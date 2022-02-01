@@ -7,7 +7,7 @@ from . import auth_view as auth
 from .. import db
 from api.utils.responses import response_with
 from api.utils import responses as resp 
-from api.db.models import User
+from api.database.models import Country, User
 from api.utils.model_marsh import UserSchema
 from api.utils.token import generate_verification_token, confirm_verification_token
 from api.utils.email import send_email
@@ -17,24 +17,23 @@ from api.utils.email import send_email
 def create_user():
     try:
         data = {
-            "username": request.args.get("username"),
-            "email": request.args.get("email"),
-            "password": request.args.get("password")
+            "username": request.json["username"],
+            "email": request.json["email"],
+            "password": request.json["password"],
+            "birth_date": request.json['birth_date']
         }
-
         if data['email'] is None or data['username'] is None:
             return response_with(resp.INVALID_INPUT_422)
-        
+
         if User.find_by_email(data['email']) or User.find_by_username(data['username']):
             return response_with(resp.SUCCESS_201)
-        
+
         data['password'] = User.generate_hash(data['password'])
         
         user_schema = UserSchema()
-       
-        user = user_schema.load(data)
-        
+        user_data = user_schema.load(data, partial=True)
         token = generate_verification_token(data['email'])
+      
         verification_email = url_for('auth_view.verify_email', token=token, _external=True)
         html = render_template_string(
             """
@@ -52,14 +51,13 @@ def create_user():
             </div>
             """, verification_email=verification_email)
         subject = "Please Verify your email"
-        send_email(user.email, subject, html)
-        result = user_schema.dump(user.create())
-
+        send_email(user_data.email, subject, html)
+        user_data.create()
+    
         return response_with(resp.SUCCESS_200)
-    except Exception as e:
-        print(e)
-        return response_with(resp.INVALID_INPUT_422)
 
+    except Exception as e:
+        return response_with(resp.INVALID_INPUT_422)
 
 # Verification token
 @auth.route('/confirm/<token>', methods=['GET'])
@@ -70,6 +68,7 @@ def verify_email(token):
         return response_with(resp.SERVER_ERROR_404)
     
     user = User.query.filter_by(email=email).first_or_404()
+    
     if user.confirmed:
         return response_with(resp.INVALID_INPUT_422)
     else:
@@ -84,9 +83,10 @@ def verify_email(token):
 def login_user():
     try:
         data = {
-            "username": request.args.get("username"),
-            "password": request.args.get("password")
+            "username": request.json["username"],
+            "password": request.json["password"]
         }
+        
         if data['username']:
             current_user = User.find_by_username(data['username'])
         if not current_user:

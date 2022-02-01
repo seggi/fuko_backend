@@ -1,11 +1,12 @@
 from marshmallow import fields
 
-from ..db.models import (
+from ..database.models import (
     Cities, State, Country, Language, Currency, AmountProvenance, 
     User, UserProfile, UserSpokenLanguage, Expenses, Loans, Depts, Savings, Budget
 )
 
-from .. import DB as db, MARSH as marsh
+from .. import db
+from .. import marsh
 
 class CitiesSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:

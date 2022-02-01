@@ -9,13 +9,13 @@ import api.utils.responses as resp
 from config import config
 from api.utils.responses import response_with
 
-# Global variables
-DB = SQLAlchemy()
-MARSH = Marshmallow()
-JWT = JWTManager()
-MAIL = Mail()
 
-# Setup enviroment for the app
+db = SQLAlchemy()
+marsh = Marshmallow()
+jwt = JWTManager()
+mail = Mail()
+
+# Create app according to environment
 def create_app(config_name) -> any:
     app = Flask(__name__)
     app.config.from_object(config[config_name])
@@ -40,13 +40,13 @@ def create_app(config_name) -> any:
         logging.error(e)
         return response_with(resp.SERVER_ERROR_404)
 
-    #  Register the App to packages 
-    DB.init_app(app)
-    MARSH.init_app(app)
-    MAIL.init_app(app)
-    JWT.init_app(app)
+    # Register App to packages
+    db.init_app(app)
+    marsh.init_app(app)
+    mail.init_app(app)
+    jwt.init_app(app)
 
-    # Colling views
+    # Import views
     from . auth import auth_view as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix="/api/user")
 

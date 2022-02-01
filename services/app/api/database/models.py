@@ -3,9 +3,10 @@ from sqlalchemy import (
     Column, Integer, DateTime, Boolean, String, Float, Text, ForeignKey, LargeBinary, null
 )
 from sqlalchemy.sql import func
+from werkzeug.security import generate_password_hash, check_password_hash
 from passlib.hash import pbkdf2_sha256 as sha256
 
-from .. import DB as db
+from .. import db
 
 class Country(db.Model):
     __tablename__ = "country"
@@ -148,7 +149,7 @@ class Loans(db.Model):
 
 # Depts Table
 class Depts(db.Model):
-    __tablename__="loans"
+    __tablename__="depts"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     borrower_id = Column(Integer, ForeignKey('users.id'), nullable=True)
