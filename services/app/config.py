@@ -17,7 +17,7 @@ class Config:
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 465
     MAIL_USERNAME = 'nankim45@gmail.com'
-    MAIL_PASSWORD = 'password'
+    MAIL_PASSWORD = 'rapy#2N.'
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
 

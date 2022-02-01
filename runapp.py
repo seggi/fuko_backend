@@ -20,7 +20,7 @@ def runApp() -> str:
     if insert_input in COMMANDS and insert_input == COMMANDS[1]:
         print("It's the first time to run migration, \nPlease wait...")
         subprocess.run(
-            "docker-compose exec dev python3 manage.py db init", check=True,
+            "sudo docker-compose exec dev python3 manage.py db init", check=True,
             shell=True, executable="/bin/bash"
         )
     elif insert_input in COMMANDS[0:3] and insert_input != COMMANDS[1]:
@@ -28,53 +28,53 @@ def runApp() -> str:
             print(f"""** migrations ** folder already exists. \n""")
             if insert_input == COMMANDS[0]:
                 subprocess.run(
-                    "docker-compose exec dev python3 manage.py db migrate", check=True,
+                    "sudo sudo docker-compose exec dev python3 manage.py db migrate", check=True,
                     shell=True, executable="/bin/bash"
                 )
             if insert_input == COMMANDS[2]:
                 subprocess.run(
-                    "docker-compose exec dev python3 manage.py db upgrade", check=True,
+                    "sudo sudo docker-compose exec dev python3 manage.py db upgrade", check=True,
                     shell=True, executable="/bin/bash"
                 )
             elif insert_input == COMMANDS[10]:
                 subprocess.run(
-                    "docker-compose exec dev python3 manage.py db stamp head", check=True,
+                    "sudo docker-compose exec dev python3 manage.py db stamp head", check=True,
                     shell=True, executable="/bin/bash"
                 )
     elif insert_input in COMMANDS:
         if insert_input == COMMANDS[5]:
             subprocess.run(
-                "docker-compose up --build dev", check=True,
+                "sudo docker-compose up --build dev", check=True,
                 shell=True, executable="/bin/bash"
             )
         elif insert_input == COMMANDS[4]:
             subprocess.run(
-                "docker-compose up dev", check=True,
+                "sudo docker-compose up dev", check=True,
                 shell=True, executable="/bin/bash"
             )
         elif insert_input == COMMANDS[6]:
             subprocess.run(
-                "docker-compose up prod", check=True,
+                "sudo docker-compose up prod", check=True,
                 shell=True, executable="/bin/bash"
             )
         elif insert_input == COMMANDS[7]:
             subprocess.run(
-                f"docker-compose exec db psql --username={DB_USERNAME} --dbname={DB}", check=True,
+                f"sudo docker-compose exec db psql --username={DB_USERNAME} --dbname={DB}", check=True,
                 shell=True, executable="/bin/bash"
             )
         elif insert_input == COMMANDS[8]:
             subprocess.run(
-                "docker-compose down -v", check=True,
+                "sudo docker-compose down -v", check=True,
                 shell=True, executable="/bin/bash"
             )
         elif insert_input == COMMANDS[9]:
             subprocess.run(
-                "docker-compose down", check=True,
+                "sudo docker-compose down", check=True,
                 shell=True, executable="/bin/bash"
             )
         elif insert_input == COMMANDS[10]:
             subprocess.run(
-                "docker-compose exec dev python manage.py seed_db", check=True,
+                "sudo docker-compose exec dev python manage.py seed_db", check=True,
                 shell=True, executable="/bin/bash"
             )
 
