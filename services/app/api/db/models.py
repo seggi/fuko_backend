@@ -1,16 +1,11 @@
 from datetime import datetime
-from locale import currency
 from sqlalchemy import (
     Column, Integer, DateTime, Boolean, String, Float, Text, ForeignKey, LargeBinary, null
 )
-from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
 from passlib.hash import pbkdf2_sha256 as sha256
 
 from .. import DB as db
-
 
 class Country(db.Model):
     __tablename__ = "country"
@@ -31,14 +26,6 @@ class Cities(db.Model):
     name = Column(String(100), nullable=False)
     state_id = Column(Integer, ForeignKey("state.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
-
-class CountryCode(db.Model):
-    __tablename__ = "country_code"
-    id = Column('id', Integer, primary_key=True)
-    name = Column(String(200), nullable=False)
-    code = Column(String(200), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=func.now())
-
 
 class Language(db.Model):
     __tablename__ = "languages"
@@ -71,7 +58,7 @@ class User(db.Model):
     birth_date = Column(String(10), unique=False, nullable=False)
     phone = Column(String(20), nullable=True, unique=True)
     is_admin = Column(Boolean(), default=False)
-    is_client = Column(Boolean(), default=False)
+    is_user = Column(Boolean(), default=False)
     status = Column(Boolean(), default=False)
     language = Column(Integer, ForeignKey("languages.id"), nullable=True)
     password = Column(Text(), nullable=True)
