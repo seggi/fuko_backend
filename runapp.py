@@ -3,7 +3,8 @@ from os import path
 from decouple import config
 
 COMMANDS = ['migrate', 'init', 'upgrade',
-            'Ctrl+C (to breack)', 'run dev', 'rebuild', 'run prod', 'db', 'clean v', 'clean sys', 'seed', 'allmigrations']
+            'Ctrl+C (to breack)', 'run dev', 'rebuild', 'run prod', 'db', 
+            'clean v', 'clean sys', 'seed', 'allmigrations', "heroku-push", "heroku-add"]
 
 # Access .env file
 DB_USERNAME = config("POSTGRES_USER_DEV")
@@ -75,6 +76,20 @@ def runApp() -> str:
         elif insert_input == COMMANDS[10]:
             subprocess.run(
                 "sudo docker-compose exec dev python manage.py seed_db", check=True,
+                shell=True, executable="/bin/bash"
+            )
+        elif insert_input == COMMANDS[12]:
+            subprocess.run(
+                "git subtree add --prefix services/app", check=True,
+                shell=True, executable="/bin/bash"
+            )
+        # git commit to heroku git  commit -am  
+        # heroku open
+        # sudo heroku create fuko-backend
+        # sudo  heroku  git:remote -a fuko-backend
+        elif insert_input == COMMANDS[13]:
+            subprocess.run(
+                "git subtree push --prefix services/app/ heroku master:main", check=True,
                 shell=True, executable="/bin/bash"
             )
 
