@@ -38,7 +38,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return "Hello this is the new versio!"
+    return "Hello this is the new fuko!"
 
 if __name__ == "__main__":
     app.run()
