@@ -10,24 +10,20 @@ app = create_app(os.getenv('FLASK_ENV') or 'production')
 cli = FlaskGroup(app)
 migrate = Migrate(app, db)
 
-
 @cli.command("create_db")
 def create_db():
     db.create_all()
     db.session.commit()
-
 
 @cli.command("drop_db")
 def drop_db():
     db.drop_all()
     db.session.commit()
 
-
 @cli.command('seed_db')
 def seed_db():
     db.session.add(Country(name="RDC"))
     db.session.commit()
-
 
 if __name__ == "__main__":
     cli()

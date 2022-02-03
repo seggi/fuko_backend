@@ -7,5 +7,9 @@ from api.database.models import *
 
 app = create_app(os.getenv('FLASK_ENV') or 'production')
 
+cli = FlaskGroup(app)
+migrate = Migrate(app, db)
+
+
 if __name__ == '__main__':
     app.run()
