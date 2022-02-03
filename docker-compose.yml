@@ -19,7 +19,7 @@ services:
     build:
       context: ./services/app
       dockerfile: Dockerfile
-    command: gunicorn --bind 0.0.0.0:7000 manage:app
+    # command: gunicorn --bind 0.0.0.0:7000 manage:app
     ports:
       - 7000:7000
     env_file:
