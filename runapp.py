@@ -86,7 +86,10 @@ def runApp() -> str:
         # git commit to heroku git  commit -am  
         # heroku open
         # sudo heroku create fuko-backend
-        # sudo  heroku  git:remote -a fuko-backend
+        # sudo  heroku  git:remote -a fuko-backend 
+        # sudo heroku run python3 manage.py db migrate -m "Initial migrations" --app fuko-backend
+        # sudo heroku run python3 manage.py db migrate --app fuko-backend
+        # sudo heroku run python3 upgrade.py db init --app fuko-backend
         elif insert_input == COMMANDS[13]:
             subprocess.run(
                 "git subtree push --prefix services/app/ heroku master:main", check=True,
