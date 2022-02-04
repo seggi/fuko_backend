@@ -12,7 +12,7 @@ class Config:
     DEBUG_TB_ENABLED = False
     DEBUG_TB_INTERCEPT_REDIRECTS = False
 
-     # Mail Settings
+    # Mail Settings
     MAIL_DEFAULT_SENDER = 'nankim45@gmail.com'
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 465
