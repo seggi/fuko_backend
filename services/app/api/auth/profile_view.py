@@ -40,8 +40,8 @@ def user_complete_profile():
 
     user = User.query.filter_by(id=data['user_id']).first()
     if user:
-        user_data = user_schema.load(data, instance=user, partial=True)
-        user_profile_data = user_schema.load(data, instance=user, partial=True)
+        user_data = user_schema.load(data["users"], instance=user, partial=True)
+        user_profile_data = user_schema.load(data["user_profile"], instance=user, partial=True)
         result = user_schema.dump(
             user_data.create() + user_profile_data.dump(user_profile_schema.create()))
         return jsonify(data=result)

@@ -88,18 +88,23 @@ def verify_email(token):
 def login_user():
     try:
         data = {
-            "username": request.json["username"],
+            "email": request.json["email"],
             "password": request.json["password"]
         }
 
-        if data['username']:
-            current_user = User.find_by_username(data['username'])
+        if data['email']:
+            current_user = User.find_by_email(data['email'])
         if not current_user:
             return response_with(resp.SERVER_ERROR_404)
         if current_user and not current_user.confirmed:
             return response_with(resp.BAD_REQUEST_400)
         if User.verify_hash(data['password'], current_user.password):
-            access_token = create_access_token(identity=data['username'])
+            user = User.query.filter_by(email=data['email']).first()
+            access_token = create_access_token(identity={
+                "username": user.username,
+                "status": user.status,
+                "user_id": user.id
+            })
             return response_with(resp.SUCCESS_201, value={'message': f'{current_user.username}',
                                                           "access_token": access_token})
         else:
