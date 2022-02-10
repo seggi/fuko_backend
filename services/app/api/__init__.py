@@ -16,6 +16,8 @@ jwt = JWTManager()
 mail = Mail()
 
 # Create app according to environment
+
+
 def create_app(config_name) -> any:
     app = Flask(__name__)
     app.config.from_object(config[config_name])
@@ -29,7 +31,7 @@ def create_app(config_name) -> any:
     def bad_request(e):
         logging.error(e)
         return response_with(resp.BAD_REQUEST_400)
-    
+
     @app.errorhandler(500)
     def server_error(e):
         logging.error(e)
@@ -48,6 +50,8 @@ def create_app(config_name) -> any:
 
     # Import views
     from . auth import auth_view as auth_blueprint
+    from . auth import profile_view as profile_blueprint
     app.register_blueprint(auth_blueprint, url_prefix="/api/user")
+    app.register_blueprint(profile_blueprint, url_prefix="/api/user/profile")
 
     return app

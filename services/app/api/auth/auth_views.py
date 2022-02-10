@@ -106,5 +106,4 @@ def login_user():
             return response_with(resp.UNAUTHORIZED_403)
 
     except Exception as e:
-        print(e)
         return response_with(resp.INVALID_INPUT_422)
