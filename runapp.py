@@ -3,7 +3,7 @@ from os import path
 from decouple import config
 
 COMMANDS = ['migrate', 'init', 'upgrade',
-            'Ctrl+C (to breack)', 'run dev', 'rebuild', 'run prod', 'db', 
+            'Ctrl+C (to breack)', 'run dev', 'rebuild', 'run prod', 'db',
             'clean v', 'clean sys', 'seed', 'allmigrations', "heroku-push", "heroku-add"]
 
 # Access .env file
@@ -83,13 +83,15 @@ def runApp() -> str:
                 "git subtree add --prefix services/app", check=True,
                 shell=True, executable="/bin/bash"
             )
-        # git commit to heroku git  commit -am  
+        # git commit to heroku git  commit -am
         # heroku open
         # sudo heroku create fuko-backend
-        # sudo  heroku  git:remote -a fuko-backend 
+        # sudo  heroku  git:remote -a fuko-backend
         # sudo heroku run python3 manage.py db migrate -m "Initial migrations" --app fuko-backend
         # sudo heroku run python3 manage.py db migrate --app fuko-backend
         # sudo heroku run python3 upgrade.py db init --app fuko-backend
+        # ----------------------------------------------------------------------------------------
+        # git push heroku ft-config-swagger:master
         elif insert_input == COMMANDS[13]:
             subprocess.run(
                 "git subtree push --prefix services/app/ heroku master:main", check=True,
