@@ -8,11 +8,13 @@ from passlib.hash import pbkdf2_sha256 as sha256
 
 from .. import db
 
+
 class Country(db.Model):
     __tablename__ = "country"
     id = Column('id', Integer, primary_key=True)
     name = Column(String(200), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
+
 
 class State(db.Model):
     __tablename__ = "state"
@@ -21,12 +23,14 @@ class State(db.Model):
     country_id = Column(Integer, ForeignKey("country.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
 
+
 class Cities(db.Model):
     __tablename__ = "cities"
     id = Column('id', Integer, primary_key=True)
     name = Column(String(100), nullable=False)
     state_id = Column(Integer, ForeignKey("state.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
+
 
 class Language(db.Model):
     __tablename__ = "languages"
@@ -35,20 +39,25 @@ class Language(db.Model):
     default = Column(Boolean(), default=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
 
+
 class Currency(db.Model):
-    __tablename__="currency"
+    __tablename__ = "currency"
     id = Column('id', Integer, primary_key=True)
     name = Column(String(200), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
 
 # Amount provenance category
+
+
 class AmountProvenance(db.Model):
-    __tablename__="amount_provenance"
+    __tablename__ = "amount_provenance"
     id = Column('id', Integer, primary_key=True)
     name = Column(String(200), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
 
 # Register User
+
+
 class User(db.Model):
     __tablename__ = "users"
     id = Column('id', Integer, primary_key=True)
@@ -69,60 +78,60 @@ class User(db.Model):
     confirmed = Column(Boolean(), nullable=False, default=False)
     confirmed_on = Column(DateTime(timezone=True),
                           default=func.now(), nullable=True)
-    profile = db.relationship("UserProfile", backref="user", lazy=True)
+    # profile = db.relationship("UserProfile", backref="user", lazy=True)
 
     def create(self):
         db.session.add(self)
         db.session.commit()
-        return self   
+        return self
 
     @classmethod
     def find_by_email(cls, email):
         return cls.query.filter_by(email=email).first()
-    
+
     @classmethod
     def find_by_username(cls, username):
         return cls.query.filter_by(username=username).first()
-    
+
     @staticmethod
-    def generate_hash(password):    
+    def generate_hash(password):
         return sha256.hash(password)
-    
+
     @staticmethod
     def verify_hash(password, hash):
         return sha256.verify(password, hash)
 
 # User Profile
+
+
 class UserProfile(db.Model):
     __tablename__ = "user_profile"
     id = Column('id', Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    gender = Column(String(5), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+    gender = Column(String(8), nullable=True)
     country = Column(Integer, ForeignKey("country.id"), nullable=True)
     state = Column(Integer, ForeignKey('state.id'), nullable=True)
     city = Column(Integer, ForeignKey('cities.id'), nullable=True)
     picture = Column(Text(), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
-    
-    def __init__(self, users):
-        self.users = users
-    
-    def create(self):
-        db.session.add(self)
-        db.session.commit()
-        return self  
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
 
 # User spoken language
+
+
 class UserSpokenLanguage(db.Model):
-    __tablename__="user_spoken_language"
+    __tablename__ = "user_spoken_language"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     languages_id = Column(Integer, ForeignKey('languages.id'))
     created_at = Column(DateTime(timezone=True), default=func.now())
 
 # Finance Table
+
+
 class Expenses(db.Model):
-    __tablename__ ="expense"
+    __tablename__ = "expense"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     amount = Column(Float, nullable=False)
@@ -130,10 +139,13 @@ class Expenses(db.Model):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
+
 # Loan Table
 '''Make in the future you include ORGANITION'''
+
+
 class Loans(db.Model):
-    __tablename__="loans"
+    __tablename__ = "loans"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     lender_id = Column(Integer, ForeignKey('users.id'), nullable=True)
@@ -148,8 +160,10 @@ class Loans(db.Model):
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
 # Depts Table
+
+
 class Depts(db.Model):
-    __tablename__="depts"
+    __tablename__ = "depts"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     borrower_id = Column(Integer, ForeignKey('users.id'), nullable=True)
@@ -164,21 +178,27 @@ class Depts(db.Model):
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
 # Savings Table
+
+
 class Savings(db.Model):
-    __tablename__="savings"
+    __tablename__ = "savings"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    money_provenance = Column(Integer, ForeignKey('amount_provenance.id') , nullable=True)
+    money_provenance = Column(Integer, ForeignKey(
+        'amount_provenance.id'), nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
+
 # Budget Table
 '''The system will check first the total amount user has in his wallet'''
+
+
 class Budget(db.Model):
-    __tablename__="Budget"
+    __tablename__ = "Budget"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     amount = Column(Float, nullable=False)
@@ -188,6 +208,5 @@ class Budget(db.Model):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
+
 ''' In the future we have to combine with tontine && back'''
-
-

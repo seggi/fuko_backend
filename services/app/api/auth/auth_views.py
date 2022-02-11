@@ -1,13 +1,12 @@
-from flask import url_for, render_template_string, jsonify
+from flask import url_for, render_template_string
 from flask import request
 from flask_jwt_extended import create_access_token
-from flask_jwt_extended import jwt_required
 
 from . import auth_view as auth
 from .. import db
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.database.models import Country, User
+from api.database.models import User
 from api.utils.model_marsh import UserSchema
 from api.utils.token import generate_verification_token, confirm_verification_token
 from api.utils.email import send_email
@@ -104,6 +103,8 @@ def login_user():
             return response_with(resp.SUCCESS_201, value={'message': f'{current_user.username}',
                                                           "access_token": access_token,
                                                           "data": {
+                                                              "first_name": user.first_name,
+                                                              "last_name": user.last_name,
                                                               "username": user.username,
                                                               "status": user.status,
                                                               "user_id": user.id
