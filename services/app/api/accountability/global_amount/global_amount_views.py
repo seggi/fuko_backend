@@ -48,3 +48,5 @@ def user_global_amount(user_id):
     )
 
     return jsonify(data=result.out_put())
+
+

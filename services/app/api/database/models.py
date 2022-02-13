@@ -136,6 +136,8 @@ class Expenses(db.Model):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
+    title = Column(Text, nullable=True)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -155,7 +157,7 @@ class Loans(db.Model):
     description = Column(Text, nullable=True)
     '''Enter the date of receiving money & section works when the lender is not in the system'''
     received_at = Column(DateTime())
-    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=False)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -173,7 +175,7 @@ class Depts(db.Model):
     description = Column(Text, nullable=True)
     '''Enter the date of receiving money & section works when the lender is not in the system'''
     lent_at = Column(DateTime())
-    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=False)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
