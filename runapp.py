@@ -89,7 +89,7 @@ def runApp() -> str:
         # sudo  heroku  git:remote -a fuko-backend
         # sudo heroku run python3 manage.py db migrate -m "Initial migrations" --app fuko-backend
         # sudo heroku run python3 manage.py db migrate --app fuko-backend
-        # sudo heroku run python3 upgrade.py db init --app fuko-backend
+        # sudo heroku run python3 manage.py db upgrade --app fuko-backend
         # ----------------------------------------------------------------------------------------
         # git push heroku ft-config-swagger:master
         elif insert_input == COMMANDS[13]:

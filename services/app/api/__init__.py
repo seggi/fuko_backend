@@ -51,7 +51,12 @@ def create_app(config_name) -> any:
     # Import views
     from . auth import auth_view as auth_blueprint
     from . auth import profile_view as profile_blueprint
+    from . accountability.global_amount.global_amount_views import global_account as account_blueprint
+    from .accountability.expenses.expenses_views import expenses as expenses_blueprint
+
     app.register_blueprint(auth_blueprint, url_prefix="/api/user")
     app.register_blueprint(profile_blueprint, url_prefix="/api/user/profile")
+    app.register_blueprint(account_blueprint)
+    app.register_blueprint(expenses_blueprint)
 
     return app
