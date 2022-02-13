@@ -4,8 +4,7 @@ from flask_jwt_extended import jwt_required
 from api.database.models import Depts, Expenses, Loans, Savings, User
 from api.utils.model_marsh import DeptsSchema, ExpensesSchema, LoanSchema, SavingsSchema, UserSchema
 from api.core.query import QueryGlobalRepport
-
-from api.accountability.account import global_amount_view as global_amount
+from api.core.objects import GlobalAmount
 
 from ... import db
 
@@ -30,17 +29,22 @@ QUERY = QueryGlobalRepport()
 
 
 @global_account.get("/global-amount/<int:user_id>")
-# @jwt_required
+@jwt_required()
 def user_global_amount(user_id):
-    expenses = QUERY.join_2_table_by_user_id(
+    expenses = QUERY.join_2_table_by_id(
         db=db, model1=USER, model2=EXPENSES, user_id=user_id)
-    loans = QUERY.join_2_table_by_user_id(
+    loans = QUERY.join_2_table_by_id(
         db=db, model1=USER, model2=LOANS, user_id=user_id)
-    savings = QUERY.join_2_table_by_user_id(
+    savings = QUERY.join_2_table_by_id(
         db=db, model1=USER, model2=SAVINGS, user_id=user_id)
-    dept = QUERY.join_2_table_by_user_id(
+    dept = QUERY.join_2_table_by_id(
         db=db, model1=USER, model2=DEPT, user_id=user_id)
 
-    result = EXPENSES_SCHEMA.dump(expenses) + LOANS_SCHEMA.dump(
-        loans) + DEPT_SCHEMA.dump(savings) + SAVINGS_SCHEMA.dump(dept)
-    return jsonify(data=result)
+    result = GlobalAmount(
+        tbl1=EXPENSES_SCHEMA.dump(expenses),
+        tbl2=LOANS_SCHEMA.dump(loans),
+        tbl3=SAVINGS_SCHEMA.dump(savings),
+        tbl4=DEPT_SCHEMA.dump(dept)
+    )
+
+    return jsonify(data=result.out_put())
