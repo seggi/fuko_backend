@@ -15,3 +15,7 @@ class GlobalAmount:
             self.tbl_names[2]: self.tbl3,
             self.tbl_names[3]: self.tbl4,
         }
+
+    def global_computation(self, item_data):
+        data = item_data['data']
+        pass

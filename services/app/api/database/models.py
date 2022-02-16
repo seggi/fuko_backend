@@ -1,10 +1,12 @@
 from datetime import datetime
 from sqlalchemy import (
-    Column, Integer, DateTime, Boolean, String, Float, Text, ForeignKey, LargeBinary, null
+    Column, Integer, DateTime, Boolean, String, Float, Text, ForeignKey, LargeBinary
 )
 from sqlalchemy.sql import func
 from werkzeug.security import generate_password_hash, check_password_hash
 from passlib.hash import pbkdf2_sha256 as sha256
+from sqlalchemy.orm import backref
+
 
 from .. import db
 
@@ -78,7 +80,9 @@ class User(db.Model):
     confirmed = Column(Boolean(), nullable=False, default=False)
     confirmed_on = Column(DateTime(timezone=True),
                           default=func.now(), nullable=True)
-    # profile = db.relationship("UserProfile", backref="user", lazy=True)
+    profile = db.relationship("UserProfile", backref="user", lazy=True)
+    expense = db.relationship(
+        "Expenses", backref=backref("users", lazy="joined"))
 
     def create(self):
         db.session.add(self)
