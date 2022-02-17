@@ -15,3 +15,34 @@ class GlobalAmount:
             self.tbl_names[2]: self.tbl3,
             self.tbl_names[3]: self.tbl4,
         }
+
+    def computer_amount(self, item_list):
+        lists = []
+        lists1 = []
+        lists2 = []
+        lists3 = []
+        for item in item_list[self.tbl_names[0]]:
+            lists.append(item['amount'])
+
+        for item in item_list[self.tbl_names[1]]:
+            lists1.append(item['amount'])
+
+        for item in item_list[self.tbl_names[2]]:
+            lists2.append(item['amount'])
+
+        for item in item_list[self.tbl_names[3]]:
+            lists2.append(item['amount'])
+
+        data = {
+            self.tbl_names[0]:  sum(lists),
+            self.tbl_names[1]:  sum(lists1),
+            self.tbl_names[2]:  sum(lists2),
+            self.tbl_names[3]:  sum(lists3)
+        }
+
+        calculate_all_amount = lists + lists1 + lists2 + lists3
+
+        return {
+            "global_amount_details": data,
+            "global_amount": sum(calculate_all_amount)
+        }

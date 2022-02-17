@@ -8,7 +8,7 @@ from api.utils import responses as resp
 from api.utils.model_marsh import ExpensesSchema
 
 from ... import db
-from api.database.models import Expenses
+from api.database.models import Expenses, User
 expenses = Blueprint("expenses", __name__,
                      url_prefix="/api/user/account")
 
@@ -31,8 +31,11 @@ def user_add_expenses(user_id):
 
 
 @expenses.get("/expenses/<int:user_id>")
-@jwt_required()
+# @jwt_required()
 def user_get_expenses(user_id):
+    item_list = []
     expenses_schema = ExpensesSchema()
     data = QUERY.get_data(db=db, model=Expenses, user_id=user_id)
-    return jsonify(data=expenses_schema.dump(data),)
+    for item in data:
+        item_list.append(expenses_schema.dump(item))
+    return jsonify(data=item_list)
