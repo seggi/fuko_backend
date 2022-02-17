@@ -16,6 +16,28 @@ class GlobalAmount:
             self.tbl_names[3]: self.tbl4,
         }
 
-    def global_computation(self, item_data):
-        data = item_data['data']
-        pass
+    def computer_amount(self, item_list):
+        lists = []
+        lists1 = []
+        lists2 = []
+        lists3 = []
+        for item in item_list[self.tbl_names[0]]:
+            lists.append(item['amount'])
+
+        for item in item_list[self.tbl_names[1]]:
+            lists1.append(item['amount'])
+
+        for item in item_list[self.tbl_names[2]]:
+            lists2.append(item['amount'])
+
+        for item in item_list[self.tbl_names[3]]:
+            lists2.append(item['amount'])
+
+        data = {
+            self.tbl_names[0]:  sum(lists),
+            self.tbl_names[1]:  sum(lists1),
+            self.tbl_names[2]:  sum(lists2),
+            self.tbl_names[3]:  sum(lists3)
+        }
+
+        return data
