@@ -40,4 +40,9 @@ class GlobalAmount:
             self.tbl_names[3]:  sum(lists3)
         }
 
-        return data
+        calculate_all_amount = lists + lists1 + lists2 + lists3
+
+        return {
+            "global_amount_details": data,
+            "global_amount": sum(calculate_all_amount)
+        }

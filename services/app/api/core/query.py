@@ -1,4 +1,7 @@
 
+from sqlalchemy import extract
+
+
 class QueryGlobalRepport:
     def __init__(self) -> None:
         pass
@@ -28,3 +31,11 @@ class QueryGlobalRepport:
         # Checking for user 4 other mode except User model
         user = model.query.filter_by(user_id=user_id).all()
         return user
+
+    def get_data_by_date(self, db, model1, model2, user_id, date={}):
+        # Select by specific date && LEFTJOIN
+        all_amount = db.session.query(model2).join(
+            model1, model2.user_id == user_id, isouter=True).\
+            filter(extract('year', model2.created_at) == date["year"]).\
+            filter(extract('month', model2.created_at) == date['month']).all()
+        return all_amount
