@@ -17,6 +17,7 @@ class QueryGlobalRepport:
             model1, model2.user_id == user_id, isouter=True).all()
         return all_amount
 
+    # Save data
     def insert_data(self, db, table_data):
         db.session.add(table_data)
         db.session.commit()
@@ -39,3 +40,6 @@ class QueryGlobalRepport:
             filter(extract('year', model2.created_at) == date["year"]).\
             filter(extract('month', model2.created_at) == date['month']).all()
         return all_amount
+
+    def single_table_by_date(date={}):
+        pass

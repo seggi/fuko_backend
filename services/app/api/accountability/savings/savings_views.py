@@ -14,6 +14,8 @@ savings = Blueprint("savings", __name__,
 
 QUERY = QueryGlobalRepport()
 
+# Register saving data
+
 
 @savings.post("/add-saving/<int:user_id>")
 @jwt_required()
@@ -29,6 +31,8 @@ def user_add_saving(user_id):
         "message": "Amount saved with success"
     })
 
+# Get all savings
+
 
 @savings.get("/savings/<int:user_id>")
 @jwt_required()
@@ -39,3 +43,11 @@ def user_get_saving(user_id):
     for item in data:
         item_list.append(savings_schema.dump(item))
     return jsonify(data=item_list)
+
+
+# Get saving by date
+@savings.get("/savings/<int:user_id>")
+@jwt_required()
+def get_savings_date(user_id):
+    data = request.json | {"user_id": user_id}
+    pass

@@ -1,4 +1,5 @@
 
+# Retrieve dictionary according to tables
 class GlobalAmount:
     tbl_names = ['expenses', 'loans', 'savings', 'depts']
 
@@ -15,6 +16,9 @@ class GlobalAmount:
             self.tbl_names[2]: self.tbl3,
             self.tbl_names[3]: self.tbl4,
         }
+
+    # Retrieve && calculate all amount by category ,
+    '''Expenses, Savings, Dept ans  Loans'''
 
     def computer_amount(self, item_list):
         lists = []

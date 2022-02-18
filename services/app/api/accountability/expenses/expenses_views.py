@@ -14,6 +14,8 @@ expenses = Blueprint("expenses", __name__,
 
 QUERY = QueryGlobalRepport()
 
+# Register expenses
+
 
 @expenses.post("/add-expenses/<int:user_id>")
 @jwt_required()
@@ -28,6 +30,8 @@ def user_add_expenses(user_id):
         "code": "success",
         "message": "Amount saved with success"
     })
+
+# Retrieve all expense
 
 
 @expenses.get("/expenses/<int:user_id>")
