@@ -5,6 +5,7 @@ from flask_marshmallow import Marshmallow
 from flask_mail import Mail
 from flask_jwt_extended import JWTManager
 
+
 import api.utils.responses as resp
 from config import config
 from api.utils.responses import response_with
@@ -14,6 +15,7 @@ db = SQLAlchemy()
 marsh = Marshmallow()
 jwt = JWTManager()
 mail = Mail()
+
 
 # Create app according to environment
 
