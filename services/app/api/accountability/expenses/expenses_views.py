@@ -18,7 +18,7 @@ QUERY = QueryGlobalRepport()
 
 
 @expenses.post("/add-expenses/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_add_expenses(user_id):
     # Generate inputs
     data = request.json | {"user_id": user_id}
@@ -35,7 +35,7 @@ def user_add_expenses(user_id):
 
 
 @expenses.get("/expenses/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_get_expenses(user_id):
     item_list: list = []
     expenses_schema = ExpensesSchema()
