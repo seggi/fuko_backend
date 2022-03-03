@@ -18,7 +18,7 @@ QUERY = QueryGlobalRepport()
 
 
 @loans.post("/add-loans/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_add_loans(user_id):
     # Generate inputs
     data = request.json | {"user_id": user_id}
