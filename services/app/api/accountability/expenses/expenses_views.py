@@ -14,26 +14,29 @@ expenses = Blueprint("expenses", __name__,
 
 QUERY = QueryGlobalRepport()
 
+# Register expenses
+
 
 @expenses.post("/add-expenses/<int:user_id>")
 @jwt_required()
 def user_add_expenses(user_id):
     # Generate inputs
-    data = request.json | {"user_id": user_id}
-    if data["amount"] is None or data["description"] is None:
-        return response_with(resp.INVALID_INPUT_422)
-    else:
-        QUERY.insert_data(db=db, table_data=Expenses(**data))
+    data = request.json
+    for value in data["data"]:
+        QUERY.insert_data(db=db, table_data=Expenses(**value))
     return jsonify({
         "code": "success",
         "message": "Amount saved with success"
     })
 
 
+# Retrieve all expense
+
+
 @expenses.get("/expenses/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_get_expenses(user_id):
-    item_list = []
+    item_list: list = []
     expenses_schema = ExpensesSchema()
     data = QUERY.get_data(db=db, model=Expenses, user_id=user_id)
     for item in data:

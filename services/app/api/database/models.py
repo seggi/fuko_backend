@@ -207,10 +207,21 @@ class Budget(db.Model):
     __tablename__ = "Budget"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    name = Column(Text(), nullable=False)
+    start_date = Column(DateTime(), nullable=True)
+    end_date = Column(DateTime(), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
+
+class BudgetDetails(db.Model):
+    __tablename__ = "budget_details"
+    id = Column('id', Integer, primary_key=True)
+    budget_id = Column(Integer, ForeignKey('Budget.id'), nullable=False)
     amount = Column(Float, nullable=False)
     activity_description = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
-    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=False)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
