@@ -44,9 +44,12 @@ class GlobalAmount:
             self.tbl_names[3]:  sum(lists3)
         }
 
-        calculate_all_amount = lists + lists1 + lists2 + lists3
+        negative_values = sum(lists + lists3)
+        positive_values = sum(lists1 + lists2)
+
+        calculate_all_amount = positive_values - negative_values
 
         return {
             "global_amount_details": data,
-            "global_amount": sum(calculate_all_amount)
+            "global_amount": calculate_all_amount
         }

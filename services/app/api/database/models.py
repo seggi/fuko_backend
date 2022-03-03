@@ -174,7 +174,7 @@ class Depts(db.Model):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     borrower_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     '''If lender is not fuko user <mension his/her name>'''
-    destination = Column(Text, nullable=True)
+    borrower_name = Column(Text, nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     '''Enter the date of receiving money & section works when the lender is not in the system'''
@@ -194,7 +194,7 @@ class Savings(db.Model):
         'amount_provenance.id'), nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
-    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=False)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
