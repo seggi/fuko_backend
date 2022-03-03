@@ -1,7 +1,7 @@
 
 # Retrieve dictionary according to tables
 class GlobalAmount:
-    tbl_names = ['expenses', 'loans', 'savings', 'depts']
+    tbl_names = ['expenses', 'loans', 'savings', 'dept']
 
     def __init__(self, tbl1, tbl2, tbl3, tbl4) -> None:
         self.tbl1 = tbl1
@@ -35,18 +35,21 @@ class GlobalAmount:
             lists2.append(item['amount'])
 
         for item in item_list[self.tbl_names[3]]:
-            lists2.append(item['amount'])
+            lists3.append(item['amount'])
 
         data = {
             self.tbl_names[0]:  sum(lists),
             self.tbl_names[1]:  sum(lists1),
             self.tbl_names[2]:  sum(lists2),
-            self.tbl_names[3]:  sum(lists3)
+            self.tbl_names[3]:  sum(lists3),
         }
 
-        calculate_all_amount = lists + lists1 + lists2 + lists3
+        negative_values = sum(lists + lists3)
+        positive_values = sum(lists1 + lists2)
+
+        calculate_all_amount = positive_values - negative_values
 
         return {
             "global_amount_details": data,
-            "global_amount": sum(calculate_all_amount)
+            "global_amount": calculate_all_amount
         }
