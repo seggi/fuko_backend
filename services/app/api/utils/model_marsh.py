@@ -1,7 +1,7 @@
 from marshmallow import fields
 
 from ..database.models import (
-    Cities, State, Country, Language, Currency, AmountProvenance,
+    BudgetDetails, Cities, State, Country, Language, Currency, AmountProvenance,
     User, UserProfile, UserSpokenLanguage, Expenses, Loans, Depts, Savings, Budget
 )
 
@@ -135,5 +135,12 @@ class SavingsSchema(marsh.SQLAlchemyAutoSchema):
 class BudgetSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = Budget
+        include_relationships = True
+        load_instance = True
+
+
+class BudgetDetailsSchema(marsh.SQLAlchemyAutoSchema):
+    class Meta:
+        model = BudgetDetails
         include_relationships = True
         load_instance = True

@@ -56,11 +56,13 @@ def create_app(config_name) -> any:
     from . accountability.global_amount.global_amount_views import global_account as account_blueprint
     from .accountability.expenses.expenses_views import expenses as expenses_blueprint
     from .accountability.savings.savings_views import savings as savings_blueprint
+    from .accountability.budget.budget_views import budget as budget_blueprint
 
     app.register_blueprint(auth_blueprint, url_prefix="/api/user")
     app.register_blueprint(profile_blueprint, url_prefix="/api/user/profile")
     app.register_blueprint(account_blueprint)
     app.register_blueprint(expenses_blueprint)
     app.register_blueprint(savings_blueprint)
+    app.register_blueprint(budget_blueprint)
 
     return app

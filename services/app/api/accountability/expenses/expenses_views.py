@@ -21,8 +21,7 @@ QUERY = QueryGlobalRepport()
 @jwt_required()
 def user_add_expenses(user_id):
     # Generate inputs
-    data = request.json | {"user_id": user_id}
-
+    data = request.json
     for value in data["data"]:
         QUERY.insert_data(db=db, table_data=Expenses(**value))
     return jsonify({
