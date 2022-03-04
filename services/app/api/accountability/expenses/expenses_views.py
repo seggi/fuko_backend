@@ -34,11 +34,21 @@ def user_add_expenses(user_id):
 
 
 @expenses.get("/expenses/<int:user_id>")
-@jwt_required()
+# @jwt_required()
 def user_get_expenses(user_id):
     item_list: list = []
+    total_amount_list = []
     expenses_schema = ExpensesSchema()
     data = QUERY.get_data(db=db, model=Expenses, user_id=user_id)
     for item in data:
         item_list.append(expenses_schema.dump(item))
-    return jsonify(data=item_list)
+
+    for item in item_list:
+        total_amount_list.append(item['amount'])
+
+    total_amount = sum(total_amount_list)
+
+    return jsonify(data={
+        "expenses_list": item_list,
+        "total_amount": total_amount
+    })
