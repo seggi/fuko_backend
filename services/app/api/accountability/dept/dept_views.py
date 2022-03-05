@@ -18,7 +18,7 @@ QUERY = QueryGlobalRepport()
 
 
 @dept.post("/add-dept/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_add_dept(user_id):
     # Generate inputs
     data = request.json | {"user_id": user_id}
@@ -35,7 +35,7 @@ def user_add_dept(user_id):
 
 
 @dept.get("/retrieve/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_get_dept(user_id):
     item_list = []
     dept_schema = DeptsSchema()

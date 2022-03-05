@@ -33,7 +33,7 @@ QUERY = QueryGlobalRepport()
 
 
 @global_account.get("/global-amount/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_global_amount(user_id):
 
     expenses = QUERY.get_all_joined_table_by_id(
