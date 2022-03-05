@@ -60,7 +60,7 @@ def user_global_amount(user_id):
 
 
 @global_account.get("/global-amount-by-date/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_global_amount_by_date(user_id):
     expenses = QUERY.get_data_by_date(
         db=db, model1=USER, model2=EXPENSES, user_id=user_id,

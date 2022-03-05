@@ -1,5 +1,5 @@
 
-from sqlalchemy import extract
+from sqlalchemy import extract, desc
 
 
 class QueryGlobalRepport:
@@ -44,5 +44,6 @@ class QueryGlobalRepport:
     def single_table_by_date(self, db,  model, user_id, date={}):
         all_amount = model.query.filter_by(user_id=user_id).\
             filter(extract('year', model.created_at) == date["year"]).\
-            filter(extract('month', model.created_at) == date['month']).all()
+            filter(extract('month', model.created_at) ==
+                   date['month']).order_by(desc(model.created_at)).all()
         return all_amount
