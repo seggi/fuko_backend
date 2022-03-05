@@ -21,24 +21,23 @@ todays_date = date.today()
 
 
 @savings.post("/add-saving/<int:user_id>")
-@jwt_required()
+# @jwt_required()
 def user_add_saving(user_id):
     # Generate inputs
-    data = request.json | {"user_id": user_id}
-    if data["amount"] is None or data["description"] is None:
-        return response_with(resp.INVALID_INPUT_422)
-    else:
-        QUERY.insert_data(db=db, table_data=Savings(**data))
+    data = request.json
+    for value in data["data"]:
+        QUERY.insert_data(db=db, table_data=Savings(**value))
     return jsonify({
         "code": "success",
         "message": "Amount saved with success"
     })
 
+
 # Get all savings
 
 
 @savings.get("/retrieve-by-date/<int:user_id>")
-@jwt_required()
+# @jwt_required()
 def user_get_saving_by_date(user_id):
     item_list: list = []
     total_amount_list = []
