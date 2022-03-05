@@ -21,7 +21,7 @@ todays_date = date.today()
 
 
 @savings.post("/add-saving/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_add_saving(user_id):
     # Generate inputs
     data = request.json
@@ -37,7 +37,7 @@ def user_add_saving(user_id):
 
 
 @savings.get("/retrieve-by-date/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_get_saving_by_date(user_id):
     item_list: list = []
     total_amount_list = []
