@@ -1,3 +1,4 @@
+from datetime import date
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from api.accountability.global_amount.global_amount_views import QUERY
@@ -15,6 +16,8 @@ expenses = Blueprint("expenses", __name__,
 QUERY = QueryGlobalRepport()
 
 # Register expenses
+# Get current date
+todays_date = date.today()
 
 
 @expenses.post("/add-expenses/<int:user_id>")
@@ -34,7 +37,7 @@ def user_add_expenses(user_id):
 
 
 @expenses.get("/expenses/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_get_expenses(user_id):
     item_list: list = []
     total_amount_list = []
@@ -50,5 +53,29 @@ def user_get_expenses(user_id):
 
     return jsonify(data={
         "expenses_list": item_list,
-        "total_amount": total_amount
+        "total_amount": total_amount,
+        "today_date": todays_date,
+    })
+
+
+@expenses.get("/expenses-by-date/<int:user_id>")
+@jwt_required()
+def user_get_expenses_by_date(user_id):
+    item_list: list = []
+    total_amount_list = []
+    expenses_schema = ExpensesSchema()
+    data = QUERY.single_table_by_date(db=db, model=Expenses, user_id=user_id, date={
+        "year": todays_date.year, "month": todays_date.month})
+    for item in data:
+        item_list.append(expenses_schema.dump(item))
+
+    for item in item_list:
+        total_amount_list.append(item['amount'])
+
+    total_amount = sum(total_amount_list)
+
+    return jsonify(data={
+        "expenses_list": item_list,
+        "total_amount": total_amount,
+        "today_date": todays_date,
     })

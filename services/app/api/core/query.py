@@ -41,5 +41,8 @@ class QueryGlobalRepport:
             filter(extract('month', model2.created_at) == date['month']).all()
         return all_amount
 
-    def single_table_by_date(date={}):
-        pass
+    def single_table_by_date(self, db,  model, user_id, date={}):
+        all_amount = model.query.filter_by(user_id=user_id).\
+            filter(extract('year', model.created_at) == date["year"]).\
+            filter(extract('month', model.created_at) == date['month']).all()
+        return all_amount
