@@ -17,12 +17,7 @@ from api.utils.email import send_email
 @auth.route('/signup', methods=['POST'])
 def create_user():
     try:
-        data = {
-            "username": request.json["username"],
-            "email": request.json["email"],
-            "password": request.json["password"],
-            "birth_date": request.json['birth_date']
-        }
+        data = request.json
         if data['email'] is None or data['username'] is None:
             return response_with(resp.INVALID_INPUT_422)
 

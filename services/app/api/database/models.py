@@ -131,23 +131,34 @@ class UserSpokenLanguage(db.Model):
     languages_id = Column(Integer, ForeignKey('languages.id'))
     created_at = Column(DateTime(timezone=True), default=func.now())
 
-# Finance Table
+# Accountability Table
+
+# Expenses
+# Expense can not be deleted
 
 
 class Expenses(db.Model):
     __tablename__ = "expense"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    expense_name = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
+
+class ExpenseDetails(db.Model):
+    __tablename__ = "expense_details"
+    id = Column('id', Integer, primary_key=True)
+    expense_id = Column(Integer, ForeignKey('expense.id'), nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
-    title = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
 
 # Loan Table
-'''Make in the future you include ORGANITION'''
+'''Make in the future you include ORGANIZATION'''
 
 
 class Loans(db.Model):
@@ -165,6 +176,16 @@ class Loans(db.Model):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
+
+class LoanPayment(db.Model):
+    __tablename__ = "loan_payment"
+    id = Column('id', Integer, primary_key=True)
+    dept_id = Column(Integer, ForeignKey('loans.id'), nullable=False)
+    amount = Column(Float, nullable=False)
+    description = Column(Text, nullable=True)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
 # Depts Table
 
 
@@ -179,9 +200,22 @@ class Depts(db.Model):
     description = Column(Text, nullable=True)
     '''Enter the date of receiving money & section works when the lender is not in the system'''
     lent_at = Column(DateTime())
+    payment_status = Column(Boolean, default=False)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
+
+
+class DeptsPayment(db.Model):
+    __tablename__ = "dept_payment"
+    id = Column('id', Integer, primary_key=True)
+    dept_id = Column(Integer, ForeignKey('depts.id'), nullable=False)
+    amount = Column(Float, nullable=False)
+    description = Column(Text, nullable=True)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
 
 # Savings Table
 
