@@ -1,12 +1,14 @@
 from datetime import date
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
+from itsdangerous import json
 from api.accountability.global_amount.global_amount_views import QUERY
 
 from api.core.query import QueryGlobalRepport
 from api.utils.responses import response_with
 from api.utils import responses as resp
 from api.utils.model_marsh import ExpensesSchema
+from api.core.labels import AppLabels
 
 from ... import db
 from api.database.models import Expenses, User
@@ -18,18 +20,40 @@ QUERY = QueryGlobalRepport()
 # Register expenses
 # Get current date
 todays_date = date.today()
+APP_LABEL = AppLabels()
 
 
-@expenses.post("/add-expenses/<int:user_id>")
+# @expenses.post("/create-expenses/<int:user_id>")
+# @jwt_required()
+# def user_create_expense(user_id):
+#     data = request.json | {"user_id": user_id}
+#     if data['expense_name'] is None and data['user_id'] is None:
+#         return response_with(resp.INVALID_INPUT_422)
+
+#     if User.find_by_email(data['email']) or User.find_by_username(data['username']):
+#         return response_with(resp.SUCCESS_201)
+
+#     if Expenses.find_by_expense_name(data['expense_name']):
+#         return jsonify(message=APP_LABEL.label("Expense name already exist"))
+
+#     else:
+#         QUERY.insert_data(db=db, table_data=Expenses(**data))
+#         return jsonify(data={
+#             "code": APP_LABEL.label("success"),
+#             "message": APP_LABEL.label("Expense saved with success")
+#         })
+
+
+@expenses.post("/expenses-details/<int:expense_id>")
 @jwt_required()
-def user_add_expenses(user_id):
+def user_add_expenses(expense_id):
     # Generate inputs
-    data = request.json
+    data = request.json | {"expense_id": expense_id}
     for value in data["data"]:
-        QUERY.insert_data(db=db, table_data=Expenses(**value))
+        QUERY.insert_data(db=db, table_data=ExpenseDetails(**value))
     return jsonify({
-        "code": "success",
-        "message": "Amount saved with success"
+        "code": APP_LABEL.label("success"),
+        "message": APP_LABEL.label("Amount saved with success")
     })
 
 
