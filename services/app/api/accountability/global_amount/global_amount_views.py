@@ -2,8 +2,8 @@ from datetime import date
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
 
-from api.database.models import Depts, Expenses, Loans, Savings, User
-from api.utils.model_marsh import DeptsSchema, ExpensesSchema, LoanSchema, SavingsSchema, UserSchema
+from api.database.models import Depts, ExpenseDetails, Expenses, Loans, Savings, User
+from api.utils.model_marsh import DeptsSchema, ExpenseDetailsSchema, ExpensesSchema, LoanSchema, SavingsSchema, UserSchema
 from api.core.query import QueryGlobalRepport
 from api.core.objects import GlobalAmount
 
@@ -17,17 +17,18 @@ todays_date = date.today()
 
 # Call Models
 USER = User
-EXPENSES = Expenses
+EXPENSES = ExpenseDetails
 LOANS = Loans
 DEPT = Depts
 SAVINGS = Savings
 
 # Call Schema
 USER_SCHEMA = UserSchema(many=True)
-EXPENSES_SCHEMA = ExpensesSchema(many=True)
+EXPENSES_SCHEMA = ExpenseDetailsSchema(many=True)
 LOANS_SCHEMA = LoanSchema(many=True)
 DEPT_SCHEMA = DeptsSchema(many=True)
 SAVINGS_SCHEMA = SavingsSchema(many=True)
+
 
 QUERY = QueryGlobalRepport()
 
@@ -36,8 +37,9 @@ QUERY = QueryGlobalRepport()
 @jwt_required()
 def user_global_amount(user_id):
 
-    expenses = QUERY.get_all_joined_table_by_id(
-        db=db, model1=USER, model2=EXPENSES, user_id=user_id)
+    expenses = db.session.query(ExpenseDetails).join(
+        Expenses, ExpenseDetails.expense_id == Expenses.id, isouter=True).\
+        filter(Expenses.user_id == user_id).all()
     loans = QUERY.get_all_joined_table_by_id(
         db=db, model1=USER, model2=LOANS, user_id=user_id)
     savings = QUERY.get_all_joined_table_by_id(

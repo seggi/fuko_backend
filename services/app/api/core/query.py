@@ -30,7 +30,8 @@ class QueryGlobalRepport:
 
     def get_data(self, db,  model, user_id):
         # Checking for user 4 other mode except User model
-        user = model.query.filter_by(user_id=user_id).all()
+        user = model.query.filter_by(user_id=user_id).order_by(
+            desc(model.created_at)).all()
         return user
 
     def get_data_by_date(self, db, model1, model2, user_id, date={}):
