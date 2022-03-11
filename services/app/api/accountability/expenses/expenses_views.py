@@ -25,7 +25,7 @@ APP_LABEL = AppLabels()
 
 
 @expenses.post("/create-expenses/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_create_expense(user_id):
     data = request.json | {"user_id": user_id}
     if data['expense_name'] is None and data['user_id'] is None:
@@ -65,7 +65,7 @@ def user_add_expenses(expense_id):
 # Retrieve all expense
 
 @expenses.get("/expenses/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_get_expense(user_id):
     expenses_list: list = []
     expenses_details_list: list = []
@@ -97,7 +97,7 @@ def user_get_expense(user_id):
 
 
 @ expenses.get("/expense-details/<int:expense_id>")
-# @ jwt_required()
+@ jwt_required()
 def user_get_expense_details(expense_id):
     item_list: list = []
     total_amount_list = []
@@ -119,7 +119,7 @@ def user_get_expense_details(expense_id):
 
 
 @ expenses.get("/expenses-by-date/<int:expense_id>")
-# @ jwt_required()
+@ jwt_required()
 def user_get_expenses_by_date(expense_id):
     item_list: list = []
     total_amount_list = []
