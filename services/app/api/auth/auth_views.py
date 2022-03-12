@@ -94,7 +94,9 @@ def login_user():
             return response_with(resp.BAD_REQUEST_400)
         if User.verify_hash(data['password'], current_user.password):
             user = User.query.filter_by(email=data['email']).first()
-            access_token = create_access_token(identity=data["email"])
+
+            access_token = create_access_token(
+                identity={"id": user.id, "email": data["email"]})
             return response_with(resp.SUCCESS_201, value={'message': f'{current_user.username}',
                                                           "access_token": access_token,
                                                           "data": {
