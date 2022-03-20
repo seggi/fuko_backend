@@ -30,21 +30,21 @@ def user_create_expense(user_id):
     data = request.json | {"user_id": user_id}
     if data['expense_name'] is None and data['user_id'] is None:
         return response_with(resp.INVALID_INPUT_422)
-    expense = Expenses.query.filter_by(
-        expense_name=data['expense_name']).first()
-    if expense:
-        return jsonify(message=APP_LABEL.label("Expense name already exist"))
+    # expense = Expenses.query.filter_by(
+    #     expense_name=data['expense_name']).first()
+    # if expense:
+    #     return jsonify(message=APP_LABEL.label("Expense name already exist"))
 
-    else:
-        QUERY.insert_data(db=db, table_data=Expenses(**data))
-        return jsonify(data={
-            "code": APP_LABEL.label("success"),
-            "message": APP_LABEL.label("Expense saved with success")
-        })
+    # else:
+    QUERY.insert_data(db=db, table_data=Expenses(**data))
+    return jsonify(data={
+        "code": APP_LABEL.label("success"),
+        "message": APP_LABEL.label("Expense saved with success")
+    })
 
 
 @expenses.post("/add-expenses-details/<int:expense_id>")
-# @jwt_required()
+@jwt_required()
 def user_add_expenses(expense_id):
     # Generate inputs
     data = request.json
@@ -65,7 +65,7 @@ def user_add_expenses(expense_id):
 # Retrieve all expense
 
 @expenses.get("/expenses/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_get_expense(user_id):
     expenses_list: list = []
     expenses_details_list: list = []
@@ -75,7 +75,8 @@ def user_get_expense(user_id):
     expenses = QUERY.get_data(db=db, model=Expenses, user_id=user_id)
     expenses_details = db.session.query(ExpenseDetails).join(
         Expenses, ExpenseDetails.expense_id == Expenses.id, isouter=True).\
-        filter(Expenses.user_id == user_id).all()
+        filter(Expenses.user_id == user_id).order_by(
+            desc(ExpenseDetails.created_at)).all()
 
     for item in expenses:
         expenses_list.append(expenses_schema.dump(item))
@@ -96,7 +97,7 @@ def user_get_expense(user_id):
 
 
 @ expenses.get("/expense-details/<int:expense_id>")
-# @ jwt_required()
+@ jwt_required()
 def user_get_expense_details(expense_id):
     item_list: list = []
     total_amount_list = []
@@ -118,7 +119,7 @@ def user_get_expense_details(expense_id):
 
 
 @ expenses.get("/expenses-by-date/<int:expense_id>")
-# @ jwt_required()
+@ jwt_required()
 def user_get_expenses_by_date(expense_id):
     item_list: list = []
     total_amount_list = []

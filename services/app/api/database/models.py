@@ -188,14 +188,24 @@ class LoanPayment(db.Model):
     updated_at = Column(DateTime(timezone=True), default=func.now())
 # Depts Table
 
+# Record lender in note list
 
-class Depts(db.Model):
-    __tablename__ = "depts"
+
+class DeptNoteBook(db.Model):
+    __tablename__ = "dept_note_book"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     borrower_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     '''If lender is not fuko user <mension his/her name>'''
     borrower_name = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
+
+class Depts(db.Model):
+    __tablename__ = "depts"
+    id = Column('id', Integer, primary_key=True)
+    note_id = Column(Integer, ForeignKey('dept_note_book.id'), nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     '''Enter the date of receiving money & section works when the lender is not in the system'''
