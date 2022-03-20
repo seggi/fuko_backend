@@ -81,18 +81,22 @@ def user_get_dept():
     return jsonify(data={"dept_list": dept_list, "total_dept": total_amount})
 
 
-@dept.post("/add-dept")
+@dept.post("/add-dept/<int:note_id>")
 @jwt_required()
-def user_add_dept():
+def user_add_dept(note_id):
     # Generate inputs
-    data = request.json
-    if data["amount"] is None:
-        return response_with(resp.INVALID_INPUT_422)
-    else:
-        QUERY.insert_data(db=db, table_data=Depts(**data))
+    data = request.json | {"note_id": note_id}
+
+    for value in data["data"]:
+        if value['amount'] is None:
+            return response_with(resp.INVALID_INPUT_422)
+        else:
+            QUERY.insert_data(db=db, table_data=Depts(
+                **value | {"note_id": note_id}))
+
     return jsonify({
-        "code": "success",
-        "message": "Amount saved with success"
+        "code": APP_LABEL.label("success"),
+        "message": APP_LABEL.label("Dept Amount recorded with success")
     })
 
 
