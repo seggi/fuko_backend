@@ -81,6 +81,7 @@ def user_get_dept():
     return jsonify(data={"dept_list": dept_list, "total_dept": total_amount})
 
 
+# Add dept
 @dept.post("/add-dept/<int:note_id>")
 @jwt_required()
 def user_add_dept(note_id):
