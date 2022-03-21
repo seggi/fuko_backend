@@ -20,7 +20,6 @@ class ManageInput:
             print(f"{[command]}", sep=',', end=' ')
         print("\n")
         self.get_command = self.commands()
-        # self.display_input = self.display_input()
 
     def commands(self) -> dict:
 
