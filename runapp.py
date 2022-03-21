@@ -40,8 +40,11 @@ class ManageInput:
             "com": f"git  commit -am ",
             "push": "git push heroku ",
             "init-migrate": "sudo heroku run python3 manage.py db migrate -m 'Initial migrations' --app fuko-backend",
+            "db-history": "sudo heroku run python3 manage.py db history --app fuko-backend",
+            "stamp-db": "sudo heroku run python3 manage.py db stamp head --app fuko-backend",
             "migrate-db": "sudo heroku run python3 manage.py db migrate --app fuko-backend",
-            "upgrade-db": "sudo heroku run python3 manage.py db upgrade --app fuko-backend"
+            "upgrade-db": "sudo heroku run python3 manage.py db upgrade --app fuko-backend",
+            "heroku-db": "heroku pg:psql"
         }
 
     def display_input(self):
