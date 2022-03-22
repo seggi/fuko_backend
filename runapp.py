@@ -36,7 +36,7 @@ class ManageInput:
             'seed': "sudo docker-compose exec dev python manage.py seed_db",
             'allmigrations': "sudo docker-compose exec dev python3 manage.py db stamp head",
             # Heroku section
-            "add": "git subtree add --prefix services/app",
+            "add": "git subtree add --prefix . services/app",
             "com": f"git  commit -am ",
             "push": "git push heroku ",
             "init-migrate": "sudo heroku run python3 manage.py db migrate -m 'Initial migrations' --app fuko-backend",
@@ -44,7 +44,9 @@ class ManageInput:
             "stamp-db": "sudo heroku run python3 manage.py db stamp head --app fuko-backend",
             "migrate-db": "sudo heroku run python3 manage.py db migrate --app fuko-backend",
             "upgrade-db": "sudo heroku run python3 manage.py db upgrade --app fuko-backend",
-            "heroku-db": "heroku pg:psql"
+            "heroku-db": "heroku pg:psql",
+            # If branch is bind the master branch
+            "update-branch": "git push heroku `git subtree  split --prefix services/app master`:master --force"
         }
 
     def display_input(self):
