@@ -36,7 +36,7 @@ class ManageInput:
             'seed': "sudo docker-compose exec dev python manage.py seed_db",
             'allmigrations': "sudo docker-compose exec dev python3 manage.py db stamp head",
             # Heroku section
-            "add": "git subtree add --prefix . services/app",
+            "add": "git subtree add . --prefix services/app",
             "com": f"git  commit -am ",
             "push": "git push heroku ",
             "init-migrate": "sudo heroku run python3 manage.py db migrate -m 'Initial migrations' --app fuko-backend",
