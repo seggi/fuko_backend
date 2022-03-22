@@ -85,7 +85,7 @@ def user_get_dept():
 @dept.post("/add-dept/<int:note_id>")
 @jwt_required()
 def user_add_dept(note_id):
-    # Generate inputs
+
     data = request.json | {"note_id": note_id}
 
     for value in data["data"]:
