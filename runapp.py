@@ -25,8 +25,8 @@ class ManageInput:
 
         return {
             "init":  "sudo docker-compose exec dev python3 manage.py db init",
-            "migrate": "sudo sudo docker-compose exec dev python3 manage.py db migrate",
-            "upgrade": "sudo sudo docker-compose exec dev python3 manage.py db upgrade",
+            "migrate": "sudo docker-compose exec dev python3 manage.py db migrate",
+            "upgrade": "sudo docker-compose exec dev python3 manage.py db upgrade",
             'run dev': "sudo docker-compose up dev",
             'rebuild': "sudo docker-compose up --build dev",
             'run prod': "sudo docker-compose up prod",
