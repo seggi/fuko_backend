@@ -24,8 +24,7 @@ def create_user():
             "birth_date": request.json["birth_date"]
         }
         if data['email'] is None or data['username'] is None:
-            inputs = {"email": data['email'], "user": data['username']}
-            return jsonify(message=inputs)
+            return response_with(resp.INVALID_INPUT_422)
 
         if User.find_by_email(data['email']) or User.find_by_username(data['username']):
             return response_with(resp.SUCCESS_201)
@@ -60,7 +59,7 @@ def create_user():
         return response_with(resp.SUCCESS_200)
 
     except Exception as e:
-        return jsonify(message="checkout your backend")
+        return jsonify(message=f"checkout your backend, {e}")
         # return response_with(resp.INVALID_INPUT_422)
 
 # Verification token
