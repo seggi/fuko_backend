@@ -46,7 +46,8 @@ class ManageInput:
             "upgrade-db": "sudo heroku run python3 manage.py db upgrade --app fuko-backend",
             "heroku-db": "heroku pg:psql",
             # If branch is bind the master branch
-            "update-branch": "git push heroku `git subtree  split --prefix services/app master`:master --force"
+            "update-branch": "git push heroku `git subtree  split --prefix services/app master`:master --force",
+            "change-branch": "heroku git:remote -a example-app"
         }
 
     def display_input(self):
