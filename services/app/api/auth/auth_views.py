@@ -25,7 +25,6 @@ def create_user():
         }
         if data['email'] is None or data['username'] is None:
             inputs = {"email": data['email'], "user": data['username']}
-            # return response_with(resp.INVALID_INPUT_422, )
             return jsonify(message=inputs)
 
         if User.find_by_email(data['email']) or User.find_by_username(data['username']):
