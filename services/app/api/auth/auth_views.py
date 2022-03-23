@@ -23,8 +23,9 @@ def create_user():
             "username": request.json["username"],
             "birth_date": request.json["birth_date"]
         }
-        if data['email'] is None:
-            return response_with(resp.INVALID_INPUT_422)
+        if data['email'] is None or data['username'] is None:
+            inputs = {"email": data['email'], "user": data['username']}
+            return response_with(resp.INVALID_INPUT_422, message=inputs)
 
         if User.find_by_email(data['email']) or User.find_by_username(data['username']):
             return response_with(resp.SUCCESS_201)
