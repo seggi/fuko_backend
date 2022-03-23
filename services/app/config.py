@@ -13,10 +13,10 @@ class Config:
     DEBUG_TB_INTERCEPT_REDIRECTS = False
 
     # Mail Settings
-    MAIL_DEFAULT_SENDER = 'nankim45@gmail.com'
+    MAIL_DEFAULT_SENDER = 'seggimarugira@gmail.com'
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 465
-    MAIL_USERNAME = 'nankim45@gmail.com'
+    MAIL_USERNAME = 'seggimarugira@gmail.com'
     MAIL_PASSWORD = 'rapy#2N.'
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
@@ -28,7 +28,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    MAIL_DEFAULT_SENDER = 'nankim45@gmail.com'
+    MAIL_DEFAULT_SENDER = 'seggimarugira@gmail.com'
     USER = os.getenv("POSTGRES_USER_DEV")
     PWD = os.getenv("POSTGRES_PASSWORD_DEV")
     HOSTNAME = os.getenv("POSTGRES_HOSTNAME_DEV")
@@ -54,7 +54,7 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     PROPAGATE_EXCEPTIONS = True  # Prevent expiration exceptions
-    MAIL_DEFAULT_SENDER = 'nankim45@gmail.com'
+    MAIL_DEFAULT_SENDER = 'seggimarugira@gmail.com'
     URI = os.getenv("DATABASE_URL")
     if URI and URI.startswith("postgres://"):
         SQLALCHEMY_DATABASE_URI = URI.replace(
