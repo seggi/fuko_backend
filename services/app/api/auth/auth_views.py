@@ -1,4 +1,4 @@
-from flask import url_for, render_template_string
+from flask import jsonify, url_for, render_template_string
 from flask import request
 from flask_jwt_extended import create_access_token
 
@@ -25,7 +25,8 @@ def create_user():
         }
         if data['email'] is None or data['username'] is None:
             inputs = {"email": data['email'], "user": data['username']}
-            return response_with(resp.INVALID_INPUT_422, message=inputs)
+            # return response_with(resp.INVALID_INPUT_422, )
+            return jsonify(message=inputs)
 
         if User.find_by_email(data['email']) or User.find_by_username(data['username']):
             return response_with(resp.SUCCESS_201)
