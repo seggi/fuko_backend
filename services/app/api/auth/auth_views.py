@@ -60,7 +60,8 @@ def create_user():
         return response_with(resp.SUCCESS_200)
 
     except Exception as e:
-        return response_with(resp.INVALID_INPUT_422)
+        return jsonify(message="checkout your backend")
+        # return response_with(resp.INVALID_INPUT_422)
 
 # Verification token
 
