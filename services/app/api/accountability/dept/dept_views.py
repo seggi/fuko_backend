@@ -39,7 +39,6 @@ def add_borrower_to_notebook():
 
 # Search User
 
-
 @dept.post("/search-user")
 @jwt_required()
 def search_user():

@@ -14,13 +14,15 @@ loans = Blueprint("loans", __name__,
 
 QUERY = QueryGlobalRepport()
 
-# Register loans data
-
+# Register loans data && Record partners or (Lenders) to list 
 
 @loans.post("/add-loans/<int:user_id>")
 @jwt_required()
 def user_add_loans(user_id):
     # Generate inputs
+    ''' user_id, lender_id, provenace, amount,
+    description, received_at, currency_id,
+    '''
     data = request.json | {"user_id": user_id}
     if data["amount"] is None or data["description"] is None:
         return response_with(resp.INVALID_INPUT_422)

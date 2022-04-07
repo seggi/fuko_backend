@@ -166,7 +166,7 @@ class Loans(db.Model):
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     lender_id = Column(Integer, ForeignKey('users.id'), nullable=True)
-    '''If lender is not fuko user <mension his/her name>'''
+    '''If lender is not fuko user <provide his/her name>'''
     provenance = Column(Text, nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
@@ -186,10 +186,9 @@ class LoanPayment(db.Model):
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
+
 # Depts Table
-
 # Record lender in note list
-
 
 class DeptNoteBook(db.Model):
     __tablename__ = "dept_note_book"

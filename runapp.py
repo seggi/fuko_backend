@@ -2,18 +2,18 @@
 # Access .env file
 from decouple import config
 from os import path
-import subprocess
+
 DB_USERNAME = config("POSTGRES_USER_DEV")
 DB = config("POSTGRES_DB_DEV")
 
 
 class ManageInput:
-    item_data: list = ['migrate', 'init', 'upgrade',
+    item_data = ['migrate', 'init', 'upgrade',
                        'Ctrl+C (to break)', 'run dev', 'rebuild', 'run prod', 'db',
                        'clean v', 'clean sys', 'seed', 'allmigrations', "heroku add"
                        "heroku-push", "heroku-add"]
 
-    def __init__(self) -> None:
+    def __init__(self) :
 
         print("Please use the following commands to continue")
         for command in self.item_data:
@@ -21,7 +21,7 @@ class ManageInput:
         print("\n")
         self.get_command = self.commands()
 
-    def commands(self) -> dict:
+    def commands(self):
 
         return {
             "init":  "sudo docker-compose exec dev python3 manage.py db init",
