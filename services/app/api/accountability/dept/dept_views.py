@@ -9,6 +9,7 @@ from api.utils.responses import response_with
 from api.utils import responses as resp
 from api.utils.model_marsh import DeptNoteBookSchema, DeptsSchema, UserSchema
 from api.core.labels import AppLabels
+from api.core.objects import ManageQuery
 
 from ... import db
 from api.database.models import DeptNoteBook, Depts, User
@@ -17,27 +18,26 @@ dept = Blueprint("dept", __name__,
 
 
 QUERY = QueryGlobalRepport()
+manage_query = ManageQuery()
 
 # Register dept data && Record borrower to note book
 # Get all dept
 
-
 todays_date = date.today()
 APP_LABEL = AppLabels()
-
 
 @dept.post("/add-borrower-to-notebook")
 @jwt_required()
 def add_borrower_to_notebook():
-    user_id = get_jwt_identity()
-    data = request.json | {"user_id": user_id['id']}
+    user_id = get_jwt_identity()['id']
+    data = request.json | {"user_id": user_id}
     QUERY.insert_data(db=db, table_data=DeptNoteBook(**data))
     return jsonify({
         "code": "success",
         "message": "Amount saved with success"
     })
 
-# Search User
+# Search User to be removed
 
 @dept.post("/search-user")
 @jwt_required()
@@ -56,27 +56,16 @@ def search_user():
 @jwt_required()
 def user_get_dept():
     user_id = get_jwt_identity()['id']
-    total_amount_list = []
-    total_dept = []
     dept_list = []
-    dept_schema = DeptsSchema()
     dept_note_book_schema = DeptNoteBookSchema()
     borrower_list = QUERY.get_data(db=db, model=DeptNoteBook, user_id=user_id)
     total_dept_amount = db.session.query(Depts).join(
         DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
         filter(DeptNoteBook.user_id == user_id).all()
 
-    for item in borrower_list:
-        dept_list.append(dept_note_book_schema.dump(item))
-
-    for item in total_dept_amount:
-        total_amount_list.append(dept_schema.dump(item, ))
-
-    for item in total_amount_list:
-        total_dept.append(item['amount'])
-
-    total_amount = sum(total_dept)
-
+    dept_list = manage_query.serialize_schema(borrower_list, dept_note_book_schema)
+    total_amount = manage_query.generate_total_amount(total_dept_amount,)
+    
     return jsonify(data={"dept_list": dept_list, "total_dept": total_amount})
 
 
@@ -103,24 +92,17 @@ def user_add_dept(note_id):
 @dept.get("/retrieve-date/<int:dept_note_id>")
 @jwt_required()
 def get_dept_date(dept_note_id):
-    item_list: list = []
-    total_amount_list = []
     dept_details_schema = DeptsSchema()
     data = Depts.query.filter_by(note_id=dept_note_id).\
         filter(extract('year', Depts.created_at) == todays_date.year).\
         filter(extract('month', Depts.created_at) ==
                todays_date.month).order_by(desc(Depts.created_at)).all()
 
-    for item in data:
-        item_list.append(dept_details_schema.dump(item))
-
-    for item in item_list:
-        total_amount_list.append(item['amount'])
-
-    total_amount = sum(total_amount_list)
+    dept_list = manage_query.serialize_schema(data, dept_details_schema)
+    total_amount = manage_query.generate_total_amount(dept_list)
 
     return jsonify(data={
-        "dept_list": item_list,
+        "dept_list": dept_list,
         "total_amount": total_amount,
         "today_date": todays_date,
     })
