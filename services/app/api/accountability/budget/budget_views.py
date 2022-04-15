@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_current_user
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+from api.core.objects import ManageQuery
 
 from ... import db
 from api.accountability.global_amount.global_amount_views import QUERY
@@ -7,13 +9,14 @@ from api.database.models import Budget, BudgetDetails, User
 
 from api.utils.model_marsh import BudgetDetailsSchema, BudgetSchema
 
-
 budget = Blueprint("budget", __name__, url_prefix="/api/user/budget")
 
+manage_query = ManageQuery()
 
-@budget.get("/all/<int:user_id>")
+@budget.get("/all")
 @jwt_required()
-def user_budget(user_id):
+def user_budget():
+    user_id = get_jwt_identity()['id']
     item_list: list = []
     budget_schema = BudgetSchema()
     data = QUERY.get_data(db=db, model=Budget, user_id=user_id)
@@ -22,11 +25,11 @@ def user_budget(user_id):
     return jsonify(data=item_list)
 
 
-@budget.post("/create-budget/<int:user_id>")
+@budget.post("/create-budget")
 @jwt_required()
-def create_budget(user_id):
-    data = request.json
-
+def create_budget():
+    user_id = get_jwt_identity()['id']
+    data = request.json | {"user_id": user_id}
     for value in data["data"]:
         QUERY.insert_data(db=db, table_data=Budget(
             **value))
@@ -39,7 +42,7 @@ def create_budget(user_id):
 @budget.post("/save-budget-details/<int:budget_id>")
 @jwt_required()
 def save_budget_details(budget_id):
-    data = request.json
+    data = request.json | {"budget_id": budget_id}
     for value in data["data"]:
         QUERY.insert_data(db=db, table_data=BudgetDetails(
             **value))
@@ -49,10 +52,10 @@ def save_budget_details(budget_id):
     })
 
 
-@budget.get("/get-budget-details/<int:user_id>/<int:budget_id>")
+@budget.get("/get-budget-details/<int:budget_id>")
 @jwt_required()
-def get_budget_details(user_id, budget_id):
-    collect_total_amount = []
+def get_budget_details(budget_id):
+    user_id = get_jwt_identity()['id']
     budget_details = db.session.query(BudgetDetails).outerjoin(
         Budget, BudgetDetails.budget_id == Budget.id).filter(Budget.user_id == user_id).\
         filter(BudgetDetails.budget_id == budget_id).all()
@@ -64,10 +67,10 @@ def get_budget_details(user_id, budget_id):
     budget_schema = BudgetSchema(many=True).dump(budget)
     budget_details_schema = BudgetDetailsSchema(many=True).dump(budget_details)
 
-    for item in budget_details_schema:
-        collect_total_amount.append(item['amount'])
+    total_amount = manage_query.generate_total_amount(budget_details_schema)
+    
     total = {
-        "total_amount": sum(collect_total_amount),
+        "total_amount": sum(total_amount),
         "currency": ""
     }
 
