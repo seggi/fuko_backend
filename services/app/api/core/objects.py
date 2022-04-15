@@ -1,5 +1,6 @@
 
-# Retrieve dictionary according to tables
+NEW_LIST = []
+# Retrieve dictionary according to 
 class GlobalAmount:
     tbl_names = ['expenses', 'loans', 'savings', 'dept']
 
@@ -53,3 +54,14 @@ class GlobalAmount:
             "global_amount_details": data,
             "global_amount": calculate_all_amount
         }
+
+class ManageQuery:
+    def serialize_schema(self, query_list, schema):
+        for item in query_list:
+            NEW_LIST.append(schema.dump(item))
+        return NEW_LIST
+    
+    def generate_total_amount(self, amount_list):
+        for item in amount_list:
+            NEW_LIST.append(item['amount'])
+        return sum(NEW_LIST)

@@ -160,18 +160,25 @@ class ExpenseDetails(db.Model):
 # Loan Table
 '''Make in the future you include ORGANIZATION'''
 
+class LoanNoteBook(db.Model):
+    __tablename__ = "loan_note_book"
+    id = Column('id', Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    partner_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+    '''If your partener is not fuko user <mension his/her name>'''
+    partner_name = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
 
 class Loans(db.Model):
     __tablename__ = "loans"
     id = Column('id', Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    lender_id = Column(Integer, ForeignKey('users.id'), nullable=True)
-    '''If lender is not fuko user <mension his/her name>'''
-    provenance = Column(Text, nullable=True)
+    note_id = Column(Integer, ForeignKey('loan_note_book.id'), nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
-    '''Enter the date of receiving money & section works when the lender is not in the system'''
-    received_at = Column(DateTime())
+    '''Enter the date of receiving money & section works when the your financial partener is not in the system'''
+    recieve_money_at = Column(DateTime())
+    payment_status = Column(Boolean, default=False)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
@@ -180,16 +187,15 @@ class Loans(db.Model):
 class LoanPayment(db.Model):
     __tablename__ = "loan_payment"
     id = Column('id', Integer, primary_key=True)
-    dept_id = Column(Integer, ForeignKey('loans.id'), nullable=False)
+    loan_id = Column(Integer, ForeignKey('loans.id'), nullable=False)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
+
 # Depts Table
-
 # Record lender in note list
-
 
 class DeptNoteBook(db.Model):
     __tablename__ = "dept_note_book"

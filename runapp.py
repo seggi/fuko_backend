@@ -2,18 +2,18 @@
 # Access .env file
 from decouple import config
 from os import path
-import subprocess
+
 DB_USERNAME = config("POSTGRES_USER_DEV")
 DB = config("POSTGRES_DB_DEV")
 
 
 class ManageInput:
-    item_data: list = ['migrate', 'init', 'upgrade',
+    item_data = ['migrate', 'init', 'upgrade',
                        'Ctrl+C (to break)', 'run dev', 'rebuild', 'run prod', 'db',
                        'clean v', 'clean sys', 'seed', 'allmigrations', "heroku add"
                        "heroku-push", "heroku-add"]
 
-    def __init__(self) -> None:
+    def __init__(self) :
 
         print("Please use the following commands to continue")
         for command in self.item_data:
@@ -21,12 +21,12 @@ class ManageInput:
         print("\n")
         self.get_command = self.commands()
 
-    def commands(self) -> dict:
+    def commands(self):
 
         return {
             "init":  "sudo docker-compose exec dev python3 manage.py db init",
-            "migrate": "sudo sudo docker-compose exec dev python3 manage.py db migrate",
-            "upgrade": "sudo sudo docker-compose exec dev python3 manage.py db upgrade",
+            "migrate": "sudo docker-compose exec dev python3 manage.py db migrate",
+            "upgrade": "sudo docker-compose exec dev python3 manage.py db upgrade",
             'run dev': "sudo docker-compose up dev",
             'rebuild': "sudo docker-compose up --build dev",
             'run prod': "sudo docker-compose up prod",
@@ -36,7 +36,7 @@ class ManageInput:
             'seed': "sudo docker-compose exec dev python manage.py seed_db",
             'allmigrations': "sudo docker-compose exec dev python3 manage.py db stamp head",
             # Heroku section
-            "add": "git subtree add --prefix services/app",
+            "add": "git subtree add . --prefix services/app",
             "com": f"git  commit -am ",
             "push": "git push heroku ",
             "init-migrate": "sudo heroku run python3 manage.py db migrate -m 'Initial migrations' --app fuko-backend",
@@ -44,7 +44,10 @@ class ManageInput:
             "stamp-db": "sudo heroku run python3 manage.py db stamp head --app fuko-backend",
             "migrate-db": "sudo heroku run python3 manage.py db migrate --app fuko-backend",
             "upgrade-db": "sudo heroku run python3 manage.py db upgrade --app fuko-backend",
-            "heroku-db": "heroku pg:psql"
+            "heroku-db": "heroku pg:psql",
+            # If branch is bind the master branch
+            "update-branch": "git push heroku `git subtree  split --prefix services/app master`:master --force",
+            "change-branch": "heroku git:remote -a example-app"
         }
 
     def display_input(self):

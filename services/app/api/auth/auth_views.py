@@ -1,4 +1,4 @@
-from flask import url_for, render_template_string
+from flask import jsonify, url_for, render_template_string
 from flask import request
 from flask_jwt_extended import create_access_token
 
@@ -17,7 +17,12 @@ from api.utils.email import send_email
 @auth.route('/signup', methods=['POST'])
 def create_user():
     try:
-        data = request.json
+        data = {
+            "email": request.json["email"],
+            "password": request.json["password"],
+            "username": request.json["username"],
+            "birth_date": request.json["birth_date"]
+        }
         if data['email'] is None or data['username'] is None:
             return response_with(resp.INVALID_INPUT_422)
 
@@ -54,7 +59,8 @@ def create_user():
         return response_with(resp.SUCCESS_200)
 
     except Exception as e:
-        return response_with(resp.INVALID_INPUT_422)
+        return jsonify(message=f"checkout your backend, {e}")
+        # return response_with(resp.INVALID_INPUT_422)
 
 # Verification token
 
