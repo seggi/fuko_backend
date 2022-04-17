@@ -36,7 +36,7 @@ def create_user():
         token = generate_verification_token(data['email'])
 
         verification_email = url_for(
-            'auth_view.verify_email', token=token, _external=True)
+            'auth.verify_email', token=token, _external=True)
         html = render_template_string(
             """
             <div>
