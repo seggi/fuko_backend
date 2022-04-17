@@ -1,8 +1,7 @@
-from flask import jsonify, url_for, render_template_string
+from flask import Blueprint,  url_for, render_template_string
 from flask import request
 from flask_jwt_extended import create_access_token
 
-from . import auth_view as auth
 from .. import db
 from api.utils.responses import response_with
 from api.utils import responses as resp
@@ -13,8 +12,9 @@ from api.utils.email import send_email
 
 # Manage route
 
+auth =  Blueprint("auth", __name__, url_prefix="/api/user")
 
-@auth.route('/signup', methods=['POST'])
+@auth.post('/signup')
 def create_user():
     try:
         data = {
@@ -59,13 +59,12 @@ def create_user():
         return response_with(resp.SUCCESS_200)
 
     except Exception as e:
-        return jsonify(message=f"checkout your backend, {e}")
-        # return response_with(resp.INVALID_INPUT_422)
+        return response_with(resp.INVALID_INPUT_422)
 
 # Verification token
 
 
-@auth.route('/confirm/<token>', methods=['GET'])
+@auth.get('/confirm/<token>')
 def verify_email(token):
     try:
         email = confirm_verification_token(token)
@@ -84,8 +83,8 @@ def verify_email(token):
 
 
 # Login
-@auth.route('/login', methods=['POST'])
-def login_user():
+@auth.post('/login')
+def sign_in_user():
     try:
         data = {
             "email": request.json["email"],

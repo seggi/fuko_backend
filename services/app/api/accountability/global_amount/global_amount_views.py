@@ -34,7 +34,7 @@ QUERY = QueryGlobalRepport()
 
 
 @global_account.get("/global-amount/<int:user_id>")
-# @jwt_required()
+@jwt_required()
 def user_global_amount(user_id):
 
     expenses = db.session.query(ExpenseDetails).join(

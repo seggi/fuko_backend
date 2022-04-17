@@ -1,16 +1,17 @@
-from flask import jsonify
+from flask import jsonify, Blueprint
 from flask import request
 from flask_jwt_extended import jwt_required
 
 from api.database.models import User, UserProfile
 
 from .. import db
-from . import profile_view
 from api.utils.responses import response_with
 from api.utils import responses as resp
 
 # User setup profile for first time sign up
 # Check if is the first time
+
+profile_view = Blueprint("profile_view", __name__, url_prefix="/api/user/profile")
 
 
 @profile_view.post('/complete-profile')
