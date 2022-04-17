@@ -64,31 +64,31 @@ def user_global_amount(user_id):
     return jsonify(data={"all_4_tables": result.out_put(), "global_amount": global_amount})
 
 
-@global_account.get("/global-amount-by-date/<int:user_id>")
-@jwt_required()
-def user_global_amount_by_date(user_id):
-    expenses = QUERY.get_data_by_date(
-        db=db, model1=USER, model2=EXPENSES, user_id=user_id,
-        date={"year": todays_date.year, "month": todays_date.month})
-    loans = QUERY.get_data_by_date(
-        db=db, model1=USER, model2=LOANS, user_id=user_id,
-        date={"year": todays_date.year, "month": todays_date.month})
-    savings = QUERY.get_data_by_date(
-        db=db, model1=USER, model2=SAVINGS, user_id=user_id,
-        date={"year": todays_date.year, "month": todays_date.month})
-    dept = QUERY.get_data_by_date(
-        db=db, model1=USER, model2=DEPT, user_id=user_id,
-        date={"year": todays_date.year, "month": todays_date.month})
+# @global_account.get("/global-amount-by-date/<int:user_id>")
+# @jwt_required()
+# def user_global_amount_by_date(user_id):
+#     expenses = QUERY.get_data_by_date(
+#         db=db, model1=USER, model2=EXPENSES, user_id=user_id,
+#         date={"year": todays_date.year, "month": todays_date.month})
+#     loans = QUERY.get_data_by_date(
+#         db=db, model1=USER, model2=LOANS, user_id=user_id,
+#         date={"year": todays_date.year, "month": todays_date.month})
+#     savings = QUERY.get_data_by_date(
+#         db=db, model1=USER, model2=SAVINGS, user_id=user_id,
+#         date={"year": todays_date.year, "month": todays_date.month})
+#     dept = QUERY.get_data_by_date(
+#         db=db, model1=USER, model2=DEPT, user_id=user_id,
+#         date={"year": todays_date.year, "month": todays_date.month})
 
-    result = GlobalAmount(
-        tbl1=EXPENSES_SCHEMA.dump(expenses),
-        tbl2=LOANS_SCHEMA.dump(loans),
-        tbl3=SAVINGS_SCHEMA.dump(savings),
-        tbl4=DEPT_SCHEMA.dump(dept)
-    )
+#     result = GlobalAmount(
+#         tbl1=EXPENSES_SCHEMA.dump(expenses),
+#         tbl2=LOANS_SCHEMA.dump(loans),
+#         tbl3=SAVINGS_SCHEMA.dump(savings),
+#         tbl4=DEPT_SCHEMA.dump(dept)
+#     )
 
-    global_amount = result.computer_amount(
-        item_list=result.out_put(),
-    )
+#     global_amount = result.computer_amount(
+#         item_list=result.out_put(),
+#     )
 
-    return jsonify(data={"all_4_tables": result.out_put(), "all_in_one": global_amount})
+#     return jsonify(data={"all_4_tables": result.out_put(), "all_in_one": global_amount})
