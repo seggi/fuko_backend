@@ -275,5 +275,15 @@ class BudgetDetails(db.Model):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
+# Register Banks & MNO 
+# According to supported country
+''' Send Money and recieve Money'''
+
+class FkSuppertedCountries(db.Model):
+    __tablename__ = "ft_supported_countries"
+    id = Column('id', Integer, primary_key=True)
+    name = Column(Text)
+
+
 
 ''' In the future we have to combine with tontine && back'''
