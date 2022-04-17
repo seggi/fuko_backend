@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        <div>
+            <h1>{{ app_title }}</h1>
+        </div>
+        {% for app_section in app_sections %}
+           {% for key, value in app_section.items() %} 
+                <div>
+                    <div>
+                        <h3>{{ key }}</h3>
+                    </div>
+                    
+                    {% for blue_print, blue_print_v in value.items() %}   
+                        <div>
+                            <span>Blueprint Name: <b>{{ blue_print }}</b> </span>
+                        </div>
+                        <br/>
+                        <div>
+                            <span>URL Prefix: <b>{{ blue_print_v['url_prefix'] }}</b></span>
+                        </div>
+                        <h4>
+                            Methods
+                        </h4>
+                        {% for end_point in blue_print_v['end_points'] %}
+                            <div class="content-body">
+                                <div class="methods-body"> 
+                                    <div class="method">
+                                        <span>{{ end_point['method'] }}</span>
+                                    </div>
+                                    <div class="end-point">
+                                        <span>{{ end_point['end_point'] }}</span>
+                                    </div>
+                                    <div class="description">
+                                        <span>{{ end_point['description'] }}</span>
+                                    </div>
+                                </div>
+                                <div class="inputs">
+                                    <span>{{ end_point['inputs'] }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+
+                </div>
+           {% endfor %}
+        {% endfor %}
+    </body>
+</html>

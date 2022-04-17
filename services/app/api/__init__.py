@@ -4,8 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_mail import Mail
 from flask_jwt_extended import JWTManager
-
-
 import api.utils.responses as resp
 from config import config
 from api.utils.responses import response_with

@@ -2,6 +2,10 @@
 * {
     box-sizing: border-box;
 }
+
+body {
+    padding: 8px;
+}
   
 .meme {
     margin: auto;
@@ -54,4 +58,48 @@ p {
   
 .top {
     top: 0;
+}
+
+.content-body {
+    display: block;
+    background: lightblue;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 5px;
+}
+
+.methods-body {
+    border-radius: 4px;
+    margin: 10px;
+    display: flex;
+}
+
+.methods-body .method {
+    color: white;
+    font-weight: 600;
+    background: blue;
+    padding: 8px;
+    width: 100px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.methods-body .end-point {
+    font-weight: 600;
+    padding: 8px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.methods-body .description {
+    font-weight: 300;
+    padding: 8px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.inputs {
+    color: #fff;
+    padding: 8px;
+    background: #000;
 }
