@@ -4,9 +4,14 @@
 }
 
 body {
-    padding: 8px;
+    padding: 28px;
 }
-  
+
+.box-content {
+    margin-top: 50px;
+    margin-bottom: 10px;
+}
+
 .meme {
     margin: auto;
     width: 100px;
@@ -65,7 +70,7 @@ p {
     background: lightblue;
     border-radius: 4px;
     padding: 10px;
-    margin: 5px;
+    margin-top: 10px;
 }
 
 .methods-body {
@@ -99,7 +104,6 @@ p {
 }
 
 .inputs {
-    color: #fff;
+    color: #333;
     padding: 8px;
-    background: #000;
 }
