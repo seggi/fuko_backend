@@ -9,7 +9,7 @@ def get_template():
     welcome_msg = "Welcome to fuko API"
     return render_template('index.html', welcome_msg=welcome_msg)
 
-@document.route('/api/doc')
+@document.route('/api/docs')
 def api_doc():
 
     return render_template(
