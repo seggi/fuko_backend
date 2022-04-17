@@ -285,5 +285,4 @@ class FkSuppertedCountries(db.Model):
     name = Column(Text)
 
 
-
 ''' In the future we have to combine with tontine && back'''
