@@ -59,6 +59,7 @@ def create_app(config_name) -> any:
     from .accountability.budget.budget_views import budget as budget_blueprint
     from .accountability.loans.loan_views import loans as loans_blueprint
     from .accountability.dept.dept_views import dept as dept_blueprint
+    from .documentation.index import document as document_blueprint
 
     app.register_blueprint(auth_blueprint, url_prefix="/api/user")
     app.register_blueprint(profile_blueprint, url_prefix="/api/user/profile")
@@ -68,5 +69,7 @@ def create_app(config_name) -> any:
     app.register_blueprint(budget_blueprint)
     app.register_blueprint(loans_blueprint)
     app.register_blueprint(dept_blueprint)
+
+    app.register_blueprint(document_blueprint)
 
     return app
