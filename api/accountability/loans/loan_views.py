@@ -31,7 +31,7 @@ def add_borrower_to_notebook():
     QUERY.insert_data(db=db, table_data=LoanNoteBook(**data))
     return jsonify({
         "code": "success",
-        "message": "Amount saved with success"
+        "message": "Partnert added with success"
     })
 
 
@@ -47,10 +47,11 @@ def user_get_loans():
         LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True
     ).filter(LoanNoteBook.user_id == user_id).all()
     
-    loan_list = manage_query.serialize_schema(data, loans_schema)
-    total_amount = manage_query.generate_total_amount(total_loan_amount)
+    # loan_list = manage_query.serialize_schema(data, loans_schema)
+    # total_amount = manage_query.generate_total_amount(total_loan_amount)
 
-    return jsonify(data={"loan_list": loan_list, "total_loan": total_amount} )
+    # return jsonify(data={"loan_list": loan_list, "total_loan": total_amount} )
+    return jsonify(user_id, "==>")
 
 # Search for financial partener 
 
