@@ -1,7 +1,7 @@
 from marshmallow import fields
 
 from ..database.models import (
-    BudgetDetails, Cities, DeptNoteBook, DeptsPayment, ExpenseDetails, LoanPayment, State, Country, Language, Currency, AmountProvenance,
+    BudgetDetails, Cities, DeptNoteBook, DeptsPayment, ExpenseDetails, LoanNoteBook, LoanPayment, State, Country, Language, Currency, AmountProvenance,
     User, UserProfile, UserSpokenLanguage, Expenses, Loans, Depts, Savings, Budget
 )
 
@@ -130,6 +130,13 @@ class LoanPaymentSchema(marsh.SQLAlchemyAutoSchema):
         model = LoanPayment
         include_relationships = True
         load_instance = True
+
+class LoanNoteBookSchema(marsh.SQLAlchemyAutoSchema):
+    class Meta:
+        model = LoanNoteBook
+        include_relationships = True
+        load_instance = True
+
 
 
 class DeptNoteBookSchema(marsh.SQLAlchemyAutoSchema):

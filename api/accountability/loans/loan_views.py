@@ -7,7 +7,7 @@ from sqlalchemy import extract, desc
 from api.core.query import QueryGlobalRepport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import LoanSchema, UserSchema
+from api.utils.model_marsh import LoanNoteBookSchema, LoanSchema, UserSchema
 from api.core.objects import ManageQuery
 from api.core.labels import AppLabels
 
@@ -42,16 +42,16 @@ def add_borrower_to_notebook():
 def user_get_loans():
     user_id = get_jwt_identity()['id']
     loans_schema = LoanSchema()
+    loans_note_book_schame = LoanNoteBookSchema()
     data = QUERY.get_data(db=db, model=LoanNoteBook, user_id=user_id)
     total_loan_amount = db.session.query(Loans).join(
         LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True
     ).filter(LoanNoteBook.user_id == user_id).all()
     
-    loan_list = manage_query.serialize_schema(data, loans_schema)
-    total_amount = manage_query.generate_total_amount(total_loan_amount)
+    loan_list = manage_query.serialize_schema(data, loans_note_book_schame)
+    total_amount = manage_query.generate_total_amount(total_loan_amount, loans_schema)
 
-    # return jsonify(data={"loan_list": loan_list, "total_loan": total_amount} )
-    return jsonify(user_id, "==>", loan_list, total_amount)
+    return jsonify(data={"loan_list": loan_list, "total_loan": total_amount} )
 
 # Search for financial partener 
 
@@ -74,7 +74,7 @@ def user_add_loan(note_id):
     # Generate inputs
     data = request.json | {"note_id": note_id}
     for value in data["data"]:
-        if value['amount'] is None:
+        if value["amount"] is None:
             return response_with(resp.INVALID_INPUT_422)
         else:
             QUERY.insert_data(db=db, table_data=Loans(
