@@ -39,6 +39,9 @@ def add_borrower_to_notebook():
 
 # Search User to be removed
 
+dept_note_book_schema = DeptNoteBookSchema()
+dept_schema = DeptsSchema()
+
 @dept.post("/search-user")
 @jwt_required()
 def search_user():
@@ -57,14 +60,13 @@ def search_user():
 def user_get_dept():
     user_id = get_jwt_identity()['id']
     dept_list = []
-    dept_note_book_schema = DeptNoteBookSchema()
     borrower_list = QUERY.get_data(db=db, model=DeptNoteBook, user_id=user_id)
     total_dept_amount = db.session.query(Depts).join(
         DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
         filter(DeptNoteBook.user_id == user_id).all()
 
     dept_list = manage_query.serialize_schema(borrower_list, dept_note_book_schema)
-    total_amount = manage_query.generate_total_amount(total_dept_amount,)
+    total_amount = manage_query.generate_total_amount(total_dept_amount, dept_schema)
     
     return jsonify(data={"dept_list": dept_list, "total_dept": total_amount})
 
@@ -92,14 +94,13 @@ def user_add_dept(note_id):
 @dept.get("/retrieve-date/<int:dept_note_id>")
 @jwt_required()
 def get_dept_date(dept_note_id):
-    dept_details_schema = DeptsSchema()
     data = Depts.query.filter_by(note_id=dept_note_id).\
         filter(extract('year', Depts.created_at) == todays_date.year).\
         filter(extract('month', Depts.created_at) ==
                todays_date.month).order_by(desc(Depts.created_at)).all()
 
-    dept_list = manage_query.serialize_schema(data, dept_details_schema)
-    total_amount = manage_query.generate_total_amount(dept_list)
+    dept_list = manage_query.serialize_schema(data, dept_note_book_schema)
+    total_amount = manage_query.generate_total_amount(dept_list, dept_schema)
 
     return jsonify(data={
         "dept_list": dept_list,

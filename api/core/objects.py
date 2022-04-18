@@ -61,7 +61,13 @@ class ManageQuery:
             NEW_LIST.append(schema.dump(item))
         return NEW_LIST
     
-    def generate_total_amount(self, amount_list):
+    def generate_total_amount(self, amount_list, schema):
+        lists = []
+        save_amount = []
         for item in amount_list:
-            NEW_LIST.append(item['amount'])
-        return sum(NEW_LIST)
+            lists.append(schema.dump(item))
+        
+        for item in lists:
+            save_amount.append(item['amount'])
+        
+        return sum(save_amount)
