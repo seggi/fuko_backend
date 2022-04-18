@@ -48,10 +48,10 @@ def user_get_loans():
     ).filter(LoanNoteBook.user_id == user_id).all()
     
     loan_list = manage_query.serialize_schema(data, loans_schema)
-    # total_amount = manage_query.generate_total_amount(total_loan_amount)
+    total_amount = manage_query.generate_total_amount(total_loan_amount)
 
     # return jsonify(data={"loan_list": loan_list, "total_loan": total_amount} )
-    return jsonify(user_id, "==>", loan_list)
+    return jsonify(user_id, "==>", loan_list, total_amount)
 
 # Search for financial partener 
 
