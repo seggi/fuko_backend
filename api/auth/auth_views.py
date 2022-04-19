@@ -1,6 +1,6 @@
 from flask import Blueprint,  url_for, render_template_string
-from flask import request
-from flask_jwt_extended import create_access_token
+from flask import request, jsonify
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 
 from .. import db
 from api.utils.responses import response_with
@@ -62,8 +62,6 @@ def create_user():
         return response_with(resp.INVALID_INPUT_422)
 
 # Verification token
-
-
 @auth.get('/confirm/<token>')
 def verify_email(token):
     try:
@@ -81,6 +79,13 @@ def verify_email(token):
         db.session.commit()
         return render_template_string("<p>E-mail verified, you can proceed to login now.<p/>")
 
+# Refresh token
+@auth.route("/refresh", methods=["POST"])
+@jwt_required(refresh=True)
+def refresh():
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity, fresh=False)
+    return jsonify(access_token=access_token)
 
 # Login
 @auth.post('/login')
@@ -102,8 +107,10 @@ def sign_in_user():
 
             access_token = create_access_token(
                 identity={"id": user.id, "email": data["email"]})
+            access_fresh_token = create_refresh_token(identity={"id": user.id, "email": data["email"]})
             return response_with(resp.SUCCESS_201, value={'message': f'{current_user.username}',
                                                           "access_token": access_token,
+                                                          "access_fresh_token": access_fresh_token,
                                                           "data": {
                                                               "first_name": user.first_name,
                                                               "last_name": user.last_name,
@@ -111,7 +118,8 @@ def sign_in_user():
                                                               "status": user.status,
                                                               "user_id": user.id
                                                           }
-                                                          })
+                                                        }
+                                                    )
         else:
             return response_with(resp.UNAUTHORIZED_403)
 

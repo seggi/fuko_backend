@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -20,6 +21,11 @@ class Config:
     MAIL_PASSWORD = 'rapy#2N.'
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
+
+    # JWT config
+    JWT_SECRET_KEY = "difficult-to-guess-cafe-py"
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
     @staticmethod
     def init_app(app):
@@ -47,7 +53,6 @@ class TestingConfig(Config):
     PORT = os.getenv("POSTGRES_PORT_TEST")
     DB = os.getenv("POSTGRES_DB_TEST")
     PROPAGATE_EXCEPTIONS = True  # Prevent expiration exceptions
-    JWT_SECRET_KEY = "difficult-to-guess-cafe-py"
     SQLALCHEMY_DATABASE_URI = f"postgresql://{USER}:{PWD}@{HOSTNAME}:{PORT}/{DB}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

@@ -40,7 +40,7 @@ def add_borrower_to_notebook():
 # Get all loans
 
 @loans.get("/retrieve")
-@jwt_required()
+@jwt_required(refresh=True)
 def user_get_loans():
     user_id = get_jwt_identity()['id']
     data = QUERY.get_data(db=db, model=LoanNoteBook, user_id=user_id)
