@@ -202,7 +202,7 @@ class DeptNoteBook(db.Model):
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     borrower_id = Column(Integer, ForeignKey('users.id'), nullable=True)
-    '''If lender is not fuko user <mension his/her name>'''
+    '''If lender is not fuko user <provider his/her name>'''
     borrower_name = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())

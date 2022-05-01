@@ -2,7 +2,7 @@ from datetime import date
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from api.accountability.global_amount.global_amount_views import QUERY
-from sqlalchemy import extract, desc
+from sqlalchemy import extract, desc, and_, func
 
 from api.core.query import QueryGlobalRepport
 from api.utils.responses import response_with
@@ -54,17 +54,22 @@ def user_get_loans():
     return jsonify(data={"loan_list": loan_list, "total_loan": total_amount} )
 
 # Search for financial partener 
-
 @loans.post("/search-user")
-@jwt_required()
+@jwt_required(refresh=True)
 def search_user():
     user_schema = UserSchema(many=True)
     data = request.json["username"]
+
     if User.find_by_username(data.lower()):
         user = db.session.query(User.username, User.first_name, User.id,
                                 User.last_name).filter_by(username=data.lower()).all()
-
         return jsonify(data=user_schema.dump(user))
+
+    if User.find_by_username(data):
+        user = db.session.query(User.username, User.first_name, User.id,
+                                User.last_name).filter_by(username=data).all()
+        return jsonify(data=user_schema.dump(user))
+
     return jsonify(data="User not found!")
 
 # Add loan
@@ -101,4 +106,22 @@ def get_loan_date(loan_note_id):
         "loan_list": loan_list,
         "total_amount": total_amount,
         "today_date": todays_date,
+    })
+
+# Get saving by selected date
+@loans.post("/retrieve-loans-date/<int:loan_note_id>")
+@jwt_required(refresh=True)
+def get_dept_by_date(loan_note_id):
+    inputs =  request.json 
+    data = Loans.query.filter_by(note_id=loan_note_id).\
+        filter(and_(func.date(Loans.created_at) <= inputs['date_one'])).\
+        filter(func.date(Loans.created_at) >= inputs['date_two']).\
+        order_by(desc(Loans.created_at)).all()
+
+    loan_list = manage_query.serialize_schema(data, loans_note_book_schame)
+    total_amount = manage_query.generate_total_amount(loan_list, loans_schema)
+
+    return jsonify(data={
+        "loan_list": loan_list,
+        "total_amount": total_amount
     })
