@@ -57,7 +57,40 @@ doc: dict = {
                       {
                           'method': 'get',
                           'end_point': '/retrieve',
-                          'description':'Get loans'
+                          'description':'Get loans',
+                          'output': '''
+                            "data": {
+                                "loan_list": [
+                                    {
+                                        "created_at": date,
+                                        "id": integer,
+                                        "partner_name": string,
+                                        "updated_at": date
+                                    }
+                                ],
+                                "total_loan": float
+                            }
+                          '''
+                      },
+                      {
+                          'method': 'post',
+                          'end_point': '/retrieve-loans-date/<int:loan_note_id>',
+                          'description':'Get loans',
+                          'inputs': '''
+                            {
+                                "date_one": date,
+                                "date_two": date,
+                            }
+                          ''',
+                          'output': '''
+                            {
+                                "data": {
+                                    "loan_list": list,
+                                    "total_amount": float
+                                }
+                            }
+                          '''
+                      
                       },
                       {
                           'method': 'post',
@@ -68,8 +101,9 @@ doc: dict = {
                       {
                           'method': 'get',
                           'end_point': '/retrieve-date/<int:loan_note_id>',
-                          'description':'Retrieve all loans in current month'
-                      }
+                          'description':'Retrieve all loans in current month',
+                      },
+
                   ]
                 },
 
@@ -79,9 +113,14 @@ doc: dict = {
                         {
                             'method': 'post',
                             'end_point': '/add-borrower-to-notebook',
-                            'description': '',
+                            'description': '''
+                                Add new borrower to your Notebook \n
+                                If borrower is not registered in fuko provide the full name or single name,
+                                If borrower is registered in fuko, the system will save Him/Her automaticaly \n
+                                by adding His/Her username in place of borrower_name
+                            ''',
                             'inputs': '''
-                                { 'name': 'string' }
+                                { user_id: integer,  borrower_id: integer, 'borrower_name': string, }
                             '''
                         },
                         {
@@ -89,13 +128,15 @@ doc: dict = {
                             'end_point': '/search-user',
                             'description': '',
                             'inputs': '''
-                                { 'name': 'string' }
+                                { 'name': string }
                             '''
                         },
                         {
                             'method': 'get',
                             'end_point': '/retrieve',
-                            'description': '',
+                            'output': '''
+                                {data: {"dept_list": [], "total_dept": float}}
+                             ''',
                         },
                          {
                             'method': 'post',
@@ -105,11 +146,25 @@ doc: dict = {
                                 { 'amount': float, description: 'string' }
                             '''
                         },
+                        {
+                            'method': 'post',
+                            'end_point': '/retrieve-dept-date/<int:dept_note_id>',
+                            'description': '',
+                            'inputs': '''
+                                { 'date_one': date, 'date_two': date }
+                            '''
+                        },
                          {
                             'method': 'get',
                             'end_point': '/retrieve-date/<int:dept_note_id>',
                             'description': 'Retrieve all depts in current month',
-                            
+                            'output': '''
+                                data: {
+                                        "dept_list": [],
+                                        "total_amount": float,
+                                        "today_date": date,
+                                    }
+                            '''
                         },
                     ]
                 }

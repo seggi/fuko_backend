@@ -1,6 +1,6 @@
 from flask import jsonify, Blueprint
 from flask import request
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from api.database.models import User, UserProfile
 
@@ -17,19 +17,19 @@ profile_view = Blueprint("profile_view", __name__, url_prefix="/api/user/profile
 @profile_view.post('/complete-profile')
 @jwt_required()
 def user_complete_profile():
+    user_id = get_jwt_identity()['id']
     data = {
         "users": {
-            "id": request.json["user_id"],
+            "id": user_id,
             "first_name": request.json["first_name"],
             "last_name": request.json["last_name"],
             "phone": request.json["phone"],
             "status": request.json["status"],
         },
         "user_profile": {
-            "user_id": request.json["user_id"],
+            "user_id": user_id,
             "gender":  request.json["gender"],
         }
-
     }
 
     if data["users"]['first_name'] is None or data["users"]['last_name'] is None or data["users"]['phone'] is None\

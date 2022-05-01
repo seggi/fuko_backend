@@ -25,6 +25,9 @@ manage_query = ManageQuery()
 
 todays_date = date.today()
 APP_LABEL = AppLabels()
+dept_note_book_schema = DeptNoteBookSchema()
+dept_schema = DeptsSchema()
+
 
 @dept.post("/add-borrower-to-notebook")
 @jwt_required()
@@ -34,23 +37,24 @@ def add_borrower_to_notebook():
     QUERY.insert_data(db=db, table_data=DeptNoteBook(**data))
     return jsonify({
         "code": "success",
-        "message": "Amount saved with success"
+        "message": "Borrower added with success"
     })
 
 # Search User to be removed
 
-dept_note_book_schema = DeptNoteBookSchema()
-dept_schema = DeptsSchema()
-
 @dept.post("/search-user")
-@jwt_required()
+@jwt_required(refresh=True)
 def search_user():
     user_schema = UserSchema(many=True)
     data = request.json["username"]
     if User.find_by_username(data.lower()):
         user = db.session.query(User.username, User.first_name, User.id,
                                 User.last_name).filter_by(username=data.lower()).all()
+        return jsonify(data=user_schema.dump(user))
 
+    if User.find_by_username(data):
+        user = db.session.query(User.username, User.first_name, User.id,
+                                User.last_name).filter_by(username=data).all()
         return jsonify(data=user_schema.dump(user))
     return jsonify(data="User not found!")
 
@@ -89,7 +93,6 @@ def user_add_dept(note_id):
         "message": APP_LABEL.label("Dept Amount recorded with success")
     })
 
-
 # Get saving by date
 @dept.get("/retrieve-date/<int:dept_note_id>")
 @jwt_required()
@@ -106,4 +109,21 @@ def get_dept_date(dept_note_id):
         "dept_list": dept_list,
         "total_amount": total_amount,
         "today_date": todays_date,
+    })
+
+# Get saving by selected date
+@dept.post("/retrieve-dept-date/<int:dept_note_id>")
+@jwt_required(refresh=True)
+def get_dept_by_date(dept_note_id):
+    inputs =  request.json 
+    data = Depts.query.filter_by(note_id=dept_note_id).\
+        filter(Depts.created_at <= inputs['date_one']).\
+        filter(Depts.created_at >= inputs['date_two'])
+
+    dept_list = manage_query.serialize_schema(data, dept_note_book_schema)
+    total_amount = manage_query.generate_total_amount(dept_list, dept_schema)
+
+    return jsonify(data={
+        "dept_list": dept_list,
+        "total_amount": total_amount,
     })
