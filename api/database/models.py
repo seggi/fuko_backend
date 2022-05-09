@@ -1,4 +1,5 @@
 from datetime import datetime
+from tokenize import group
 from sqlalchemy import (
     Column, Integer, DateTime, Boolean, String, Float, Text, ForeignKey, LargeBinary
 )
@@ -133,9 +134,8 @@ class UserSpokenLanguage(db.Model):
 
 # Accountability Table
 
-# Expenses
+# Private Expenses
 # Expense can not be deleted
-
 
 class Expenses(db.Model):
     __tablename__ = "expense"
@@ -275,14 +275,100 @@ class BudgetDetails(db.Model):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
-# Register Banks & MNO 
-# According to supported country
-''' Send Money and recieve Money'''
-
-class FkSuppertedCountries(db.Model):
-    __tablename__ = "ft_supported_countries"
+# User create Groupe 
+'''
+ Status options
+ - sent
+ - accepted
+ - rejected
+ - expired
+'''
+class RequestStatus(db.Model):
+    __tablename__="request_status"
     id = Column('id', Integer, primary_key=True)
-    name = Column(Text)
+    name = Column(Text(), nullable=True)
+
+class UserCreateGroup(db.Model):
+    __tablename__="user_create_group"
+    id = Column('id', Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    group_name = Column(Text(), nullable=False)
+    is_admin = Column(Boolean(), default=False)
+    group_deleted = Column(Boolean(), default=False)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+    delete_at = Column(DateTime(timezone=True))
+   
+class GroupMembers(db.Model):
+    __tablename__="group_members"
+    id = Column('id', Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    group_id = Column(Integer, ForeignKey("user_create_group.id"))
+    request_status =  Column(Integer, ForeignKey('request_status.id'), nullable=True)
+    requested_at = Column(DateTime(timezone=True), default=func.now())
+    accepted_at = Column(DateTime(timezone=True))
+    remove_member_at = Column(DateTime(timezone=True))
+    status = Column(Boolean(), default=True)
+
+
+# Public Expenses or (Group Expenses)
+
+class GroupeContributorAmount(db.Model):
+    __tablename__="group_manage_money"
+    id = Column('id', Integer, primary_key=True)
+    contributor_id = Column(Integer, ForeignKey("group_members.id"))
+    amount = Column(Float, nullable=False)
+    description = Column(Text, nullable=True)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
+class GroupDepts(db.Model):
+    __tablename__="group_depts"
+    id = Column('id', Integer, primary_key=True)
+    memeber_id = Column(Integer, ForeignKey("group_members.id"))
+    amount = Column(Float, nullable=False)
+    description = Column(Text, nullable=True)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
+
+'''
+Defferents Rent payment options
+- Per month
+- Per week 
+- Per day
+- Per two week
+- Per 2 month
+- Per 3 month
+- Per 6 month
+- Per Year
+- other
+'''
+class RentPaymentOption(db.Model):
+    __tablename__="rent_payment_option"
+    id = Column('id', Integer, primary_key=True)
+    name = Column(Text(), nullable=True)
+    value = Column(Text(), nullable=True)
+
+class Accommodation(db.Model):
+    __tablename__="accommodation"
+    id = Column('id', Integer, primary_key=True)
+    lessor_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    landlord_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    amount = Column(Float, nullable=False)
+    description = Column(Text, nullable=True)
+    ''' If not paid yet default = False'''
+    status = Column(Boolean(), default=False)
+    landlord_confirm = Column(Boolean(), default=False)
+    lessor_confirm = Column(Boolean(), default=False)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    payment_option = Column(Integer, ForeignKey('payment_option.id'), nullable=True)
+    periode_range = Column(Text, nullable=True)
+    paid_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
 
 
 ''' In the future we have to combine with tontine && back'''
