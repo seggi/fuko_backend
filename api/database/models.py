@@ -336,15 +336,10 @@ class GroupDepts(db.Model):
 
 '''
 Defferents Rent payment options
-- Per month
-- Per week 
-- Per day
-- Per two week
-- Per 2 month
-- Per 3 month
-- Per 6 month
-- Per Year
-- other
+- Month
+- Week
+- Day
+- Year
 '''
 class RentPaymentOption(db.Model):
     __tablename__="rent_payment_option"
@@ -358,6 +353,7 @@ class Accommodation(db.Model):
     lessor_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     landlord_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     amount = Column(Float, nullable=False)
+    periode_range = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
     ''' If not paid yet default = False'''
     status = Column(Boolean(), default=False)
@@ -365,9 +361,9 @@ class Accommodation(db.Model):
     lessor_confirm = Column(Boolean(), default=False)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     payment_option = Column(Integer, ForeignKey('payment_option.id'), nullable=True)
-    periode_range = Column(Text, nullable=True)
     paid_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
+
 
 
 
