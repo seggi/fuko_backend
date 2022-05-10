@@ -1,4 +1,5 @@
 from datetime import date
+from api.auth.auth_views import refresh
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import extract, desc
@@ -30,7 +31,7 @@ dept_schema = DeptsSchema()
 
 
 @dept.post("/add-borrower-to-notebook")
-@jwt_required()
+@jwt_required(refresh=True)
 def add_borrower_to_notebook():
     user_id = get_jwt_identity()['id']
     data = request.json | {"user_id": user_id}
@@ -116,14 +117,16 @@ def get_dept_date(dept_note_id):
 @jwt_required(refresh=True)
 def get_dept_by_date(dept_note_id):
     inputs =  request.json 
-    data = Depts.query.filter_by(note_id=dept_note_id).\
+    loan_list = []
+    depts_data = Depts.query.filter_by(note_id=dept_note_id).\
         filter(Depts.created_at <= inputs['date_one']).\
-        filter(Depts.created_at >= inputs['date_two'])
+        filter(Depts.created_at >= inputs['date_two']).order_by(desc(Depts.created_at)).all()
 
-    dept_list = manage_query.serialize_schema(data, dept_note_book_schema)
-    total_amount = manage_query.generate_total_amount(dept_list, dept_schema)
+    for item in depts_data:
+            loan_list.append(dept_schema.dump(item))
+    total_amount = manage_query.generate_total_amount(loan_list)
 
     return jsonify(data={
-        "dept_list": dept_list,
+        "dept_list": loan_list,
         "total_amount": total_amount,
     })

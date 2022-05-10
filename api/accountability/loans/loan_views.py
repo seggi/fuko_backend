@@ -23,7 +23,7 @@ APP_LABEL = AppLabels()
 
 # Register loans data && Record partners or (Lenders) to list 
 loans_schema = LoanSchema()
-loans_note_book_schame = LoanNoteBookSchema()
+loans_note_book_schema = LoanNoteBookSchema()
 
 @loans.post("/add-partner-to-notebook")
 @jwt_required()
@@ -43,13 +43,20 @@ def add_borrower_to_notebook():
 @jwt_required(refresh=True)
 def user_get_loans():
     user_id = get_jwt_identity()['id']
-    data = QUERY.get_data(db=db, model=LoanNoteBook, user_id=user_id)
+    loan_list = []
+    total_loan_amount_list = []
+    loan_data = QUERY.get_data(db=db, model=LoanNoteBook, user_id=user_id)
     total_loan_amount = db.session.query(Loans).join(
         LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True
-    ).filter(LoanNoteBook.user_id == user_id).all()
+    ).filter(LoanNoteBook.user_id == user_id).order_by(desc(Loans.created_at)).all()
+
+    for item in loan_data:
+        loan_list.append(loans_schema.dump(item))
+
+    for item in total_loan_amount:
+        total_loan_amount_list.append(loans_schema.dump(item))
     
-    loan_list = manage_query.serialize_schema(data, loans_note_book_schame)
-    total_amount = manage_query.generate_total_amount(total_loan_amount, loans_schema)
+    total_amount = manage_query.generate_total_amount(total_loan_amount_list)
 
     return jsonify(data={"loan_list": loan_list, "total_loan": total_amount} )
 
@@ -57,20 +64,26 @@ def user_get_loans():
 @loans.post("/search-user")
 @jwt_required(refresh=True)
 def search_user():
-    user_schema = UserSchema(many=True)
-    data = request.json["username"]
+    try:
+        user_schema = UserSchema(many=True)
+        data = request.json["username"]
 
-    if User.find_by_username(data.lower()):
-        user = db.session.query(User.username, User.first_name, User.id,
-                                User.last_name).filter_by(username=data.lower()).all()
-        return jsonify(data=user_schema.dump(user))
+        if User.find_by_username(data.lower()):
+            user = db.session.query(User.username, User.first_name, User.id,
+                                    User.last_name).filter_by(username=data.lower()).\
+                                    filter(User.confirmed == True).all()
+            return jsonify(data=user_schema.dump(user))
 
-    if User.find_by_username(data):
-        user = db.session.query(User.username, User.first_name, User.id,
-                                User.last_name).filter_by(username=data).all()
-        return jsonify(data=user_schema.dump(user))
+        if User.find_by_username(data):
+            user = db.session.query(User.username, User.first_name, User.id,
+                                    User.last_name).filter_by(username=data).\
+                                    filter(User.confirmed == True).all()
+            return jsonify(data=user_schema.dump(user))
 
-    return jsonify(data="User not found!")
+        return jsonify(data="User not found!")
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
+    
 
 # Add loan
 @loans.post("/add-loan/<int:note_id>")
@@ -91,16 +104,19 @@ def user_add_loan(note_id):
     })
 
 # Get saving by date
-@loans.get("/retrieve-date/<int:loan_note_id>")
-@jwt_required()
-def get_loan_date(loan_note_id):
-    data = Loans.query.filter_by(note_id=loan_note_id).\
+@loans.get("/retrieve-by-current-date/<int:loan_note_id>")
+@jwt_required(refresh=True)
+def get_loan_by_current_date(loan_note_id):
+    loan_list = []
+    loan_data = Loans.query.filter_by(note_id=loan_note_id).\
         filter(extract('year', Loans.created_at) == todays_date.year).\
         filter(extract('month', Loans.created_at) ==
                todays_date.month).order_by(desc(Loans.created_at)).all()
 
-    loan_list = manage_query.serialize_schema(data, loans_note_book_schame)
-    total_amount = manage_query.generate_total_amount(loan_list, loans_schema)
+    for item in loan_data:
+        loan_list.append(loans_schema.dump(item))
+
+    total_amount = manage_query.generate_total_amount(loan_list)
 
     return jsonify(data={
         "loan_list": loan_list,
@@ -109,19 +125,25 @@ def get_loan_date(loan_note_id):
     })
 
 # Get saving by selected date
-@loans.post("/retrieve-loans-date/<int:loan_note_id>")
+@loans.post("/retrieve-loans-by-date/<int:loan_note_id>")
 @jwt_required(refresh=True)
 def get_dept_by_date(loan_note_id):
-    inputs =  request.json 
-    data = Loans.query.filter_by(note_id=loan_note_id).\
-        filter(and_(func.date(Loans.created_at) <= inputs['date_one'])).\
-        filter(func.date(Loans.created_at) >= inputs['date_two']).\
-        order_by(desc(Loans.created_at)).all()
+    try:
+        inputs =  request.json 
+        loan_list = []
+        loan_data = Loans.query.filter_by(note_id=loan_note_id).\
+            filter(extract('year', Loans.created_at) == inputs['year']).\
+            filter(extract('month', Loans.created_at) == inputs['month']).order_by(desc(Loans.created_at)).all()
 
-    loan_list = manage_query.serialize_schema(data, loans_note_book_schame)
-    total_amount = manage_query.generate_total_amount(loan_list, loans_schema)
+        for item in loan_data:
+            loan_list.append(loans_schema.dump(item))
+            
+        total_amount = manage_query.generate_total_amount(loan_list)
 
-    return jsonify(data={
-        "loan_list": loan_list,
-        "total_amount": total_amount
-    })
+        return jsonify(data={
+            "loan_list": loan_list,
+            "total_amount": total_amount
+        })
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
+
