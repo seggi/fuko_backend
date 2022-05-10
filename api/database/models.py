@@ -170,7 +170,7 @@ class ExpenseDetails(db.Model):
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
 # Note Book
-class NotBook(db.Model):
+class NoteBook(db.Model):
     __tablename__ = 'notebook'
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
@@ -201,6 +201,7 @@ class LoanNoteBook(db.Model):
     friend_id = Column(Integer, ForeignKey('notebook_member.id'), nullable=True)
     '''If your partener is not fuko user <mension his/her name>'''
     partner_name = Column(Text, nullable=True)
+    notebook_id = Column(Integer, ForeignKey('notebook.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
