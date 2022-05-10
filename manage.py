@@ -28,7 +28,7 @@ def seed_db():
     request_status = ["sent", "accepted", "rejected", "expired"]
     
     for status in request_status:
-        db.session.add(RequestStatus(name=status))
+        db.session.add(RequestStatus(request_status_name=status))
         db.session.commit()
 
     for code, desc in currencies().items():
