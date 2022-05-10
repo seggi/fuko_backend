@@ -46,7 +46,8 @@ class Language(db.Model):
 class Currency(db.Model):
     __tablename__ = "currency"
     id = Column('id', Integer, primary_key=True)
-    name = Column(String(200), nullable=False)
+    code = Column(String(10), nullable=False)
+    description = Column(String(200), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
 
 # Request Status
@@ -188,8 +189,8 @@ class NoteBookMember(db.Model):
     friend_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     request_status =  Column(Integer, ForeignKey('request_status.id'), nullable=True)
     sent_at = Column(DateTime(timezone=True), default=func.now())
-    confirmed_at = Column(DateTime(timezone=True), default=func.now())
-    canceled_at = Column(DateTime(timezone=True), default=func.now())
+    confirmed_at = Column(DateTime(timezone=True))
+    canceled_at = Column(DateTime(timezone=True))
 
 # Loan Table
 '''Include ORGANIZATION in future'''

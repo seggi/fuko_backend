@@ -18,7 +18,7 @@ APP_LABEL = AppLabels()
 now = datetime.now()
 
 notebook = Blueprint("notebook", __name__,
-                  url_prefix="/api/user/account/notebook")
+                  url_prefix="/api/user/notebook")
 
 noteBookSchema = NoteBookSchema()
 
