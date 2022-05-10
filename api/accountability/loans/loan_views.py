@@ -25,7 +25,21 @@ APP_LABEL = AppLabels()
 loans_schema = LoanSchema()
 loans_note_book_schema = LoanNoteBookSchema()
 
+# Invite Friend
 @loans.post("/add-partner-to-notebook")
+@jwt_required()
+def invite_friend_to_notebook():
+    user_id = get_jwt_identity()['id']
+    data = request.json | {"user_id": user_id}
+    QUERY.insert_data(db=db, table_data=LoanNoteBook(**data))
+    return jsonify({
+        "code": "success",
+        "message": "Partnert added with success"
+    })
+
+# Add People
+# No from fuko
+@loans.post("/add-people-notebook")
 @jwt_required()
 def add_borrower_to_notebook():
     user_id = get_jwt_identity()['id']
@@ -35,7 +49,6 @@ def add_borrower_to_notebook():
         "code": "success",
         "message": "Partnert added with success"
     })
-
 
 # Get all loans
 
@@ -102,7 +115,7 @@ def user_add_loan(note_id):
         "code": APP_LABEL.label("success"),
         "message": APP_LABEL.label("Loan Amount recorded with success")
     })
-
+APP_LABEL 
 # Get saving by date
 @loans.get("/retrieve-by-current-date/<int:loan_note_id>")
 @jwt_required(refresh=True)
@@ -125,7 +138,7 @@ def get_loan_by_current_date(loan_note_id):
     })
 
 # Get saving by selected date
-@loans.post("/retrieve-loans-by-date/<int:loan_note_id>")
+@loans.post("/retrieve")
 @jwt_required(refresh=True)
 def get_dept_by_date(loan_note_id):
     try:
