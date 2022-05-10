@@ -46,7 +46,8 @@ class Language(db.Model):
 class Currency(db.Model):
     __tablename__ = "currency"
     id = Column('id', Integer, primary_key=True)
-    name = Column(String(200), nullable=False)
+    code = Column(String(10), nullable=False)
+    description = Column(String(200), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
 
 # Request Status
@@ -60,7 +61,7 @@ class Currency(db.Model):
 class RequestStatus(db.Model):
     __tablename__="request_status"
     id = Column('id', Integer, primary_key=True)
-    name = Column(Text(), nullable=True)
+    request_status_name = Column(Text(), nullable=True)
 
 # Amount provenance category
 
@@ -68,7 +69,7 @@ class RequestStatus(db.Model):
 class AmountProvenance(db.Model):
     __tablename__ = "amount_provenance"
     id = Column('id', Integer, primary_key=True)
-    name = Column(String(200), nullable=False)
+    provenance_name = Column(String(200), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
 
 # Register User
@@ -174,7 +175,7 @@ class NoteBook(db.Model):
     __tablename__ = 'notebook'
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    name = Column(Text, nullable=True)
+    notebook_name = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
@@ -188,8 +189,8 @@ class NoteBookMember(db.Model):
     friend_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     request_status =  Column(Integer, ForeignKey('request_status.id'), nullable=True)
     sent_at = Column(DateTime(timezone=True), default=func.now())
-    confirmed_at = Column(DateTime(timezone=True), default=func.now())
-    canceled_at = Column(DateTime(timezone=True), default=func.now())
+    confirmed_at = Column(DateTime(timezone=True))
+    canceled_at = Column(DateTime(timezone=True))
 
 # Loan Table
 '''Include ORGANIZATION in future'''
