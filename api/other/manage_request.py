@@ -8,7 +8,6 @@ from api.core.query import QueryGlobalRepport
 from api.utils.responses import response_with
 from api.utils import responses as resp
 from api.core.labels import AppLabels
-from api.core.firebase.firebase_request import send_firebase_request
 from api.utils.model_marsh import NoteBookSchema, NoteBookMemberSchema, UserSchema, RequestStatusSchema
 
 
@@ -49,7 +48,6 @@ def invite_friend():
             return jsonify({
                 "code": APP_LABEL.label("Alert"),
                 "message": APP_LABEL.label("Request already sent."),
-                "firebase": send_firebase_request()
             })
             
         else:
@@ -59,7 +57,6 @@ def invite_friend():
                 "message": APP_LABEL.label("Resquest sent")
             })
     except Exception as e:
-        print(e, "KKK")
         return response_with(resp.INVALID_INPUT_422) 
 
 

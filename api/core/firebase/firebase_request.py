@@ -1,8 +1,11 @@
 import requests
 import json
+from decouple import config
+
+FIREBASE_SERVER_TOKEN =  config("FIREBASE_SERVER_TOKEN")
 
 def send_firebase_request():
-  serverToken = 'AAAAP_Wvopg:APA91bFWlJDVk8LWeWy5biHGWL6XaThNmu753bw2G1l7De_ddcPHA_fPlKQip6tCLieGC0LnyAPe6tfJgiAhSQlLgFhGNblKiwlByrqQQUQSOMQ2BStbAVQI_Z7dWrJEquSbjsdGnnxq'
+  serverToken = FIREBASE_SERVER_TOKEN
   deviceToken = 'device token here'
 
   headers = {
