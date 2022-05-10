@@ -45,7 +45,6 @@ def invite_friend():
             "message": APP_LABEL.label("Resquest sent")
         })
     except Exception as e:
-        print(e, "MMMM")
         return response_with(resp.INVALID_INPUT_422) 
 
 @manage_request.get("/retrieve-invitation") 
