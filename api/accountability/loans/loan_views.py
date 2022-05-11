@@ -1,4 +1,5 @@
 from datetime import date
+from datetime import datetime
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from api.accountability.global_amount.global_amount_views import QUERY
@@ -20,6 +21,7 @@ todays_date = date.today()
 QUERY = QueryGlobalRepport()
 manage_query = ManageQuery()
 APP_LABEL = AppLabels()
+now = datetime.now()
 
 # Register loans data && Record partners or (Lenders) to list 
 loans_schema = LoanSchema()
@@ -92,12 +94,11 @@ def user_get_loans():
     user_id = get_jwt_identity()['id']
     loan_list = []
     total_loan_amount_list = []
-    loan_data = QUERY.get_data(db=db, model=LoanNoteBook, user_id=user_id)
     total_loan_amount = db.session.query(Loans).join(
         LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True
     ).filter(LoanNoteBook.user_id == user_id).order_by(desc(Loans.created_at)).all()
 
-    for item in loan_data:
+    for item in total_loan_amount:
         loan_list.append(loans_schema.dump(item))
 
     for item in total_loan_amount:
@@ -106,24 +107,6 @@ def user_get_loans():
     total_amount = manage_query.generate_total_amount(total_loan_amount_list)
 
     return jsonify(data={"loan_list": loan_list, "total_loan": total_amount} )
-
-# Add loan
-@loans.post("/add-loan/<int:note_id>")
-@jwt_required()
-def user_add_loan(note_id):
-    # Generate inputs
-    data = request.json | {"note_id": note_id}
-    for value in data["data"]:
-        if value["amount"] is None:
-            return response_with(resp.INVALID_INPUT_422)
-        else:
-            QUERY.insert_data(db=db, table_data=Loans(
-                **value | {"note_id": note_id}))
-
-    return jsonify({
-        "code": APP_LABEL.label("success"),
-        "message": APP_LABEL.label("Loan Amount recorded with success")
-    })
 
 # Get loan by date
 @loans.get("/retrieve-by-current-date/<int:loan_note_id>")
@@ -146,27 +129,56 @@ def get_loan_by_current_date(loan_note_id):
         "today_date": todays_date,
     })
 
-# Get loan by selected date
-@loans.post("/retrieve")
+# Add loan
+@loans.post("/record-loan/<int:note_id>")
 @jwt_required(refresh=True)
-def get_dept_by_date(loan_note_id):
+def user_record_loan(note_id):
+    # Generate inputs
     try:
-        inputs =  request.json 
-        loan_list = []
-        loan_data = Loans.query.filter_by(note_id=loan_note_id).\
-            filter(extract('year', Loans.created_at) == inputs['year']).\
-            filter(extract('month', Loans.created_at) == inputs['month']).\
-                order_by(desc(Loans.created_at)).all()
+        data = request.json | {"note_id": note_id}
+        for value in data["data"]:
+            if value["amount"] is None:
+                return response_with(resp.INVALID_INPUT_422)
+            else:
+                if value["recieve_money_at"]  == "":
+                    recieved_at  = {"recieve_money_at": now}
+                    QUERY.insert_data(db=db, table_data=Loans(
+                        **value | {"note_id": note_id, **recieved_at}))
+                    return jsonify({
+                        "code": APP_LABEL.label("success"),
+                        "message": APP_LABEL.label("Loan Amount recorded with success")
+                    })  
+                else:
+                    QUERY.insert_data(db=db, table_data=Loans(
+                        **value | {"note_id": note_id}))
+                    return jsonify({
+                        "code": APP_LABEL.label("success"),
+                        "message": APP_LABEL.label("Loan Amount recorded with success")
+                    })  
 
-        for item in loan_data:
-            loan_list.append(loans_schema.dump(item))
-            
-        total_amount = manage_query.generate_total_amount(loan_list)
-
-        return jsonify(data={
-            "loan_list": loan_list,
-            "total_amount": total_amount
-        })
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
 
+# Update loan
+@loans.put("/update-loan/<int:loan_id>")
+@jwt_required(refresh=True)
+def user_update_loan(loan_id):
+    # Generate inputs
+    try:
+        data = request.json
+        if data["amount"] is None or data["currency_id"] is None:
+            return response_with(resp.INVALID_INPUT_422)
+        else:
+            loan = db.session.query(Loans).filter(Loans.id == loan_id).one()
+            loan.description = data['description']
+            loan.recieve_money_at = data['recieve_money_at']
+            loan.currency_id = data['currency_id']
+            loan.update_at = now
+            db.session.commit()
+            return jsonify({
+                "code": APP_LABEL.label("success"),
+                "message": APP_LABEL.label("Loan Amount updated with success")
+            })
+       
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
