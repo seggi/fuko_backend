@@ -199,6 +199,7 @@ class LoanNoteBook(db.Model):
     __tablename__ = "loan_note_book"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    # ? to be changed to member_id
     friend_id = Column(Integer, ForeignKey('notebook_member.id'), nullable=True)
     '''If your partener is not fuko user <mension his/her name>'''
     partner_name = Column(Text, nullable=True)

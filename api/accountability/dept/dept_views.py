@@ -41,24 +41,6 @@ def add_borrower_to_notebook():
         "message": "Borrower added with success"
     })
 
-# Search User to be removed
-
-@dept.post("/search-user")
-@jwt_required(refresh=True)
-def search_user():
-    user_schema = UserSchema(many=True)
-    data = request.json["username"]
-    if User.find_by_username(data.lower()):
-        user = db.session.query(User.username, User.first_name, User.id,
-                                User.last_name).filter_by(username=data.lower()).all()
-        return jsonify(data=user_schema.dump(user))
-
-    if User.find_by_username(data):
-        user = db.session.query(User.username, User.first_name, User.id,
-                                User.last_name).filter_by(username=data).all()
-        return jsonify(data=user_schema.dump(user))
-    return jsonify(data="User not found!")
-
 
 @dept.get("/retrieve")
 @jwt_required()

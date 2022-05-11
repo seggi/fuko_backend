@@ -28,7 +28,7 @@ noteBookSchema = NoteBookSchema()
 userSchema = UserSchema()
 requestStatusSchema = RequestStatusSchema()
 
-request_status = {"sent" : 1, "accepted": 2, "rejected": 3, "expired": 4}
+request_status = {"sent" : 1, "accepted": 50, "rejected": 3, "expired": 4}
 
 @manage_request.post("/invite-friend") 
 @jwt_required(refresh=True)
@@ -77,6 +77,31 @@ def retrieve_invitation():
                 join(RequestStatus, NoteBookMember.request_status  == RequestStatus.id , isouter=True).\
                 filter(NoteBookMember.friend_id == user_id).\
                     filter(NoteBookMember.request_status == request_status['sent']). \
+                        order_by(desc(NoteBookMember.sent_at)).\
+                        all()
+                
+    for request in retrieve_request:
+        request_list.append({
+            **noteBookMemberSchema.dump(request), 
+            **requestStatusSchema.dump(request),
+            **noteBookSchema.dump(request),
+            **userSchema.dump(request)
+        })
+       
+    return jsonify(data=request_list)
+
+@manage_request.get("/get-friends") 
+@jwt_required(refresh=True)
+def retrieve_friends():
+    user_id = get_jwt_identity()['id']
+    request_list = []
+    retrieve_request = db.session.query(NoteBookMember.id, NoteBook.notebook_name , 
+        User.first_name, User.last_name, User.username).\
+        join(NoteBook, NoteBookMember.notebook_id  == NoteBook.id, isouter=True).\
+            join(User, NoteBookMember.sender_id == User.id, isouter=True).\
+                join(RequestStatus, NoteBookMember.request_status  == RequestStatus.id , isouter=True).\
+                filter(NoteBookMember.friend_id == user_id).\
+                    filter(NoteBookMember.request_status == request_status['accepted']). \
                         order_by(desc(NoteBookMember.sent_at)).\
                         all()
                 
@@ -144,3 +169,28 @@ def retrieve_request_status():
     for status in get_status:
         status_list.append(requestStatusSchema.dump(status))
     return jsonify(data=status_list)
+
+
+# Search for financial partener 
+@manage_request.post("/search-user")
+@jwt_required(refresh=True)
+def search_user():
+    try:
+        user_schema = UserSchema(many=True)
+        data = request.json["username"]
+
+        if User.find_by_username(data.lower()):
+            user = db.session.query(User.username, User.first_name, User.id,
+                                    User.last_name).filter_by(username=data.lower()).\
+                                    filter(User.confirmed == True).all()
+            return jsonify(data=user_schema.dump(user))
+
+        if User.find_by_username(data):
+            user = db.session.query(User.username, User.first_name, User.id,
+                                    User.last_name).filter_by(username=data).\
+                                    filter(User.confirmed == True).all()
+            return jsonify(data=user_schema.dump(user))
+
+        return jsonify(data="User not found!")
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
