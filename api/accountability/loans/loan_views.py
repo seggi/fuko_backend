@@ -7,12 +7,12 @@ from sqlalchemy import extract, desc, and_, func
 from api.core.query import QueryGlobalRepport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import LoanNoteBookSchema, LoanSchema, UserSchema
+from api.utils.model_marsh import LoanNoteBookSchema, LoanSchema, NoteBookMemberSchema, UserSchema
 from api.core.objects import ManageQuery
 from api.core.labels import AppLabels
 
 from ... import db
-from api.database.models import LoanNoteBook, Loans, User
+from api.database.models import LoanNoteBook, Loans, NoteBookMember, User
 loans = Blueprint("loans", __name__,
                   url_prefix="/api/user/account/loans")
 
@@ -23,32 +23,66 @@ APP_LABEL = AppLabels()
 
 # Register loans data && Record partners or (Lenders) to list 
 loans_schema = LoanSchema()
+userSchema = UserSchema()
 loans_note_book_schema = LoanNoteBookSchema()
+noteBookMemberSchema = NoteBookMemberSchema()
 
 # Invite Friend
 @loans.post("/add-partner-to-notebook")
-@jwt_required()
+@jwt_required(refresh=True)
 def invite_friend_to_notebook():
     user_id = get_jwt_identity()['id']
     data = request.json | {"user_id": user_id}
     QUERY.insert_data(db=db, table_data=LoanNoteBook(**data))
     return jsonify({
         "code": "success",
-        "message": "Partnert added with success"
+        "message": "Friend added with success"
     })
 
 # Add People
 # No from fuko
 @loans.post("/add-people-notebook")
-@jwt_required()
+@jwt_required(refresh=True)
 def add_borrower_to_notebook():
     user_id = get_jwt_identity()['id']
     data = request.json | {"user_id": user_id}
     QUERY.insert_data(db=db, table_data=LoanNoteBook(**data))
     return jsonify({
         "code": "success",
-        "message": "Partnert added with success"
+        "message": "Friend added with success"
     })
+
+@loans.get("/get-friend-loan-notebook") 
+@jwt_required(refresh=True)
+def retrieve_members_in_loan_notebook():
+    user_id = get_jwt_identity()['id']
+    member_in_loan_list =[]
+    outside_friend = []
+    get_member  = db.session.query(LoanNoteBook, NoteBookMember.id, User.username).\
+        join(NoteBookMember, LoanNoteBook.friend_id == NoteBookMember.id, isouter=True).\
+            join(User, NoteBookMember.friend_id == User.id, isouter=True).\
+                filter(LoanNoteBook.partner_name == None ).\
+                filter(LoanNoteBook.user_id == user_id ).\
+                all()
+    get_friend_outside = db.session.query(LoanNoteBook.id, LoanNoteBook.partner_name).\
+        filter(LoanNoteBook.partner_name != None ).\
+        filter(LoanNoteBook.user_id == user_id ).\
+        all()
+
+    for member in get_friend_outside:
+        outside_friend.append({
+            **loans_note_book_schema.dump(member)
+            })
+    
+    for member in get_member:
+        member_in_loan_list.append({
+            **userSchema.dump(member),
+            **noteBookMemberSchema.dump(member)
+            })
+
+    combine_all_list = member_in_loan_list + outside_friend
+
+    return jsonify(data=combine_all_list)
 
 # Get all loans
 
@@ -72,31 +106,6 @@ def user_get_loans():
     total_amount = manage_query.generate_total_amount(total_loan_amount_list)
 
     return jsonify(data={"loan_list": loan_list, "total_loan": total_amount} )
-
-# Search for financial partener 
-@loans.post("/search-user")
-@jwt_required(refresh=True)
-def search_user():
-    try:
-        user_schema = UserSchema(many=True)
-        data = request.json["username"]
-
-        if User.find_by_username(data.lower()):
-            user = db.session.query(User.username, User.first_name, User.id,
-                                    User.last_name).filter_by(username=data.lower()).\
-                                    filter(User.confirmed == True).all()
-            return jsonify(data=user_schema.dump(user))
-
-        if User.find_by_username(data):
-            user = db.session.query(User.username, User.first_name, User.id,
-                                    User.last_name).filter_by(username=data).\
-                                    filter(User.confirmed == True).all()
-            return jsonify(data=user_schema.dump(user))
-
-        return jsonify(data="User not found!")
-    except Exception:
-        return response_with(resp.INVALID_INPUT_422)
-    
 
 # Add loan
 @loans.post("/add-loan/<int:note_id>")
