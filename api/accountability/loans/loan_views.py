@@ -25,7 +25,7 @@ APP_LABEL = AppLabels()
 loans_schema = LoanSchema()
 userSchema = UserSchema()
 loans_note_book_schema = LoanNoteBookSchema()
-noteBookMemberSchema = NoteBookMemberSchema()
+noteBook_Member_Schema = NoteBookMemberSchema()
 
 # Invite Friend
 @loans.post("/add-partner-to-notebook")
@@ -52,7 +52,7 @@ def add_borrower_to_notebook():
         "message": "Friend added with success"
     })
 
-@loans.get("/get-friend-loan-notebook") 
+@loans.get("/get-friend-from-loan-notebook") 
 @jwt_required(refresh=True)
 def retrieve_members_in_loan_notebook():
     user_id = get_jwt_identity()['id']
@@ -77,7 +77,7 @@ def retrieve_members_in_loan_notebook():
     for member in get_member:
         member_in_loan_list.append({
             **userSchema.dump(member),
-            **noteBookMemberSchema.dump(member)
+            **noteBook_Member_Schema.dump(member)
             })
 
     combine_all_list = member_in_loan_list + outside_friend
@@ -125,7 +125,7 @@ def user_add_loan(note_id):
         "message": APP_LABEL.label("Loan Amount recorded with success")
     })
 APP_LABEL 
-# Get saving by date
+# Get loan by date
 @loans.get("/retrieve-by-current-date/<int:loan_note_id>")
 @jwt_required(refresh=True)
 def get_loan_by_current_date(loan_note_id):
@@ -146,7 +146,7 @@ def get_loan_by_current_date(loan_note_id):
         "today_date": todays_date,
     })
 
-# Get saving by selected date
+# Get loan by selected date
 @loans.post("/retrieve")
 @jwt_required(refresh=True)
 def get_dept_by_date(loan_note_id):
