@@ -1,5 +1,7 @@
 from datetime import date
 from datetime import datetime
+import json
+from api.utils.constantes import COMPUTE_SIMGLE_AMOUNT
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from api.accountability.global_amount.global_amount_views import QUERY
@@ -13,7 +15,7 @@ from api.core.objects import ManageQuery
 from api.core.labels import AppLabels
 
 from ... import db
-from api.database.models import LoanNoteBook, Loans, NoteBookMember, User
+from api.database.models import LoanNoteBook, LoanPayment, Loans, NoteBookMember, User
 loans = Blueprint("loans", __name__,
                   url_prefix="/api/user/account/loans")
 
@@ -180,5 +182,66 @@ def user_update_loan(loan_id):
                 "message": APP_LABEL.label("Loan Amount updated with success")
             })
        
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
+
+# Pay loan
+@loans.post("/pay-borrowed-amount/<int:loan_id>")
+@jwt_required(refresh=True)
+def user_pay_loan(loan_id):
+    collect_payment_history = []
+    request_data = request.json | {"note_id": loan_id}
+    
+    
+    try:
+        if request_data['data']["amount"]  is None:
+            return response_with(resp.INVALID_INPUT_422)
+
+        if request_data['method'] == COMPUTE_SIMGLE_AMOUNT:
+            get_single_amount = db.session.query(Loans.amount, Loans.currency_id).\
+                filter(Loans.currency_id == request_data['data']['currency_id']).\
+                filter(Loans.payment_status == False).\
+                filter(Loans.id == loan_id).first()
+                
+            get_payment_history = db.session.query(LoanPayment.amount).\
+                filter(LoanPayment.loan_id == loan_id).all()
+
+            for amount in get_payment_history:
+                collect_payment_history.append(float(amount['amount']))
+            
+            get_total_paid_amount = sum(collect_payment_history)
+
+            for amount in get_single_amount:
+                get_dept = amount - get_total_paid_amount
+            
+                if request_data['data']["amount"] <= amount and get_total_paid_amount <= amount and \
+                    request_data['data']['amount'] <= get_dept:
+                    data = {**request_data['data'], **{"loan_id": loan_id}}
+                    QUERY.insert_data(db=db, table_data=LoanPayment(**data))
+                    return jsonify({
+                            "code": APP_LABEL.label("success"),
+                            "message": APP_LABEL.label("You come to pay part of the dept."),
+                        })  
+                if get_total_paid_amount == amount:
+                    loan = db.session.query(Loans).filter(Loans.id == loan_id).one()
+                    loan.payment_status = True
+                    db.session.commit()
+                    return jsonify({
+                        "code": APP_LABEL.label("success"),
+                        "message": APP_LABEL.label("Congratulation you paid to all this amount.")
+                    })  
+                else:
+                    return jsonify(message=APP_LABEL.label(
+                            APP_LABEL.label(f"""You try pay much money...,the dept is {get_dept} . If you know what you are doing. please use pay multiple depts""")))
+                    
+        else:
+            computer_sum_list = []
+            get_all_amount = db.session.query(Loans.amount).\
+                filter(Loans.currency_id == request_data['data']['currency_id']).\
+                filter(Loans.payment_status == False).all()
+            return jsonify("")
+
+
+
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
