@@ -233,7 +233,6 @@ class LoanPayment(db.Model):
 
 # Depts Table
 # Record lender in note list
-
 class DeptNoteBook(db.Model):
     __tablename__ = "dept_note_book"
     id = Column('id', Integer, primary_key=True)
@@ -257,7 +256,6 @@ class Depts(db.Model):
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
-
 
 class DeptsPayment(db.Model):
     __tablename__ = "dept_payment"

@@ -16,8 +16,8 @@ from api.core.labels import AppLabels
 
 from ... import db
 from api.database.models import LoanNoteBook, LoanPayment, Loans, NoteBookMember, User
-loans = Blueprint("loans", __name__,
-                  url_prefix="/api/user/account/loans")
+
+loans = Blueprint("loans", __name__,  url_prefix="/api/user/account/loans")
 
 todays_date = date.today()
 QUERY = QueryGlobalRepport()

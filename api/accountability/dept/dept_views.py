@@ -13,10 +13,9 @@ from api.core.labels import AppLabels
 from api.core.objects import ManageQuery
 
 from ... import db
-from api.database.models import DeptNoteBook, Depts, User
-dept = Blueprint("dept", __name__,
-                 url_prefix="/api/user/account/dept")
+from api.database.models import DeptNoteBook, Depts
 
+dept = Blueprint("dept",__name__, url_prefix="/api/user/account/dept")
 
 QUERY = QueryGlobalRepport()
 manage_query = ManageQuery()
