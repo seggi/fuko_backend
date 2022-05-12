@@ -240,6 +240,7 @@ class DeptNoteBook(db.Model):
     friend_id = Column(Integer, ForeignKey('notebook_member.id'), nullable=True)
     '''If lender is not fuko user <provider his/her name>'''
     borrower_name = Column(Text, nullable=True)
+    notebook_id = Column(Integer, ForeignKey('notebook.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 

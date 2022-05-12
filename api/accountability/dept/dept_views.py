@@ -28,10 +28,10 @@ APP_LABEL = AppLabels()
 dept_note_book_schema = DeptNoteBookSchema()
 dept_schema = DeptsSchema()
 
-
+# Invite Friend
 @dept.post("/add-borrower-to-notebook")
 @jwt_required(refresh=True)
-def add_borrower_to_notebook():
+def add_friend_to_notebook():
     user_id = get_jwt_identity()['id']
     data = request.json | {"user_id": user_id}
     QUERY.insert_data(db=db, table_data=DeptNoteBook(**data))
@@ -40,19 +40,35 @@ def add_borrower_to_notebook():
         "message": "Borrower added with success"
     })
 
+# Add People
+# No from fuko
+@dept.post("/add-people-notebook")
+@jwt_required(refresh=True)
+def add_borrower_to_notebook():
+    user_id = get_jwt_identity()['id']
+    data = request.json | {"user_id": user_id}
+    QUERY.insert_data(db=db, table_data=DeptNoteBook(**data))
+    return jsonify({
+        "code": APP_LABEL.label("success"),
+        "message": APP_LABEL.label("Friend added with success")
+    })
+
+
 
 @dept.get("/retrieve")
-@jwt_required()
+@jwt_required(refresh=True)
 def user_get_dept():
     user_id = get_jwt_identity()['id']
     dept_list = []
-    borrower_list = QUERY.get_data(db=db, model=DeptNoteBook, user_id=user_id)
+
     total_dept_amount = db.session.query(Depts).join(
         DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
-        filter(DeptNoteBook.user_id == user_id).all()
+        filter(DeptNoteBook.user_id == user_id).order_by(desc(Depts.created_at)).all()
 
-    dept_list = manage_query.serialize_schema(borrower_list, dept_note_book_schema)
-    total_amount = manage_query.generate_total_amount(total_dept_amount, dept_schema)
+    for item in total_dept_amount:
+        dept_list.append(dept_schema.dump(item))
+
+    total_amount = manage_query.generate_total_amount(dept_list)
     
     return jsonify(data={"dept_list": dept_list, "total_dept": total_amount})
 
