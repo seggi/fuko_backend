@@ -10,7 +10,7 @@ from sqlalchemy import extract, desc, and_, func
 from api.core.query import QueryGlobalRepport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import LoanNoteBookSchema, LoanSchema, NoteBookMemberSchema, UserSchema
+from api.utils.model_marsh import LoanNoteBookSchema, LoanPaymentSchema, LoanSchema, NoteBookMemberSchema, UserSchema
 from api.core.objects import ManageQuery
 from api.core.labels import AppLabels
 
@@ -30,6 +30,7 @@ loans_schema = LoanSchema()
 userSchema = UserSchema()
 loans_note_book_schema = LoanNoteBookSchema()
 noteBook_Member_Schema = NoteBookMemberSchema()
+loan_payment_schema = LoanPaymentSchema()
 
 # Invite Friend
 @loans.post("/add-partner-to-notebook")
@@ -96,16 +97,16 @@ def user_get_loans():
     user_id = get_jwt_identity()['id']
     loan_list = []
     total_loan_amount_list = []
-    total_loan_amount = db.session.query(Loans).join(
-        LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True
-    ).filter(LoanNoteBook.user_id == user_id).order_by(desc(Loans.created_at)).all()
+    total_loan_amount = db.session.query(Loans).\
+        join(LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True).\
+        filter(LoanNoteBook.user_id == user_id).order_by(desc(Loans.created_at)).all()
 
     for item in total_loan_amount:
         loan_list.append(loans_schema.dump(item))
 
     for item in total_loan_amount:
         total_loan_amount_list.append(loans_schema.dump(item))
-    
+
     total_amount = manage_query.generate_total_amount(total_loan_amount_list)
 
     return jsonify(data={"loan_list": loan_list, "total_loan": total_amount} )
@@ -256,9 +257,11 @@ def pay_multiple_dept():
                 })  
             
             QUERY.insert_data(db=db, table_data=LoanPayment(**data))
-            return jsonify({
-                    "code": APP_LABEL.label("success"),
-                    "message": APP_LABEL.label("You come complete some depts."),
-                })  
+        return jsonify({
+                "code": APP_LABEL.label("success"),
+                "message": APP_LABEL.label("You come complete some depts."),
+            })  
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
+
+
