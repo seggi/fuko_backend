@@ -192,7 +192,6 @@ def user_pay_loan(loan_id):
     collect_payment_history = []
     request_data = request.json | {"note_id": loan_id}
     
-    
     try:
         if request_data['data']["amount"]  is None:
             return response_with(resp.INVALID_INPUT_422)
@@ -235,13 +234,31 @@ def user_pay_loan(loan_id):
                             APP_LABEL.label(f"""You try pay much money...,the dept is {get_dept} . If you know what you are doing. please use pay multiple depts""")))
                     
         else:
-            computer_sum_list = []
-            get_all_amount = db.session.query(Loans.amount).\
-                filter(Loans.currency_id == request_data['data']['currency_id']).\
-                filter(Loans.payment_status == False).all()
-            return jsonify("")
+            return jsonify(data="Pease pay by selecting multiple.")
+
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
 
 
-
+@loans.post("/pay-multiple-depts")
+@jwt_required(refresh=True)
+def pay_multiple_dept():
+    request_data = request.json
+    try:
+        for data in request_data:
+            get_dept = db.session.query(LoanPayment).\
+                filter(LoanPayment.loan_id == data['loan_id']).\
+                filter(LoanPayment.description == data['description']).first()
+            if get_dept:
+                return jsonify({
+                    "code": APP_LABEL.label("Alert"),
+                    "message": APP_LABEL.label("Amount can't be applied twice."),
+                })  
+            
+            QUERY.insert_data(db=db, table_data=LoanPayment(**data))
+            return jsonify({
+                    "code": APP_LABEL.label("success"),
+                    "message": APP_LABEL.label("You come complete some depts."),
+                })  
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
