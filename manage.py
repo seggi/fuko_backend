@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from api import create_app, db
 from api.database.models import *
 
-from api.core.convert_json_file import convert_currencies_json_file as currencies
+from api.core.json.convert_json_file import convert_currencies_json_file as currencies
 
 app = create_app(os.getenv('FLASK_ENV') or 'production')
 
