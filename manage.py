@@ -7,6 +7,7 @@ from api import create_app, db
 from api.database.models import *
 
 from api.core.json.convert_json_file import convert_currencies_json_file as currencies
+from api.core.json.convert_json_file import convert_budget_file as budget
 
 app = create_app(os.getenv('FLASK_ENV') or 'production')
 
@@ -26,15 +27,23 @@ def drop_db():
 @cli.command('seed_db')
 def seed_db():
     request_status = ["sent", "accepted", "rejected", "expired"]
+    budget_options = ["Icommes", "Expenses"]
     
     for status in request_status:
         db.session.add(RequestStatus(request_status_name=status))
         db.session.commit()
 
+    for status in budget_options:
+        db.session.add(BudgetOption(name=status))
+        db.session.commit()
+
     for code, desc in currencies().items():
         db.session.add(Currency(code=code, description=desc))
         db.session.commit()
-    
+
+    for code, desc in budget().items():
+        db.session.add(BudgetCategories(name=code, description=desc))
+        db.session.commit()
 
 
 if __name__ == "__main__":

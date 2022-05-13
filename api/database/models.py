@@ -297,7 +297,7 @@ class BudgetCategories(db.Model):
     __tablename__ = "budget_categories"
     id = Column('id', Integer, primary_key=True)
     name = Column(Text(), nullable=True)
-    describe = Column(Text(), nullable=True)
+    description = Column(Text(), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
