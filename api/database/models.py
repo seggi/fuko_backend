@@ -1,4 +1,5 @@
 from datetime import datetime
+from email.policy import default
 from pydoc import describe
 from tokenize import group
 from sqlalchemy import (
@@ -64,8 +65,22 @@ class RequestStatus(db.Model):
     id = Column('id', Integer, primary_key=True)
     request_status_name = Column(Text(), nullable=True)
 
-# Amount provenance category
+class BudgetOption(db.Model):
+    __tablename__ = "budget_option"
+    id = Column('id', Integer, primary_key=True)
+    name = Column(Text(), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
 
+class BudgetCategories(db.Model):
+    __tablename__ = "budget_categories"
+    id = Column('id', Integer, primary_key=True)
+    name = Column(Text(), nullable=True)
+    description = Column(Text(), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
+# Amount provenance category
 
 class AmountProvenance(db.Model):
     __tablename__ = "amount_provenance"
@@ -165,6 +180,8 @@ class ExpenseDetails(db.Model):
     __tablename__ = "expense_details"
     id = Column('id', Integer, primary_key=True)
     expense_id = Column(Integer, ForeignKey('expense.id'), nullable=True)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), nullable=True)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), nullable=2, nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
@@ -229,6 +246,8 @@ class LoanPayment(db.Model):
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), nullable=1, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -266,6 +285,8 @@ class DeptsPayment(db.Model):
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), nullable=2, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -274,6 +295,8 @@ class Savings(db.Model):
     __tablename__ = "savings"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), nullable=2, nullable=True)
     money_provenance = Column(Integer, ForeignKey(
         'amount_provenance.id'), nullable=True)
     amount = Column(Float, nullable=False)
@@ -285,21 +308,6 @@ class Savings(db.Model):
 
 # Budget Table
 '''The system will check first the total amount user has in his wallet'''
-
-class BudgetOption(db.Model):
-    __tablename__ = "budget_option"
-    id = Column('id', Integer, primary_key=True)
-    name = Column(Text(), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=func.now())
-    updated_at = Column(DateTime(timezone=True), default=func.now())
-
-class BudgetCategories(db.Model):
-    __tablename__ = "budget_categories"
-    id = Column('id', Integer, primary_key=True)
-    name = Column(Text(), nullable=True)
-    description = Column(Text(), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=func.now())
-    updated_at = Column(DateTime(timezone=True), default=func.now())
 
 class Budget(db.Model):
     __tablename__ = "Budget"
@@ -403,6 +411,8 @@ class Accommodation(db.Model):
     payment_option = Column(Integer, ForeignKey('rent_payment_option.id'), nullable=True)
     paid_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=1)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), nullable=2, nullable=True)
 
 
 
