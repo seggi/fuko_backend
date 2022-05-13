@@ -1,4 +1,5 @@
 from datetime import datetime
+from pydoc import describe
 from tokenize import group
 from sqlalchemy import (
     Column, Integer, DateTime, Boolean, String, Float, Text, ForeignKey, LargeBinary
@@ -292,6 +293,14 @@ class BudgetOption(db.Model):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
+class BudgetCategories(db.Model):
+    __tablename__ = "budget_categories"
+    id = Column('id', Integer, primary_key=True)
+    name = Column(Text(), nullable=True)
+    describe = Column(Text(), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
 class Budget(db.Model):
     __tablename__ = "Budget"
     id = Column('id', Integer, primary_key=True)
@@ -308,7 +317,8 @@ class BudgetDetails(db.Model):
     __tablename__ = "budget_details"
     id = Column('id', Integer, primary_key=True)
     budget_id = Column(Integer, ForeignKey('Budget.id'), nullable=False)
-    budget_option = Column(Integer, ForeignKey('budget_option.id'), nullable=True)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), nullable=True)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), nullable=True)
     summary = Column(Text, nullable=True)
     budget_amount = Column(Float, nullable=True)
     actual_amount = Column(Float, nullable=True)
