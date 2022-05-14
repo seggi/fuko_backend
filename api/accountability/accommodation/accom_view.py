@@ -1,5 +1,6 @@
 from datetime import date
 from datetime import datetime
+from api.utils.model_marsh import AccommodationStatusSchema
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from api.accountability.global_amount.global_amount_views import QUERY
@@ -12,7 +13,7 @@ from api.core.objects import ManageQuery
 from api.core.labels import AppLabels
 
 from ... import db
-from api.database.models import LessorOrLandlordToRentPayment, RentPaymentOption
+from api.database.models import Accommodation, LessorOrLandlordToRentPayment, RentPaymentOption
 
 accommodation = Blueprint("accommodation", __name__,  url_prefix="/api/user/account/accommodation")
 
@@ -21,6 +22,8 @@ QUERY = QueryGlobalRepport()
 manage_query = ManageQuery()
 APP_LABEL = AppLabels()
 now = datetime.now()
+
+accom_schema = AccommodationStatusSchema()
 
 
 # Add rent payment option period
@@ -108,3 +111,49 @@ def confirm_request(request_id):
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
 
+
+
+# Add new budget
+@accommodation.post("/record-rent-payment/<int:rent_payment_id>")
+@jwt_required(refresh=True)
+def record_rent_payment(rent_payment_id):
+    try:
+        get_data = request.json 
+        rent_payment = db.session.query(Accommodation).\
+                filter(Accommodation.rent_payment_id == rent_payment_id).\
+                filter(Accommodation.amount == get_data['amount']).\
+                filter(Accommodation.periode_range == get_data['periode_range']).\
+                first()
+        
+        if rent_payment:
+            return jsonify({
+                "code": APP_LABEL.label("Alert"),
+                "message": APP_LABEL.label("Rent payment already recorded.")
+            }) 
+
+        else:
+            data = {**get_data, **{"rent_payment_id": rent_payment_id}}
+            QUERY.insert_data(db=db, table_data=Accommodation(**data))
+            return jsonify({
+                "code": APP_LABEL.label("success"),
+                "message": APP_LABEL.label("Rent payment option added with success")
+            })
+
+    except Exception:
+        return response_with(resp.INVALID_FIELD_NAME_SENT_422)
+
+# Get all retrieve rent payment
+@accommodation.get("/retrieve-rent-payment")
+@jwt_required(refresh=True)
+def retrieve_rent_payment():
+    user_id = get_jwt_identity()['id']
+    rent_payment_list = []
+    rent_payment = db.session.query(Accommodation).\
+        join(LessorOrLandlordToRentPayment, Accommodation.rent_payment_id == LessorOrLandlordToRentPayment.id).\
+        filter(LessorOrLandlordToRentPayment.lessor_id == user_id).\
+        all()
+    
+    for rent in rent_payment:
+        rent_payment_list.append(accom_schema.dump(rent))
+    
+    return jsonify(data=rent_payment_list)
