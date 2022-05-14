@@ -57,9 +57,11 @@ def create_app(config_name) -> any:
     from .accountability.budget.budget_views import budget as budget_blueprint
     from .accountability.loans.loan_views import loans as loans_blueprint
     from .accountability.dept.dept_views import dept as dept_blueprint
+    from .accountability.accommodation.accom_view import accommodation as accommodation_blueprint
     from .documentation.index import document as document_blueprint
     from .other.create_notebook import notebook as notebook_blueprint
     from .other.manage_request import manage_request as manage_request_blueprint
+    
 
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(profile_blueprint)
@@ -71,6 +73,7 @@ def create_app(config_name) -> any:
     app.register_blueprint(dept_blueprint)
     app.register_blueprint(notebook_blueprint)
     app.register_blueprint(manage_request_blueprint)
+    app.register_blueprint(accommodation_blueprint)
 
     app.register_blueprint(document_blueprint)
 

@@ -392,11 +392,19 @@ class RentPaymentOption(db.Model):
     name = Column(Text(), nullable=True)
     value = Column(Text(), nullable=True)
 
-class Accommodation(db.Model):
-    __tablename__="accommodation"
+class LessorOrLandlordToRentPayment(db.Model):
+    __tablename__="lessor_landlord_to_rent_payment"
     id = Column('id', Integer, primary_key=True)
     lessor_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     landlord_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    request_status =  Column(Integer, ForeignKey('request_status.id'), nullable=True)
+    confirmed_at = Column(DateTime(timezone=True))
+    sent_at = Column(DateTime(timezone=True), default=func.now())
+
+class Accommodation(db.Model):
+    __tablename__="accommodation"
+    id = Column('id', Integer, primary_key=True)
+    rent_payment_id = Column(Integer, ForeignKey('lessor_landlord_to_rent_payment.id'), nullable=False)
     amount = Column(Float, nullable=False)
     periode_range = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
@@ -410,5 +418,6 @@ class Accommodation(db.Model):
     updated_at = Column(DateTime(timezone=True), default=func.now())
     budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=1)
     budget_option_id = Column(Integer, ForeignKey('budget_option.id'), default=2, nullable=True)
+
 
 '''In the future we have to combine with tontine && back'''
