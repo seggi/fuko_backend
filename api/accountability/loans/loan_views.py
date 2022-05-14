@@ -1,11 +1,10 @@
 from datetime import date
 from datetime import datetime
-import json
 from api.utils.constantes import COMPUTE_SIMGLE_AMOUNT
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from api.accountability.global_amount.global_amount_views import QUERY
-from sqlalchemy import extract, desc, and_, func
+from sqlalchemy import extract, desc
 
 from api.core.query import QueryGlobalRepport
 from api.utils.responses import response_with
@@ -48,7 +47,7 @@ def invite_friend_to_notebook():
 # No from fuko
 @loans.post("/add-people-notebook")
 @jwt_required(refresh=True)
-def add_borrower_to_notebook():
+def add_lent_to_notebook():
     user_id = get_jwt_identity()['id']
     data = request.json | {"user_id": user_id}
     QUERY.insert_data(db=db, table_data=LoanNoteBook(**data))
@@ -59,7 +58,7 @@ def add_borrower_to_notebook():
 
 @loans.get("/get-friend-from-loan-notebook") 
 @jwt_required(refresh=True)
-def retrieve_members_in_loan_notebook():
+def retrieve_members_from_loan_notebook():
     user_id = get_jwt_identity()['id']
     member_in_loan_list =[]
     outside_friend = []
@@ -96,7 +95,6 @@ def retrieve_members_in_loan_notebook():
 def user_get_loans():
     user_id = get_jwt_identity()['id']
     loan_list = []
-    total_loan_amount_list = []
     total_loan_amount = db.session.query(Loans).\
         join(LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True).\
         filter(LoanNoteBook.user_id == user_id).order_by(desc(Loans.created_at)).all()
@@ -104,10 +102,7 @@ def user_get_loans():
     for item in total_loan_amount:
         loan_list.append(loans_schema.dump(item))
 
-    for item in total_loan_amount:
-        total_loan_amount_list.append(loans_schema.dump(item))
-
-    total_amount = manage_query.generate_total_amount(total_loan_amount_list)
+    total_amount = manage_query.generate_total_amount(loan_list)
 
     return jsonify(data={"loan_list": loan_list, "total_loan": total_amount} )
 
@@ -255,8 +250,11 @@ def pay_multiple_dept():
                     "code": APP_LABEL.label("Alert"),
                     "message": APP_LABEL.label("Amount can't be applied twice."),
                 })  
-            
             QUERY.insert_data(db=db, table_data=LoanPayment(**data))
+            loan = db.session.query(Loans).filter(Loans.id == data['loan_id']).one()
+            loan.payment_status = True
+            db.session.commit()
+            
         return jsonify({
                 "code": APP_LABEL.label("success"),
                 "message": APP_LABEL.label("You come complete some depts."),

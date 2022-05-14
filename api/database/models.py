@@ -1,4 +1,6 @@
 from datetime import datetime
+from email.policy import default
+from pydoc import describe
 from tokenize import group
 from sqlalchemy import (
     Column, Integer, DateTime, Boolean, String, Float, Text, ForeignKey, LargeBinary
@@ -63,9 +65,22 @@ class RequestStatus(db.Model):
     id = Column('id', Integer, primary_key=True)
     request_status_name = Column(Text(), nullable=True)
 
+class BudgetOption(db.Model):
+    __tablename__ = "budget_option"
+    id = Column('id', Integer, primary_key=True)
+    name = Column(Text(), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
+class BudgetCategories(db.Model):
+    __tablename__ = "budget_categories"
+    id = Column('id', Integer, primary_key=True)
+    name = Column(Text(), nullable=True)
+    description = Column(Text(), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
 # Amount provenance category
-
-
 class AmountProvenance(db.Model):
     __tablename__ = "amount_provenance"
     id = Column('id', Integer, primary_key=True)
@@ -73,7 +88,6 @@ class AmountProvenance(db.Model):
     created_at = Column(DateTime(timezone=True), default=func.now())
 
 # Register User
-
 
 class User(db.Model):
     __tablename__ = "users"
@@ -122,7 +136,6 @@ class User(db.Model):
 
 # User Profile
 
-
 class UserProfile(db.Model):
     __tablename__ = "user_profile"
     id = Column('id', Integer, primary_key=True)
@@ -164,6 +177,8 @@ class ExpenseDetails(db.Model):
     __tablename__ = "expense_details"
     id = Column('id', Integer, primary_key=True)
     expense_id = Column(Integer, ForeignKey('expense.id'), nullable=True)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), nullable=True)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), default=2, nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
@@ -228,6 +243,8 @@ class LoanPayment(db.Model):
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7, nullable=True)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), default=1, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -237,9 +254,10 @@ class DeptNoteBook(db.Model):
     __tablename__ = "dept_note_book"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    friend_id = Column(Integer, ForeignKey('notebook_member.id'), nullable=True)
+    memeber_id = Column(Integer, ForeignKey('notebook_member.id'), nullable=True)
     '''If lender is not fuko user <provider his/her name>'''
     borrower_name = Column(Text, nullable=True)
+    notebook_id = Column(Integer, ForeignKey('notebook.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -264,6 +282,8 @@ class DeptsPayment(db.Model):
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7, nullable=True)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), default=2, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -272,6 +292,8 @@ class Savings(db.Model):
     __tablename__ = "savings"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7, nullable=True)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), default=2, nullable=True)
     money_provenance = Column(Integer, ForeignKey(
         'amount_provenance.id'), nullable=True)
     amount = Column(Float, nullable=False)
@@ -284,12 +306,12 @@ class Savings(db.Model):
 # Budget Table
 '''The system will check first the total amount user has in his wallet'''
 
-
 class Budget(db.Model):
     __tablename__ = "Budget"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     name = Column(Text(), nullable=False)
+    description = Column(Text, nullable=True) # Example Icomming or Expenses
     start_date = Column(DateTime(), nullable=True)
     end_date = Column(DateTime(), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
@@ -300,9 +322,12 @@ class BudgetDetails(db.Model):
     __tablename__ = "budget_details"
     id = Column('id', Integer, primary_key=True)
     budget_id = Column(Integer, ForeignKey('Budget.id'), nullable=False)
-    amount = Column(Float, nullable=False)
-    activity_description = Column(Text, nullable=True)
-    description = Column(Text, nullable=True)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), nullable=True)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), nullable=True)
+    summary = Column(Text, nullable=True)
+    budget_amount = Column(Float, nullable=True)
+    actual_amount = Column(Float, nullable=True)
+    difference_amount = Column(Float, nullable=True) 
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
@@ -375,7 +400,7 @@ class Accommodation(db.Model):
     amount = Column(Float, nullable=False)
     periode_range = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
-    ''' If not paid yet default = False'''
+    '''If not paid yet default = False'''
     status = Column(Boolean(), default=False)
     landlord_confirm = Column(Boolean(), default=False)
     lessor_confirm = Column(Boolean(), default=False)
@@ -383,8 +408,7 @@ class Accommodation(db.Model):
     payment_option = Column(Integer, ForeignKey('rent_payment_option.id'), nullable=True)
     paid_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=1)
+    budget_option_id = Column(Integer, ForeignKey('budget_option.id'), default=2, nullable=True)
 
-
-
-
-''' In the future we have to combine with tontine && back'''
+'''In the future we have to combine with tontine && back'''
