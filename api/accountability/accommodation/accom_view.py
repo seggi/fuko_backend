@@ -111,9 +111,8 @@ def confirm_request(request_id):
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
 
-
-
-# Add new budget
+# Record prent payment
+# This will be called by landholder
 @accommodation.post("/record-rent-payment/<int:rent_payment_id>")
 @jwt_required(refresh=True)
 def record_rent_payment(rent_payment_id):
@@ -132,7 +131,8 @@ def record_rent_payment(rent_payment_id):
             }) 
 
         else:
-            data = {**get_data, **{"rent_payment_id": rent_payment_id}}
+            landlord_confirm = True
+            data = {**get_data, **{"rent_payment_id": rent_payment_id}, **{"landlord_confirm": landlord_confirm}}
             QUERY.insert_data(db=db, table_data=Accommodation(**data))
             return jsonify({
                 "code": APP_LABEL.label("success"),
@@ -157,3 +157,17 @@ def retrieve_rent_payment():
         rent_payment_list.append(accom_schema.dump(rent))
     
     return jsonify(data=rent_payment_list)
+
+
+# Get all retrieve rent payment
+@accommodation.put("/confirm-rent-payment/<int:rent_payment_id>")
+@jwt_required(refresh=True)
+def confirm_rent_payment(rent_payment_id):
+    rent_payment = db.session.query(Accommodation).filter(Accommodation.id == rent_payment_id).one()
+    rent_payment.lessor_confirm = True
+    rent_payment.updated_at = now
+    db.session.commit()
+    return jsonify({
+                "code": APP_LABEL.label("success"),
+                "message": APP_LABEL.label("Amount Accepted")
+            })
