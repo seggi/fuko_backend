@@ -221,5 +221,4 @@ def user_pay_loan(dept_id):
             return jsonify(data="Pease pay by selecting multiple.")
 
     except Exception as e:
-        print(e, "KKKK")
         return response_with(resp.INVALID_INPUT_422)

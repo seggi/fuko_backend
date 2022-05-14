@@ -400,7 +400,7 @@ class Accommodation(db.Model):
     amount = Column(Float, nullable=False)
     periode_range = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
-    ''' If not paid yet default = False'''
+    '''If not paid yet default = False'''
     status = Column(Boolean(), default=False)
     landlord_confirm = Column(Boolean(), default=False)
     lessor_confirm = Column(Boolean(), default=False)
@@ -411,7 +411,4 @@ class Accommodation(db.Model):
     budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=1)
     budget_option_id = Column(Integer, ForeignKey('budget_option.id'), default=2, nullable=True)
 
-
-
-
-''' In the future we have to combine with tontine && back'''
+'''In the future we have to combine with tontine && back'''

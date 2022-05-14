@@ -1,11 +1,10 @@
 from datetime import date
 from datetime import datetime
-import json
 from api.utils.constantes import COMPUTE_SIMGLE_AMOUNT
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from api.accountability.global_amount.global_amount_views import QUERY
-from sqlalchemy import extract, desc, and_, func
+from sqlalchemy import extract, desc
 
 from api.core.query import QueryGlobalRepport
 from api.utils.responses import response_with
