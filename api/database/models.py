@@ -81,7 +81,6 @@ class BudgetCategories(db.Model):
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
 # Amount provenance category
-
 class AmountProvenance(db.Model):
     __tablename__ = "amount_provenance"
     id = Column('id', Integer, primary_key=True)
@@ -89,7 +88,6 @@ class AmountProvenance(db.Model):
     created_at = Column(DateTime(timezone=True), default=func.now())
 
 # Register User
-
 
 class User(db.Model):
     __tablename__ = "users"
@@ -137,7 +135,6 @@ class User(db.Model):
         return sha256.verify(password, hash)
 
 # User Profile
-
 
 class UserProfile(db.Model):
     __tablename__ = "user_profile"
@@ -246,7 +243,7 @@ class LoanPayment(db.Model):
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
-    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7, nullable=True)
     budget_option_id = Column(Integer, ForeignKey('budget_option.id'), default=1, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
@@ -285,7 +282,7 @@ class DeptsPayment(db.Model):
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
-    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7, nullable=True)
     budget_option_id = Column(Integer, ForeignKey('budget_option.id'), default=2, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
@@ -295,7 +292,7 @@ class Savings(db.Model):
     __tablename__ = "savings"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7)
+    budget_category_id = Column(Integer, ForeignKey('budget_categories.id'), default=7, nullable=True)
     budget_option_id = Column(Integer, ForeignKey('budget_option.id'), default=2, nullable=True)
     money_provenance = Column(Integer, ForeignKey(
         'amount_provenance.id'), nullable=True)
