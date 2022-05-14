@@ -164,7 +164,7 @@ def retrieve_rent_payment():
 @jwt_required(refresh=True)
 def confirm_rent_payment(rent_payment_id):
     rent_payment = db.session.query(Accommodation).filter(Accommodation.id == rent_payment_id).one()
-    rent_payment.landlord_confirm = True
+    rent_payment.lessor_confirm = True
     rent_payment.updated_at = now
     db.session.commit()
     return jsonify({
