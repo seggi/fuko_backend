@@ -59,7 +59,7 @@ def add_lent_to_notebook():
 
 @loans.get("/get-friend-from-loan-notebook") 
 @jwt_required(refresh=True)
-def retrieve_members_in_loan_notebook():
+def retrieve_members_from_loan_notebook():
     user_id = get_jwt_identity()['id']
     member_in_loan_list =[]
     outside_friend = []

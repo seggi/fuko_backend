@@ -8,12 +8,12 @@ from api.accountability.global_amount.global_amount_views import QUERY
 from api.core.query import QueryGlobalRepport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import DeptNoteBookSchema, DeptsSchema, UserSchema
+from api.utils.model_marsh import DeptNoteBookSchema, DeptsSchema, NoteBookMemberSchema, UserSchema
 from api.core.labels import AppLabels
 from api.core.objects import ManageQuery
 
 from ... import db
-from api.database.models import DeptNoteBook, Depts
+from api.database.models import DeptNoteBook, Depts, NoteBookMember, User
 
 dept = Blueprint("dept",__name__, url_prefix="/api/user/account/dept")
 
@@ -27,6 +27,8 @@ todays_date = date.today()
 APP_LABEL = AppLabels()
 dept_note_book_schema = DeptNoteBookSchema()
 dept_schema = DeptsSchema()
+user_schema = UserSchema()
+noteBook_Member_Schema = NoteBookMemberSchema()
 
 # Invite Friend
 @dept.post("/add-borrower-to-notebook")
@@ -53,6 +55,40 @@ def add_borrower_to_notebook():
         "message": APP_LABEL.label("Friend added with success")
     })
 
+
+@dept.get("/get-friend-from-dept-notebook")
+@jwt_required(refresh=True)
+def retrieve_members_from_dept_notebook():
+    user_id = get_jwt_identity()['id']
+    member_in_dept_list = []
+    outside_friend = []
+    
+    get_member  = db.session.query(DeptNoteBook, NoteBookMember.id, User.username).\
+        join(NoteBookMember, DeptNoteBook.memeber_id == NoteBookMember.id, isouter=True).\
+            join(User, NoteBookMember.friend_id == User.id, isouter=True).\
+                filter(DeptNoteBook.borrower_name == None ).\
+                filter(DeptNoteBook.user_id == user_id ).\
+                all()
+
+    get_friend_outside = db.session.query(DeptNoteBook.id, DeptNoteBook.borrower_name).\
+        filter(DeptNoteBook.borrower_name != None ).\
+        filter(DeptNoteBook.user_id == user_id ).\
+        all()
+
+    for member in get_friend_outside:
+        outside_friend.append({
+            **dept_note_book_schema.dump(member)
+            })
+    
+    for member in get_member:
+        member_in_dept_list.append({
+            **user_schema.dump(member),
+            **noteBook_Member_Schema.dump(member)
+            })
+
+    combine_all_list = member_in_dept_list + outside_friend
+    
+    return jsonify(data=combine_all_list)
 
 
 @dept.get("/retrieve")
