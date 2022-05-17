@@ -1,6 +1,7 @@
 from datetime import date
+from datetime import datetime
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from itsdangerous import json
 from sqlalchemy import extract, desc
 
@@ -21,52 +22,39 @@ QUERY = QueryGlobalRepport()
 # Register expenses
 # Get current date
 todays_date = date.today()
+now = datetime.now()
 APP_LABEL = AppLabels()
+expense_schema = ExpensesSchema()
 
 
-@expenses.post("/create-expenses/<int:user_id>")
-@jwt_required()
-def user_create_expense(user_id):
+@expenses.post("/create-expenses")
+@jwt_required(refresh=True)
+def user_create_expense():
+    user_id = get_jwt_identity()['id']
     data = request.json | {"user_id": user_id}
+    expense = Expenses.query.filter_by(
+        expense_name=data['expense_name']).first()
     if data['expense_name'] is None and data['user_id'] is None:
         return response_with(resp.INVALID_INPUT_422)
-    # expense = Expenses.query.filter_by(
-    #     expense_name=data['expense_name']).first()
-    # if expense:
-    #     return jsonify(message=APP_LABEL.label("Expense name already exist"))
+        
+    if expense:
+        return jsonify({
+            "code": APP_LABEL.label("Alert"),
+            "message": APP_LABEL.label("Expense name already exist")
+        })
 
-    # else:
-    QUERY.insert_data(db=db, table_data=Expenses(**data))
-    return jsonify(data={
-        "code": APP_LABEL.label("success"),
-        "message": APP_LABEL.label("Expense saved with success")
-    })
-
-
-@expenses.post("/add-expenses-details/<int:expense_id>")
-@jwt_required()
-def user_add_expenses(expense_id):
-    # Generate inputs
-    data = request.json
-
-    for value in data["data"]:
-        if value['amount'] is None and value['expense_id'] is None:
-            return response_with(resp.INVALID_INPUT_422)
-        else:
-            QUERY.insert_data(db=db, table_data=ExpenseDetails(
-                **value | {"expense_id": expense_id}))
-
-    return jsonify({
-        "code": APP_LABEL.label("success"),
-        "message": APP_LABEL.label("Expense Amount saved with success")
-    })
-
+    else:
+        QUERY.insert_data(db=db, table_data=Expenses(**data))
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label("Expense saved with success")
+        })
 
 # Retrieve all expense
-
-@expenses.get("/expenses/<int:user_id>")
-@jwt_required()
-def user_get_expense(user_id):
+@expenses.get("/expenses")
+@jwt_required(refresh=True)
+def user_get_expense():
+    user_id = get_jwt_identity()['id']
     expenses_list: list = []
     expenses_details_list: list = []
     total_amount_list = []
@@ -96,6 +84,53 @@ def user_get_expense(user_id):
     })
 
 
+# Update Expenses
+@expenses.put("/update-expense/<int:expense_id>")
+@jwt_required(refresh=True)
+def update_expense(expense_id):
+    user_id = get_jwt_identity()['id']
+    try:
+        data = request.json
+        if data['expense_name'] is None:
+            return response_with(resp.INVALID_INPUT_422)
+        else:
+            expense = db.session.query(Expenses).filter(
+                Expenses.id == expense_id, 
+                Expenses.user_id == user_id
+            ).one()
+            expense.expense_name = data['expense_name']
+            expense.updated_at = now
+            db.session.commit()
+            return jsonify({
+                "code": APP_LABEL.label("success"),
+                "message": APP_LABEL.label("Expene name updated with success"),
+                "data": expense_schema.dump(expense)
+            })
+
+    except Exception:
+        return response_with(resp.INVALID_FIELD_NAME_SENT_422)
+
+# Add Expense details
+@expenses.post("/add-expenses-details/<int:expense_id>")
+@jwt_required()
+def user_add_expenses(expense_id):
+    # Generate inputs
+    data = request.json
+
+    for value in data["data"]:
+        if value['amount'] is None and value['expense_id'] is None:
+            return response_with(resp.INVALID_INPUT_422)
+        else:
+            QUERY.insert_data(db=db, table_data=ExpenseDetails(
+                **value | {"expense_id": expense_id}))
+
+    return jsonify({
+        "code": APP_LABEL.label("success"),
+        "message": APP_LABEL.label("Expense Amount saved with success")
+    })
+
+
+
 @ expenses.get("/expense-details/<int:expense_id>")
 @ jwt_required()
 def user_get_expense_details(expense_id):
@@ -119,7 +154,7 @@ def user_get_expense_details(expense_id):
 
 
 @ expenses.get("/expenses-by-date/<int:expense_id>")
-@ jwt_required()
+@ jwt_required(refresh=True)
 def user_get_expenses_by_date(expense_id):
     item_list: list = []
     total_amount_list = []
@@ -142,3 +177,5 @@ def user_get_expenses_by_date(expense_id):
         "total_amount": total_amount,
         "today_date": todays_date,
     })
+
+
