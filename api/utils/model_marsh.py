@@ -39,7 +39,7 @@ class LanguageSchema(marsh.SQLAlchemyAutoSchema):
         load_instance = True
 
 
-class LanguageSchema(marsh.SQLAlchemyAutoSchema):
+class CurrenySchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = Currency
         include_relationships = True
