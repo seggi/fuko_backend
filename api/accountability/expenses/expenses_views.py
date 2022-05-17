@@ -133,7 +133,6 @@ def user_add_expenses(expense_id):
         })
 
     except Exception as e:
-        print(e)
         return response_with(resp.INVALID_INPUT_422)
 
 #  Get expenss details
@@ -169,8 +168,8 @@ def user_get_expense_details(expense_details_id):
         "today_date": todays_date,
     })
 
-
-@ expenses.get("/expenses-by-date/<int:expense_id>")
+# Retrieve Expenses by current date
+@ expenses.get("/expenses-by-current-date/<int:expense_id>")
 @ jwt_required(refresh=True)
 def user_get_expenses_by_date(expense_id):
     item_list: list = []
