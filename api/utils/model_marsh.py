@@ -4,7 +4,7 @@ from marshmallow import fields
 
 from ..database.models import (
     Accommodation, BudgetDetails, Cities, DeptNoteBook, DeptsPayment, ExpenseDetails, LoanNoteBook, LoanPayment, State, Country, Language, Currency, AmountProvenance,
-    User, UserProfile, UserSpokenLanguage, Expenses, Loans, Depts, Savings, Budget, NoteBook, NoteBookMember, RequestStatus
+    User, UserProfile, UserSpokenLanguage, Expenses, Loans, Depts, Savings, Budget, NoteBook, NoteBookMember, RequestStatus,  UserDefaultCurrency
 )
 
 from .. import db
@@ -203,5 +203,11 @@ class RequestStatusSchema(marsh.SQLAlchemyAutoSchema):
 class AccommodationStatusSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = Accommodation
+        include_relationships = True 
+        load_instance = True
+
+class UserDefaultCurrencySchema(marsh.SQLAlchemyAutoSchema):
+    class Meta:
+        model =  UserDefaultCurrency
         include_relationships = True 
         load_instance = True

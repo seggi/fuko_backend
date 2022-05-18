@@ -148,10 +148,13 @@ class UserProfile(db.Model):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
+class UserDefaultCurrency(db.Model):
+    __tablename__ = "user_default_currency"
+    id = Column('id', Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
 
 # User spoken language
-
-
 class UserSpokenLanguage(db.Model):
     __tablename__ = "user_spoken_language"
     id = Column('id', Integer, primary_key=True)

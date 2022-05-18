@@ -1,5 +1,5 @@
 from datetime import datetime
-from api.utils.model_marsh import NoteBookSchema
+from api.utils.model_marsh import CurrenySchema, NoteBookSchema
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import  desc
@@ -13,7 +13,7 @@ from api.utils.model_marsh import NoteBookSchema, NoteBookMemberSchema, UserSche
 
 
 from .. import db
-from api.database.models import NoteBook, NoteBookMember, RequestStatus, User
+from api.database.models import Currency, NoteBook, NoteBookMember, RequestStatus, User, UserDefaultCurrency
 
 
 QUERY = QueryGlobalRepport()
@@ -27,6 +27,7 @@ noteBookMemberSchema = NoteBookMemberSchema()
 noteBookSchema = NoteBookSchema()
 userSchema = UserSchema()
 requestStatusSchema = RequestStatusSchema()
+currency_schema = CurrenySchema()
 
 request_status = {"sent" : 1, "accepted": 50, "rejected": 3, "expired": 4}
 
@@ -194,3 +195,53 @@ def search_user():
         return jsonify(data="User not found!")
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
+
+# Set default currency
+@manage_request.post("/set-default-currency")
+@jwt_required(refresh=True)
+def set_default_currency():
+    user_id = get_jwt_identity()['id']
+    try:
+        data = request.json | {"user_id": user_id}
+        QUERY.insert_data(db=db, table_data=UserDefaultCurrency(**data))
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label("Currency set with success")
+        })
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
+
+# Change default currency
+@manage_request.put("/change-default-currency")
+@jwt_required(refresh=True)
+def update_default_currency():
+    user_id = get_jwt_identity()['id']
+    try:
+        data = request.json | {"user_id": user_id}
+        currency = db.session.query(UserDefaultCurrency).filter(UserDefaultCurrency.user_id == user_id).one()
+        currency.currency_id = data["currency_id"]
+        db.session.commit()
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label("Currency changed with success")
+        })
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
+
+# Set default currency
+@manage_request.get("/retrieve-default-currency")
+@jwt_required(refresh=True)
+def retrieve_default_currency():
+    curency_code = []
+    user_id = get_jwt_identity()['id']
+    curency_data_code = db.session.query(UserDefaultCurrency, Currency.id, Currency.code).\
+        join(Currency, UserDefaultCurrency.currency_id == Currency.id).\
+        filter(UserDefaultCurrency.user_id == user_id).\
+        all()
+    
+    for code in curency_data_code:
+            curency_code.append(currency_schema.dump(code))
+
+    return jsonify({ "default_currency": curency_code })
+
+   
