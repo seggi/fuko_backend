@@ -201,26 +201,54 @@ def user_get_expenses_by_month(expense_id):
         data = request.json
         item_list: list = []
         total_amount_list = []
-        data = ExpenseDetails.query.filter_by(expense_id=expense_id).\
+        currency_amount = []
+        curency_code = []
+
+        curency_data_code = db.session.query(Currency.code).\
+            filter(Currency.id == data['currency_id']).all()
+
+        data = db.session.query(
+                ExpenseDetails,
+                ExpenseDetails.amount,
+                ExpenseDetails.created_at, 
+                ExpenseDetails.id,
+                ExpenseDetails.description,
+                Currency.code,
+            ).\
+            join(Currency, ExpenseDetails.currency_id == Currency.id).\
+            filter(ExpenseDetails.expense_id == expense_id).\
+            filter(ExpenseDetails.currency_id == data['currency_id']).\
             filter(extract('year', ExpenseDetails.created_at) ==data['year']).\
             filter(extract('month', ExpenseDetails.created_at) ==data['month']
                ).order_by(desc(ExpenseDetails.created_at)).all()
 
+        
+
         for item in data:
             item_list.append(expense_detail_schema.dump(item))
+            currency_amount.append(
+                expense_detail_schema.dump(item) | currency_schema.dump(item)
+            )
 
         for item in item_list:
             total_amount_list.append(item['amount'])
 
+        for code in curency_data_code:
+            curency_code.append(currency_schema.dump(code))
+
         total_amount = sum(total_amount_list)
 
         return jsonify(data={
-            "expenses_list": item_list,
-            "total_amount": total_amount,
+            "expenses_list": currency_amount,
+            "total_amount": {
+                "currency": curency_code[0]['code'],
+                "amount": total_amount
+            },
             "today_date": todays_date,
         })
 
-    except Exception:
+    except Exception as e:
+        print(e)
         return response_with(resp.INVALID_FIELD_NAME_SENT_422)
 
 
