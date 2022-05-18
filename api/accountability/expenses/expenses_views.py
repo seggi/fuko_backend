@@ -135,8 +135,7 @@ def user_add_expenses(expense_id):
     except Exception as e:
         return response_with(resp.INVALID_INPUT_422)
 
-#  Get expenss details
-
+#  Get expenses details
 @expenses.get("/expense-details/<int:expense_details_id>")
 @jwt_required(refresh=True)
 def user_get_expense_details(expense_details_id):
@@ -168,7 +167,8 @@ def user_get_expense_details(expense_details_id):
         "today_date": todays_date,
     })
 
-# Retrieve Expenses by current date
+# Retrieve default
+# Expenses by current date
 @ expenses.get("/expenses-by-current-date/<int:expense_id>")
 @ jwt_required(refresh=True)
 def user_get_expenses_by_date(expense_id):
@@ -192,6 +192,65 @@ def user_get_expenses_by_date(expense_id):
         "total_amount": total_amount,
         "today_date": todays_date,
     })
+
+# Expenses by date (month and year)
+@ expenses.post("/expenses-by-month/<int:expense_id>")
+@ jwt_required(refresh=True)
+def user_get_expenses_by_month(expense_id):
+    try:
+        data = request.json
+        item_list: list = []
+        total_amount_list = []
+        currency_amount = []
+        curency_code = []
+
+        curency_data_code = db.session.query(Currency.code).\
+            filter(Currency.id == data['currency_id']).all()
+
+        data = db.session.query(
+                ExpenseDetails,
+                ExpenseDetails.amount,
+                ExpenseDetails.created_at, 
+                ExpenseDetails.id,
+                ExpenseDetails.description,
+                Currency.code,
+            ).\
+            join(Currency, ExpenseDetails.currency_id == Currency.id).\
+            filter(ExpenseDetails.expense_id == expense_id).\
+            filter(ExpenseDetails.currency_id == data['currency_id']).\
+            filter(extract('year', ExpenseDetails.created_at) ==data['year']).\
+            filter(extract('month', ExpenseDetails.created_at) ==data['month']
+               ).order_by(desc(ExpenseDetails.created_at)).all()
+
+        
+
+        for item in data:
+            item_list.append(expense_detail_schema.dump(item))
+            currency_amount.append(
+                expense_detail_schema.dump(item) | currency_schema.dump(item)
+            )
+
+        for item in item_list:
+            total_amount_list.append(item['amount'])
+
+        for code in curency_data_code:
+            curency_code.append(currency_schema.dump(code))
+
+        total_amount = sum(total_amount_list)
+
+        return jsonify(data={
+            "expenses_list": currency_amount,
+            "total_amount": {
+                "currency": curency_code[0]['code'],
+                "amount": total_amount
+            },
+            "today_date": todays_date,
+        })
+
+    except Exception as e:
+        print(e)
+        return response_with(resp.INVALID_FIELD_NAME_SENT_422)
+
 
 
 # Update Expense Details
