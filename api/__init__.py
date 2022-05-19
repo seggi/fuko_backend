@@ -61,6 +61,7 @@ def create_app(config_name) -> any:
     from .documentation.index import document as document_blueprint
     from .other.create_notebook import notebook as notebook_blueprint
     from .other.manage_request import manage_request as manage_request_blueprint
+    from .accountability.notebook_group.group_view import group as group_blueprint
     
 
     app.register_blueprint(auth_blueprint)
@@ -74,6 +75,7 @@ def create_app(config_name) -> any:
     app.register_blueprint(notebook_blueprint)
     app.register_blueprint(manage_request_blueprint)
     app.register_blueprint(accommodation_blueprint)
+    app.register_blueprint(group_blueprint)
 
     app.register_blueprint(document_blueprint)
 
