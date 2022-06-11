@@ -12,7 +12,8 @@ from api.utils.email import send_email
 
 # Manage route
 
-auth =  Blueprint("auth", __name__, url_prefix="/api/user")
+auth = Blueprint("auth", __name__, url_prefix="/api/user")
+
 
 @auth.post('/signup')
 def create_user():
@@ -62,6 +63,8 @@ def create_user():
         return response_with(resp.INVALID_INPUT_422)
 
 # Verification token
+
+
 @auth.get('/confirm/<token>')
 def verify_email(token):
     try:
@@ -80,6 +83,8 @@ def verify_email(token):
         return render_template_string("<p>E-mail verified, you can proceed to login now.<p/>")
 
 # Refresh token
+
+
 @auth.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():
@@ -88,6 +93,8 @@ def refresh():
     return jsonify(access_token=access_token)
 
 # Login
+
+
 @auth.post('/login')
 def sign_in_user():
     try:
@@ -107,7 +114,8 @@ def sign_in_user():
 
             access_token = create_access_token(
                 identity={"id": user.id, "email": data["email"]})
-            access_fresh_token = create_refresh_token(identity={"id": user.id, "email": data["email"]})
+            access_fresh_token = create_refresh_token(
+                identity={"id": user.id, "email": data["email"]})
             return response_with(resp.SUCCESS_201, value={'message': f'{current_user.username}',
                                                           "access_token": access_token,
                                                           "access_fresh_token": access_fresh_token,
@@ -118,8 +126,8 @@ def sign_in_user():
                                                               "status": user.status,
                                                               "user_id": user.id
                                                           }
-                                                        }
-                                                    )
+                                                          }
+                                 )
         else:
             return response_with(resp.UNAUTHORIZED_403)
 
