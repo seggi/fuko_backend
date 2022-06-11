@@ -350,6 +350,7 @@ class UserCreateGroup(db.Model):
 class GroupMembers(db.Model):
     __tablename__="group_members"
     id = Column('id', Integer, primary_key=True)
+    # member_id
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     group_id = Column(Integer, ForeignKey("user_create_group.id"))
     request_status =  Column(Integer, ForeignKey('request_status.id'), nullable=True)
