@@ -15,7 +15,8 @@ from api.core.labels import AppLabels
 from ... import db
 from api.database.models import Accommodation, LessorOrLandlordToRentPayment, RentPaymentOption
 
-accommodation = Blueprint("accommodation", __name__,  url_prefix="/api/user/account/accommodation")
+accommodation = Blueprint("accommodation", __name__,
+                          url_prefix="/api/user/account/accommodation")
 
 todays_date = date.today()
 QUERY = QueryGlobalRepport()
@@ -41,6 +42,8 @@ def add_rent_payment_option():
         return response_with(resp.INVALID_INPUT_422)
 
 # Invite Landlorder or lessor
+
+
 @accommodation.post("/invite-partner-to-rent-payment")
 @jwt_required(refresh=True)
 def invite_partner_to_rent_payment():
@@ -51,14 +54,16 @@ def invite_partner_to_rent_payment():
             get_data = data | {"landlord_id": user_id}
             request_sent = db.session.query(LessorOrLandlordToRentPayment).\
                 filter(LessorOrLandlordToRentPayment.lessor_id == get_data['lessor_id']).\
-                filter(LessorOrLandlordToRentPayment.landlord_id == get_data['landlord_id']).first()
+                filter(LessorOrLandlordToRentPayment.landlord_id ==
+                       get_data['landlord_id']).first()
 
             if request_sent:
                 return jsonify({
                     "code": APP_LABEL.label("Alert"),
                     "message": APP_LABEL.label("Request already sent."),
-                }) 
-            QUERY.insert_data(db=db, table_data=LessorOrLandlordToRentPayment(**get_data))
+                })
+            QUERY.insert_data(
+                db=db, table_data=LessorOrLandlordToRentPayment(**get_data))
             return jsonify({
                 "code": APP_LABEL.label("success"),
                 "message": APP_LABEL.label("Request sent")
@@ -67,14 +72,16 @@ def invite_partner_to_rent_payment():
             get_data = data | {"lessor_id": user_id}
             request_sent = db.session.query(LessorOrLandlordToRentPayment).\
                 filter(LessorOrLandlordToRentPayment.lessor_id == get_data['lessor_id']).\
-                filter(LessorOrLandlordToRentPayment.landlord_id == get_data['landlord_id']).first()
+                filter(LessorOrLandlordToRentPayment.landlord_id ==
+                       get_data['landlord_id']).first()
 
             if request_sent:
                 return jsonify({
                     "code": APP_LABEL.label("Alert"),
                     "message": APP_LABEL.label("Request already sent."),
-                }) 
-            QUERY.insert_data(db=db, table_data=LessorOrLandlordToRentPayment(**get_data))
+                })
+            QUERY.insert_data(
+                db=db, table_data=LessorOrLandlordToRentPayment(**get_data))
             return jsonify({
                 "code": APP_LABEL.label("success"),
                 "message": APP_LABEL.label("Request sent")
@@ -84,14 +91,16 @@ def invite_partner_to_rent_payment():
         return response_with(resp.INVALID_INPUT_422)
 
 # Confirm request
+
+
 @accommodation.put("/confirm-request/<int:request_id>")
 @jwt_required(refresh=True)
 def confirm_request(request_id):
     get_data = request.json
     try:
         request_confirm = db.session.query(LessorOrLandlordToRentPayment).\
-                filter(LessorOrLandlordToRentPayment.request_status == get_data['request_status']).\
-                first()
+            filter(LessorOrLandlordToRentPayment.request_status == get_data['request_status']).\
+            first()
         if request_confirm:
             return jsonify({
                 "code": APP_LABEL.label("Alert"),
@@ -111,28 +120,31 @@ def confirm_request(request_id):
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
 
-# Record prent payment
+# Record rent payment
 # This will be called by landholder
+
+
 @accommodation.post("/record-rent-payment/<int:rent_payment_id>")
 @jwt_required(refresh=True)
 def record_rent_payment(rent_payment_id):
     try:
-        get_data = request.json 
+        get_data = request.json
         rent_payment = db.session.query(Accommodation).\
-                filter(Accommodation.rent_payment_id == rent_payment_id).\
-                filter(Accommodation.amount == get_data['amount']).\
-                filter(Accommodation.periode_range == get_data['periode_range']).\
-                first()
-        
+            filter(Accommodation.rent_payment_id == rent_payment_id).\
+            filter(Accommodation.amount == get_data['amount']).\
+            filter(Accommodation.periode_range == get_data['periode_range']).\
+            first()
+
         if rent_payment:
             return jsonify({
                 "code": APP_LABEL.label("Alert"),
                 "message": APP_LABEL.label("Rent payment already recorded.")
-            }) 
+            })
 
         else:
             landlord_confirm = True
-            data = {**get_data, **{"rent_payment_id": rent_payment_id}, **{"landlord_confirm": landlord_confirm}}
+            data = {**get_data, **{"rent_payment_id": rent_payment_id},
+                    **{"landlord_confirm": landlord_confirm}}
             QUERY.insert_data(db=db, table_data=Accommodation(**data))
             return jsonify({
                 "code": APP_LABEL.label("success"),
@@ -142,7 +154,9 @@ def record_rent_payment(rent_payment_id):
     except Exception:
         return response_with(resp.INVALID_FIELD_NAME_SENT_422)
 
-# Get all retrieve rent payment
+# Get all rent payment
+
+
 @accommodation.get("/retrieve-rent-payment")
 @jwt_required(refresh=True)
 def retrieve_rent_payment():
@@ -152,10 +166,10 @@ def retrieve_rent_payment():
         join(LessorOrLandlordToRentPayment, Accommodation.rent_payment_id == LessorOrLandlordToRentPayment.id).\
         filter(LessorOrLandlordToRentPayment.lessor_id == user_id).\
         all()
-    
+
     for rent in rent_payment:
         rent_payment_list.append(accom_schema.dump(rent))
-    
+
     return jsonify(data=rent_payment_list)
 
 
@@ -163,11 +177,12 @@ def retrieve_rent_payment():
 @accommodation.put("/confirm-rent-payment/<int:rent_payment_id>")
 @jwt_required(refresh=True)
 def confirm_rent_payment(rent_payment_id):
-    rent_payment = db.session.query(Accommodation).filter(Accommodation.id == rent_payment_id).one()
+    rent_payment = db.session.query(Accommodation).filter(
+        Accommodation.id == rent_payment_id).one()
     rent_payment.lessor_confirm = True
     rent_payment.updated_at = now
     db.session.commit()
     return jsonify({
-                "code": APP_LABEL.label("success"),
-                "message": APP_LABEL.label("Amount Accepted")
-            })
+        "code": APP_LABEL.label("success"),
+        "message": APP_LABEL.label("Amount Accepted")
+    })

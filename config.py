@@ -40,9 +40,15 @@ class DevelopmentConfig(Config):
     HOSTNAME = os.getenv("POSTGRES_HOSTNAME_DEV")
     PORT = os.getenv("POSTGRES_PORT_DEV")
     DB = os.getenv("POSTGRES_DB_DEV")
-    PROPAGATE_EXCEPTIONS = True  # Prevent expiration exceptions
-    SQLALCHEMY_DATABASE_URI = f"postgresql://{USER}:{PWD}@{HOSTNAME}:{PORT}/{DB}"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # PROPAGATE_EXCEPTIONS = True  # Prevent expiration exceptions
+    # SQLALCHEMY_DATABASE_URI = f"postgresql://{USER}:{PWD}@{HOSTNAME}:{PORT}/{DB}"
+    # SQLALCHEMY_TRACK_MODIFICATIONS = False
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_USERNAME')
+    URI = os.getenv("DATABASE_URL")
+    if URI and URI.startswith("postgres://"):
+        SQLALCHEMY_DATABASE_URI = URI.replace(
+            "postgres://", "postgresql://", 1)
+        SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class TestingConfig(Config):
