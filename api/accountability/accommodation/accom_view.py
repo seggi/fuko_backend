@@ -6,7 +6,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from api.accountability.global_amount.global_amount_views import QUERY
 from sqlalchemy import extract, desc
 
-from api.core.query import QueryGlobalRepport
+from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
 from api.core.objects import ManageQuery
@@ -19,7 +19,7 @@ accommodation = Blueprint("accommodation", __name__,
                           url_prefix="/api/user/account/accommodation")
 
 todays_date = date.today()
-QUERY = QueryGlobalRepport()
+QUERY = QueryGlobalReport()
 manage_query = ManageQuery()
 APP_LABEL = AppLabels()
 now = datetime.now()
@@ -132,7 +132,7 @@ def record_rent_payment(rent_payment_id):
         rent_payment = db.session.query(Accommodation).\
             filter(Accommodation.rent_payment_id == rent_payment_id).\
             filter(Accommodation.amount == get_data['amount']).\
-            filter(Accommodation.periode_range == get_data['periode_range']).\
+            filter(Accommodation.period_range == get_data['period_range']).\
             first()
 
         if rent_payment:

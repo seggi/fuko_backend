@@ -9,7 +9,6 @@ from api.database.models import User
 from api.utils.model_marsh import UserSchema
 from api.utils.token import generate_verification_token
 
-
 admin_auth = Blueprint("auth", __name__, url_prefix="/api/admin")
 
 
