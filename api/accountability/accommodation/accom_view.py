@@ -132,7 +132,7 @@ def record_rent_payment(rent_payment_id):
         rent_payment = db.session.query(Accommodation).\
             filter(Accommodation.rent_payment_id == rent_payment_id).\
             filter(Accommodation.amount == get_data['amount']).\
-            filter(Accommodation.periode_range == get_data['periode_range']).\
+            filter(Accommodation.period_range == get_data['period_range']).\
             first()
 
         if rent_payment:
