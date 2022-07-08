@@ -2,7 +2,7 @@
 from sqlalchemy import extract, desc
 
 
-class QueryGlobalRepport:
+class QueryGlobalReport:
     def __init__(self) -> None:
         pass
 
