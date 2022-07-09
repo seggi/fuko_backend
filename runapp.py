@@ -9,11 +9,11 @@ DB = config("POSTGRES_DB_DEV")
 
 class ManageInput:
     item_data = ['migrate', 'init', 'upgrade',
-                       'Ctrl+C (to break)', 'run dev', 'rebuild', 'run prod', 'db',
-                       'clean v', 'clean sys', 'seed', 'allmigrations', "heroku add"
-                       "heroku-push", "heroku-add"]
+                 'Ctrl+C (to break)', 'run dev', 'rebuild', 'run prod', 'db',
+                 'clean v', 'clean sys', 'seed', 'allmigrations', "heroku add"
+                 "heroku-push", "heroku-add", 'git-add']
 
-    def __init__(self) :
+    def __init__(self):
 
         print("Please use the following commands to continue")
         for command in self.item_data:
@@ -37,6 +37,7 @@ class ManageInput:
             'allmigrations': "sudo docker-compose exec dev python3 manage.py db stamp head",
             # Heroku section
             "add": "git subtree add . --prefix services/app",
+            "git-add": "git add .",
             "com": f"git  commit -am ",
             "push": "git push heroku ",
             "init-migrate": "sudo heroku run python3 manage.py db migrate -m 'Initial migrations' --app fuko-backend",
