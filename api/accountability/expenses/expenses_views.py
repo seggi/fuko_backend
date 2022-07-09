@@ -93,7 +93,6 @@ def user_get_expense():
 @jwt_required(refresh=True)
 def update_expense(expense_id):
     try:
-        user_id = get_jwt_identity()['id']
         data = request.json
         if data['expense_name'] is None:
             return response_with(resp.INVALID_INPUT_422)
