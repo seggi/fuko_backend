@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required
 
 from api.database.models import DeptNoteBook, Depts, ExpenseDetails, Expenses, LoanNoteBook, Loans, Savings, User
 from api.utils.model_marsh import DeptsSchema, ExpenseDetailsSchema, ExpensesSchema, LoanSchema, SavingsSchema, UserSchema
-from api.core.query import QueryGlobalRepport
+from api.core.query import QueryGlobalReport
 from api.core.objects import GlobalAmount
 
 from ... import db
@@ -30,7 +30,7 @@ DEPT_SCHEMA = DeptsSchema(many=True)
 SAVINGS_SCHEMA = SavingsSchema(many=True)
 
 
-QUERY = QueryGlobalRepport()
+QUERY = QueryGlobalReport()
 
 
 @global_account.get("/global-amount/<int:user_id>")
@@ -42,7 +42,7 @@ def user_global_amount(user_id):
 
     loans = db.session.query(Loans).join(
         LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True).\
-            filter(LoanNoteBook.user_id == user_id).all()
+        filter(LoanNoteBook.user_id == user_id).all()
 
     savings = QUERY.get_all_joined_table_by_id(
         db=db, model1=USER, model2=SAVINGS, user_id=user_id)

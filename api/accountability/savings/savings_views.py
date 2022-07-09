@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import extract, desc
 from api.accountability.global_amount.global_amount_views import QUERY
 
-from api.core.query import QueryGlobalRepport
+from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
 from api.utils.model_marsh import CurrenySchema, SavingsSchema
@@ -14,13 +14,14 @@ from api.database.models import Currency, Savings, User
 savings = Blueprint("savings", __name__,
                     url_prefix="/api/user/account/savings")
 
-QUERY = QueryGlobalRepport()
+QUERY = QueryGlobalReport()
 
 # Register saving data
 
 todays_date = date.today()
 savings_schema = SavingsSchema()
 currency_schema = CurrenySchema()
+
 
 @savings.post("/add-saving")
 @jwt_required(refresh=True)
@@ -29,7 +30,8 @@ def user_add_saving():
     user_id = get_jwt_identity()['id']
     data = request.json
     for value in data["data"]:
-        QUERY.insert_data(db=db, table_data=Savings(**value |  {"user_id": user_id}))
+        QUERY.insert_data(db=db, table_data=Savings(
+            **value | {"user_id": user_id}))
     return jsonify({
         "code": "success",
         "message": "Amount saved with success"
@@ -47,12 +49,12 @@ def user_get_saving_by_date(currency_id):
     curency_code = []
 
     curency_data_code = db.session.query(Currency.code).\
-            filter(Currency.id == currency_id).all()
-    
+        filter(Currency.id == currency_id).all()
+
     data = db.session.query(
-        Savings.amount, 
-        Savings.description, 
-        Savings.created_at,  
+        Savings.amount,
+        Savings.description,
+        Savings.created_at,
         Savings.money_provenance,
         Currency.code).\
         join(Currency, Savings.currency_id == Currency.id).\
@@ -99,12 +101,12 @@ def get_savings_date():
     data = request.json
 
     curency_data_code = db.session.query(Currency.code).\
-            filter(Currency.id == data["currency_id"]).all()
-    
+        filter(Currency.id == data["currency_id"]).all()
+
     data = db.session.query(
-        Savings.amount, 
-        Savings.description, 
-        Savings.created_at,  
+        Savings.amount,
+        Savings.description,
+        Savings.created_at,
         Savings.money_provenance,
         Currency.code).\
         join(Currency, Savings.currency_id == Currency.id).\

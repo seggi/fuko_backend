@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from api.accountability.global_amount.global_amount_views import QUERY
 
-from api.core.query import QueryGlobalRepport
+from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
 from api.core.labels import AppLabels
@@ -13,16 +13,18 @@ from api.utils.model_marsh import NoteBookSchema
 from .. import db
 from api.database.models import NoteBook
 
-QUERY = QueryGlobalRepport()
+QUERY = QueryGlobalReport()
 APP_LABEL = AppLabels()
 now = datetime.now()
 
 notebook = Blueprint("notebook", __name__,
-                  url_prefix="/api/user/notebook")
+                     url_prefix="/api/user/notebook")
 
 noteBookSchema = NoteBookSchema()
 
 # Create NoteBook
+
+
 @notebook.post("/create")
 @jwt_required(refresh=True)
 def create_notebook():
@@ -37,6 +39,7 @@ def create_notebook():
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
 
+
 @notebook.get("/retrieve")
 @jwt_required(refresh=True)
 def retrieve_notebook():
@@ -48,6 +51,7 @@ def retrieve_notebook():
         notebook_list.append(noteBookSchema.dump(values))
     return jsonify(data=notebook_list)
 
+
 @notebook.put("/update")
 @jwt_required(refresh=True)
 def update_notebook():
@@ -55,9 +59,10 @@ def update_notebook():
         data = request.json
         if data['id'] == '':
             response_with(resp.INVALID_INPUT_422)
-        notebook = db.session.query(NoteBook).filter(NoteBook.id == data['id']).one()
-        notebook.name = data['name'] 
-        notebook.description = data['description'] 
+        notebook = db.session.query(NoteBook).filter(
+            NoteBook.id == data['id']).one()
+        notebook.name = data['name']
+        notebook.description = data['description']
         notebook.updated_at = now
         db.session.commit()
         return jsonify({
@@ -66,4 +71,3 @@ def update_notebook():
         })
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
-
