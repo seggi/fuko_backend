@@ -49,7 +49,8 @@ class ManageInput:
             # If branch is bind the master branch
             "update-branch": "git push heroku `git subtree  split --prefix services/app master`:master --force",
             "change-branch": "heroku git:remote -a example-app",
-            "seed_db": "sudo docker-compose exec dev python3 manage.py seed_db"
+            "seed_db": "sudo docker-compose exec dev python3 manage.py seed_db",
+            "config": "heroku git:remote appName"
         }
 
     def display_input(self):
