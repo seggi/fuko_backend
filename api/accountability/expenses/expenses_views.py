@@ -92,26 +92,25 @@ def user_get_expense():
 @expenses.put("/update-expense/<int:expense_id>")
 @jwt_required(refresh=True)
 def update_expense(expense_id):
-    user_id = get_jwt_identity()['id']
     try:
+        user_id = get_jwt_identity()['id']
         data = request.json
         if data['expense_name'] is None:
             return response_with(resp.INVALID_INPUT_422)
         else:
             expense = db.session.query(Expenses).filter(
                 Expenses.id == expense_id,
-                Expenses.user_id == user_id
             ).one()
             expense.expense_name = data['expense_name']
             expense.updated_at = now
             db.session.commit()
             return jsonify({
                 "code": APP_LABEL.label("success"),
-                "message": APP_LABEL.label("Expene name updated with success"),
+                "message": APP_LABEL.label("Expense name updated with success"),
                 "data": expense_schema.dump(expense)
             })
 
-    except Exception:
+    except Exception as e:
         return response_with(resp.INVALID_FIELD_NAME_SENT_422)
 
 # Add Expense details
