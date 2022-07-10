@@ -3,7 +3,7 @@ from xml.etree.ElementInclude import include
 from marshmallow import fields
 
 from ..database.models import (
-    Accommodation, BudgetDetails, Cities, DeptNoteBook, DeptsPayment, ExpenseDetails,
+    Accommodation, BudgetCategories, BudgetDetails, Cities, DeptNoteBook, DeptsPayment, ExpenseDetails,
     LoanNoteBook, LoanPayment, State, Country, Language, Currency, AmountProvenance,
     User, UserProfile, UserSpokenLanguage, Expenses, Loans, Depts, Savings, Budget,
     NoteBook, NoteBookMember, RequestStatus,  UserDefaultCurrency, UserCreateGroup,
@@ -17,6 +17,12 @@ from .. import marsh
 class BudgetOptionSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = BudgetOption
+        load_instance = True
+
+
+class BudgetCategoriesSchema(marsh.SQLAlchemyAutoSchema):
+    class Meta:
+        model = BudgetCategories
         load_instance = True
 
 

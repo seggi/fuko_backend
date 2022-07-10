@@ -5,24 +5,35 @@ from api.core.objects import ManageQuery
 
 from ... import db
 from api.accountability.global_amount.global_amount_views import QUERY
-from api.database.models import Budget, BudgetDetails, BudgetOption, User
+from api.database.models import Budget, BudgetCategories, BudgetDetails, BudgetOption, User
 
-from api.utils.model_marsh import BudgetDetailsSchema, BudgetOptionSchema, BudgetSchema
+from api.utils.model_marsh import BudgetCategoriesSchema, BudgetDetailsSchema, BudgetOptionSchema, BudgetSchema
 
 budget = Blueprint("budget", __name__, url_prefix="/api/user/budget")
 
 manage_query = ManageQuery()
 budget_option_schema = BudgetOptionSchema()
 budget_schema = BudgetSchema()
+budget_categories_schema = BudgetCategoriesSchema()
 
 
 @budget.get("/budget-option")
 @jwt_required(refresh=True)
-def get_budget_option():
+def get_budget_options():
     item_list: list = []
-    budget_option = QUERY.get_data(db=db, model=BudgetOption)
-    for item in budget_option:
-        item_list.append(budget_option_schema.dump(item))
+    budget_options = QUERY.get_data(db=db, model=BudgetOption)
+    for budget_option in budget_options:
+        item_list.append(budget_option_schema.dump(budget_option))
+    return jsonify(data=item_list)
+
+
+@budget.get("/budget-category")
+@jwt_required(refresh=True)
+def get_budget_categories():
+    item_list: list = []
+    budget_categories = QUERY.get_data(db=db, model=BudgetCategories)
+    for budget_category in budget_categories:
+        item_list.append(budget_categories_schema.dump(budget_category))
     return jsonify(data=item_list)
 
 
