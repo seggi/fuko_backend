@@ -62,29 +62,39 @@ def user_get_expense():
     expenses_list: list = []
     expenses_details_list: list = []
     total_amount_list = []
+    currency_code = []
     expenses_schema = ExpensesSchema()
     expenses_details_schema = ExpenseDetailsSchema()
     expenses = QUERY.get_data(db=db, model=Expenses, user_id=user_id)
-    expenses_details = db.session.query(ExpenseDetails).join(
+    expenses_details = db.session.query(ExpenseDetails.amount,
+                                        ExpenseDetails.created_at,
+                                        ExpenseDetails.description,
+                                        Currency.code).join(
         Expenses, ExpenseDetails.expense_id == Expenses.id, isouter=True).\
+        join(Currency, ExpenseDetails.currency_id == Currency.id).\
         filter(Expenses.user_id == user_id).order_by(
             desc(ExpenseDetails.created_at)).all()
 
-    for item in expenses:
-        expenses_list.append(expenses_schema.dump(item))
+    for expense in expenses:
+        expense_list = expenses_schema.dump(expense)
+        expenses_list.append(expense_list)
 
-    for item in expenses_details:
-        expenses_details_list.append(
-            expenses_details_schema.dump(item))
+    for expenses_detail in expenses_details:
+        expenses_detail_data = expenses_details_schema.dump(
+            expenses_detail) | currency_schema.dump(expenses_detail)
+        expenses_details_list.append(expenses_detail_data)
 
     for item in expenses_details_list:
         total_amount_list.append(item['amount'])
+        currency_code.append(item['code'])
 
     total_amount = sum(total_amount_list)
+    currency = currency_code[0]
 
     return jsonify(data={
         "expense": expenses_list,
-        "total": total_amount
+        "total": total_amount,
+        "currency_code": currency,
     })
 
 
@@ -134,7 +144,6 @@ def user_add_expenses(expense_id):
         })
 
     except Exception as e:
-        print(e, "LLL")
         return response_with(resp.INVALID_INPUT_422)
 
 #  Get expenses details
@@ -143,9 +152,10 @@ def user_add_expenses(expense_id):
 @expenses.get("/expense-details/<int:expense_details_id>")
 @jwt_required(refresh=True)
 def user_get_expense_details(expense_details_id):
-    item_list: list = []
+    expense_details: list = []
     total_amount_list = []
-    currency_amount = []
+    expense_amount_detail_list = []
+    currency = []
     data = db.session.query(
         ExpenseDetails.amount,
         ExpenseDetails.created_at,
@@ -156,19 +166,24 @@ def user_get_expense_details(expense_details_id):
         order_by(desc(ExpenseDetails.created_at)).all()
 
     for item in data:
-        item_list.append(expense_detail_schema.dump(item))
+        tot_expenses = expense_detail_schema.dump(
+            item) | currency_schema.dump(item)
         expense_detail_data = expense_detail_schema.dump(
             item) | currency_schema.dump(item)
-        currency_amount.append(expense_detail_data)
 
-    for item in item_list:
-        total_amount_list.append(item['amount'])
+        expense_amount_detail_list.append(expense_detail_data)
+        expense_details.append(tot_expenses)
+
+    for expense_detail in expense_details:
+        total_amount_list.append(expense_detail['amount'])
+        currency.append(expense_detail['code'])
 
     total_amount = sum(total_amount_list)
 
     return jsonify(data={
-        "expenses_list": currency_amount,
+        "expenses_list": expense_amount_detail_list,
         "total_amount": total_amount,
+        "currency_code": currency[0],
         "today_date": todays_date,
     })
 
