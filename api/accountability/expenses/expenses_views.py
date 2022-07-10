@@ -67,13 +67,11 @@ def user_get_expense():
     expenses_details_schema = ExpenseDetailsSchema()
     expenses = QUERY.get_data(db=db, model=Expenses, user_id=user_id)
     expenses_details = db.session.query(ExpenseDetails.amount,
-                                        ExpenseDetails.created_at,
-                                        ExpenseDetails.description,
                                         Currency.code).join(
         Expenses, ExpenseDetails.expense_id == Expenses.id, isouter=True).\
         join(Currency, ExpenseDetails.currency_id == Currency.id).\
         filter(Expenses.user_id == user_id).order_by(
-            desc(ExpenseDetails.created_at)).all()
+        desc(ExpenseDetails.created_at)).all()
 
     for expense in expenses:
         expense_list = expenses_schema.dump(expense)
