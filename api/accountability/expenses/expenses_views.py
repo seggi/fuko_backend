@@ -157,8 +157,9 @@ def user_get_expense_details(expense_details_id):
 
     for item in data:
         item_list.append(expense_detail_schema.dump(item))
-        currency_amount.append(
-            [expense_detail_schema.dump(item) | currency_schema.dump(item)])
+        expense_detail_data = expense_detail_schema.dump(
+            item) | currency_schema.dump(item)
+        currency_amount.append(expense_detail_data)
 
     for item in item_list:
         total_amount_list.append(item['amount'])
