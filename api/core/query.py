@@ -35,8 +35,7 @@ class QueryGlobalReport:
                 desc(model.created_at)).all()
             return user
         else:
-            data = db.session.query(model).order_by(
-                desc(model.created_at)).all()
+            data = db.session.query(model)
             return data
 
     def get_data_by_date(self, db, model1, model2, user_id, date={}):
