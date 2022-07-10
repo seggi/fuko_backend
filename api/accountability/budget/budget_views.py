@@ -5,20 +5,32 @@ from api.core.objects import ManageQuery
 
 from ... import db
 from api.accountability.global_amount.global_amount_views import QUERY
-from api.database.models import Budget, BudgetDetails, User
+from api.database.models import Budget, BudgetDetails, BudgetOption, User
 
-from api.utils.model_marsh import BudgetDetailsSchema, BudgetSchema
+from api.utils.model_marsh import BudgetDetailsSchema, BudgetOptionSchema, BudgetSchema
 
 budget = Blueprint("budget", __name__, url_prefix="/api/user/budget")
 
 manage_query = ManageQuery()
+budget_option_schema = BudgetOptionSchema()
+budget_schema = BudgetSchema()
 
-@budget.get("/all")
-@jwt_required()
+
+@budget.get("/budget-option")
+@jwt_required(refresh=True)
+def get_budget_option():
+    item_list: list = []
+    budget_option = QUERY.get_data(db=db, model=BudgetOption)
+    for item in budget_option:
+        item_list.append(budget_option_schema.dump(item))
+    return jsonify(data=item_list)
+
+
+@budget.get("/retrieve-all")
+@jwt_required(refresh=True)
 def user_budget():
     user_id = get_jwt_identity()['id']
     item_list: list = []
-    budget_schema = BudgetSchema()
     data = QUERY.get_data(db=db, model=Budget, user_id=user_id)
     for item in data:
         item_list.append(budget_schema.dump(item))
@@ -68,7 +80,7 @@ def get_budget_details(budget_id):
     budget_details_schema = BudgetDetailsSchema(many=True).dump(budget_details)
 
     total_amount = manage_query.generate_total_amount(budget_details_schema)
-    
+
     total = {
         "total_amount": sum(total_amount),
         "currency": ""

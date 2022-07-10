@@ -3,13 +3,21 @@ from xml.etree.ElementInclude import include
 from marshmallow import fields
 
 from ..database.models import (
-    Accommodation, BudgetDetails, Cities, DeptNoteBook, DeptsPayment, ExpenseDetails, LoanNoteBook, LoanPayment, State, Country, Language, Currency, AmountProvenance,
-    User, UserProfile, UserSpokenLanguage, Expenses, Loans, Depts, Savings, Budget, NoteBook, NoteBookMember, RequestStatus,  UserDefaultCurrency, UserCreateGroup,
-    GroupMembers
+    Accommodation, BudgetDetails, Cities, DeptNoteBook, DeptsPayment, ExpenseDetails,
+    LoanNoteBook, LoanPayment, State, Country, Language, Currency, AmountProvenance,
+    User, UserProfile, UserSpokenLanguage, Expenses, Loans, Depts, Savings, Budget,
+    NoteBook, NoteBookMember, RequestStatus,  UserDefaultCurrency, UserCreateGroup,
+    GroupMembers, BudgetOption
 )
 
 from .. import db
 from .. import marsh
+
+
+class BudgetOptionSchema(marsh.SQLAlchemyAutoSchema):
+    class Meta:
+        model = BudgetOption
+        load_instance = True
 
 
 class CitiesSchema(marsh.SQLAlchemyAutoSchema):
@@ -134,12 +142,12 @@ class LoanPaymentSchema(marsh.SQLAlchemyAutoSchema):
         include_relationships = True
         load_instance = True
 
+
 class LoanNoteBookSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = LoanNoteBook
         include_relationships = True
         load_instance = True
-
 
 
 class DeptNoteBookSchema(marsh.SQLAlchemyAutoSchema):
@@ -183,44 +191,51 @@ class BudgetDetailsSchema(marsh.SQLAlchemyAutoSchema):
         include_relationships = True
         load_instance = True
 
+
 class NoteBookSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = NoteBook
         include_relationships = True
         load_instance = True
 
+
 class NoteBookMemberSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = NoteBookMember
-        include_relationships = True 
+        include_relationships = True
         load_instance = True
+
 
 class RequestStatusSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = RequestStatus
-        include_relationships = True 
+        include_relationships = True
         load_instance = True
+
 
 class AccommodationStatusSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = Accommodation
-        include_relationships = True 
+        include_relationships = True
         load_instance = True
+
 
 class UserDefaultCurrencySchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
-        model =  UserDefaultCurrency
-        include_relationships = True 
+        model = UserDefaultCurrency
+        include_relationships = True
         load_instance = True
+
 
 class UserCreateGroupSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
-        model =  UserCreateGroup
-        include_relationships = True 
+        model = UserCreateGroup
+        include_relationships = True
         load_instance = True
 
-class  GroupMemberSchema(marsh.SQLAlchemyAutoSchema):
+
+class GroupMemberSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
-        model =  GroupMembers
-        include_relationships = True 
+        model = GroupMembers
+        include_relationships = True
         load_instance = True

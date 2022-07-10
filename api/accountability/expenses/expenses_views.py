@@ -134,6 +134,7 @@ def user_add_expenses(expense_id):
         })
 
     except Exception as e:
+        print(e, "LLL")
         return response_with(resp.INVALID_INPUT_422)
 
 #  Get expenses details
