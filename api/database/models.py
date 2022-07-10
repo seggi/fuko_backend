@@ -352,7 +352,7 @@ class Budget(db.Model):
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     name = Column(Text(), nullable=False)
-    description = Column(Text, nullable=True)  # Example Icomming or Expenses
+    description = Column(Text, nullable=True)  # Example Incoming or Expenses
     start_date = Column(DateTime(), nullable=True)
     end_date = Column(DateTime(), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())

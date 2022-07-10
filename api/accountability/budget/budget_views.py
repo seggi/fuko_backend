@@ -1,9 +1,12 @@
+from api.core.labels import AppLabels
+from api.utils.responses import response_with
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from api.core.objects import ManageQuery
 
 from ... import db
+from api.utils import responses as resp
 from api.accountability.global_amount.global_amount_views import QUERY
 from api.database.models import Budget, BudgetCategories, BudgetDetails, BudgetOption, User
 
@@ -15,6 +18,7 @@ manage_query = ManageQuery()
 budget_option_schema = BudgetOptionSchema()
 budget_schema = BudgetSchema()
 budget_categories_schema = BudgetCategoriesSchema()
+APP_LABEL = AppLabels()
 
 
 @budget.get("/budget-option")
@@ -49,17 +53,19 @@ def user_budget():
 
 
 @budget.post("/create-budget")
-@jwt_required()
+@jwt_required(refresh=True)
 def create_budget():
-    user_id = get_jwt_identity()['id']
-    data = request.json | {"user_id": user_id}
-    for value in data["data"]:
-        QUERY.insert_data(db=db, table_data=Budget(
-            **value))
-    return jsonify({
-        "code": "success",
-        "message": "Budget saved with success"
-    })
+    try:
+        user_id = get_jwt_identity()['id']
+        data = request.json | {"user_id": user_id}
+        QUERY.insert_data(db=db, table_data=Budget(**data))
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label("Budget saved with success")
+        })
+
+    except Exception as e:
+        return response_with(resp.INVALID_FIELD_NAME_SENT_422)
 
 
 @budget.post("/save-budget-details/<int:budget_id>")
