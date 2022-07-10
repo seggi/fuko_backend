@@ -1,3 +1,4 @@
+from datetime import datetime
 from api.core.labels import AppLabels
 from api.utils.responses import response_with
 from flask import Blueprint, jsonify, request
@@ -11,6 +12,8 @@ from api.accountability.global_amount.global_amount_views import QUERY
 from api.database.models import Budget, BudgetCategories, BudgetDetails, BudgetOption, User
 
 from api.utils.model_marsh import BudgetCategoriesSchema, BudgetDetailsSchema, BudgetOptionSchema, BudgetSchema
+
+now = datetime.now()
 
 budget = Blueprint("budget", __name__, url_prefix="/api/user/budget")
 
@@ -62,6 +65,30 @@ def create_budget():
         return jsonify({
             "code": APP_LABEL.label("success"),
             "message": APP_LABEL.label("Budget saved with success")
+        })
+
+    except Exception as e:
+        return response_with(resp.INVALID_FIELD_NAME_SENT_422)
+
+
+@budget.put("/update-budget/<int:budget_id>")
+@jwt_required(refresh=True)
+def update_budget(budget_id):
+    try:
+        data = request.json
+        budget = db.session.query(Budget).filter(
+            Budget.id == budget_id,
+        ).one()
+        budget.name = data['name']
+        budget.description = data['description']
+        budget.updated_at = now
+        budget.start_date = data["start_date"]
+        budget.end_date = data["end_date"]
+        db.session.commit()
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label("Budget Updated with success"),
+            "data": budget_schema.dump(budget)
         })
 
     except Exception as e:
