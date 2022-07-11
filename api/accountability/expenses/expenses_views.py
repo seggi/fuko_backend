@@ -27,6 +27,8 @@ APP_LABEL = AppLabels()
 currency_schema = CurrenySchema()
 expense_schema = ExpensesSchema()
 expense_detail_schema = ExpenseDetailsSchema()
+# The default currency for the  platform is USD
+system_default_currency = 150
 
 
 @expenses.post("/create-expenses")
@@ -132,6 +134,15 @@ def user_add_expenses(expense_id):
         for value in data["data"]:
             if value['amount'] is None and value['expense_id'] is None:
                 return response_with(resp.INVALID_INPUT_422)
+
+            if value['currency_id'] == '':
+                new_data = {
+                    "amount": value['amount'],
+                    "description": value["description"],
+                    "currency_id": system_default_currency
+                }
+                QUERY.insert_data(db=db, table_data=ExpenseDetails(
+                    **new_data | {"expense_id": expense_id}))
             else:
                 QUERY.insert_data(db=db, table_data=ExpenseDetails(
                     **value | {"expense_id": expense_id}))
@@ -195,9 +206,9 @@ def user_get_expenses_by_date(expense_id, currency_id):
     item_list: list = []
     total_amount_list = []
     currency_amount = []
-    curency_code = []
+    currency_code = []
 
-    curency_data_code = db.session.query(Currency.code).\
+    currency_data_code = db.session.query(Currency.code).\
         filter(Currency.id == currency_id).all()
 
     data = db.session.query(
@@ -223,15 +234,15 @@ def user_get_expenses_by_date(expense_id, currency_id):
     for item in item_list:
         total_amount_list.append(item['amount'])
 
-    for code in curency_data_code:
-        curency_code.append(currency_schema.dump(code))
+    for code in currency_data_code:
+        currency_code.append(currency_schema.dump(code))
 
     total_amount = sum(total_amount_list)
 
     return jsonify(data={
         "expenses_list": currency_amount,
         "total_amount": {
-            "currency": curency_code[0]['code'],
+            "currency": currency_code[0]['code'],
             "amount": total_amount
         },
         "today_date": todays_date,
@@ -248,9 +259,9 @@ def user_get_expenses_by_month(expense_id):
         item_list: list = []
         total_amount_list = []
         currency_amount = []
-        curency_code = []
+        currency_code = []
 
-        curency_data_code = db.session.query(Currency.code).\
+        currency_data_code = db.session.query(Currency.code).\
             filter(Currency.id == data['currency_id']).all()
 
         data = db.session.query(
@@ -277,15 +288,15 @@ def user_get_expenses_by_month(expense_id):
         for item in item_list:
             total_amount_list.append(item['amount'])
 
-        for code in curency_data_code:
-            curency_code.append(currency_schema.dump(code))
+        for code in currency_data_code:
+            currency_code.append(currency_schema.dump(code))
 
         total_amount = sum(total_amount_list)
 
         return jsonify(data={
             "expenses_list": currency_amount,
             "total_amount": {
-                "currency": curency_code[0]['code'],
+                "currency": currency_code[0]['code'],
                 "amount": total_amount
             },
             "today_date": todays_date,
@@ -296,18 +307,17 @@ def user_get_expenses_by_month(expense_id):
 
 
 # Update Expense Details
-@expenses.put("/update-expense-detail/<int:expense_detials_id>")
+@expenses.put("/update-expense-detail/<int:expense_details_id>")
 @jwt_required(refresh=True)
-def update_expense_detial(expense_detials_id):
-    user_id = get_jwt_identity()['id']
+def update_expense_detail(expense_details_id):
+
     try:
         data = request.json
         if data['description'] is None:
             return response_with(resp.INVALID_INPUT_422)
         else:
             expense_details = db.session.query(ExpenseDetails).filter(
-                Expenses.id == expense_detials_id,
-                Expenses.user_id == user_id
+                ExpenseDetails.id == expense_details_id
             ).one()
             expense_details.description = data['description']
             expense_details.currency_id = data['currency_id']
@@ -315,9 +325,10 @@ def update_expense_detial(expense_detials_id):
             db.session.commit()
             return jsonify({
                 "code": APP_LABEL.label("success"),
-                "message": APP_LABEL.label("Expene name updated with success"),
+                "message": APP_LABEL.label("Expense name updated with success"),
                 "data": expense_detail_schema.dump(expense_details)
             })
 
-    except Exception:
+    except Exception as e:
+        print(e, ":::")
         return response_with(resp.INVALID_FIELD_NAME_SENT_422)
