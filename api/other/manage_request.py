@@ -242,14 +242,26 @@ def update_default_currency():
 @manage_request.get("/retrieve-default-currency")
 @jwt_required(refresh=True)
 def retrieve_default_currency():
-    curency_code = []
+    currency_code = []
     user_id = get_jwt_identity()['id']
-    curency_data_code = db.session.query(UserDefaultCurrency, Currency.id, Currency.code).\
+    currency_data_code = db.session.query(UserDefaultCurrency, Currency.id, Currency.code).\
         join(Currency, UserDefaultCurrency.currency_id == Currency.id).\
         filter(UserDefaultCurrency.user_id == user_id).\
         all()
 
-    for code in curency_data_code:
-        curency_code.append(currency_schema.dump(code))
+    for code in currency_data_code:
+        currency_code.append(currency_schema.dump(code))
 
-    return jsonify({"default_currency": curency_code})
+    return jsonify({"default_currency": currency_code})
+
+
+@manage_request.get("/retrieve-curries")
+@jwt_required(refresh=True)
+def retrieve_currency():
+    currency_data_list = []
+    currency_data = db.session.query(Currency).all()
+
+    for currency in currency_data:
+        currency_data_list.append(currency_schema.dump(currency))
+
+    return jsonify({"data": currency_data_list})
