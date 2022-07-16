@@ -57,9 +57,9 @@ def user_create_expense():
 # Retrieve all expense
 
 
-@expenses.get("/expenses")
+@expenses.get("/expenses/<int:currency_id>")
 @jwt_required(refresh=True)
-def user_get_expense():
+def user_get_expense(currency_id):
     user_id = get_jwt_identity()['id']
     expenses_list: list = []
     expenses_details_list: list = []
@@ -72,7 +72,7 @@ def user_get_expense():
                                         Currency.code).join(
         Expenses, ExpenseDetails.expense_id == Expenses.id, isouter=True).\
         join(Currency, ExpenseDetails.currency_id == Currency.id).\
-        filter(Expenses.user_id == user_id).order_by(
+        filter(Expenses.user_id == user_id, ExpenseDetails.currency_id == currency_id).order_by(
         desc(ExpenseDetails.created_at)).all()
 
     for expense in expenses:
@@ -158,9 +158,9 @@ def user_add_expenses(expense_id):
 #  Get expenses details
 
 
-@expenses.get("/expense-details/<int:expense_details_id>")
+@expenses.get("/expense-details/<int:expense_details_id>/<int:currency_id>")
 @jwt_required(refresh=True)
-def user_get_expense_details(expense_details_id):
+def user_get_expense_details(expense_details_id, currency_id):
     expense_details: list = []
     total_amount_list = []
     expense_amount_detail_list = []
@@ -171,7 +171,7 @@ def user_get_expense_details(expense_details_id):
         ExpenseDetails.description,
         Currency.code).\
         join(Currency, ExpenseDetails.currency_id == Currency.id).\
-        filter(ExpenseDetails.expense_id == expense_details_id).\
+        filter(ExpenseDetails.expense_id == expense_details_id, ExpenseDetails.currency_id == currency_id).\
         order_by(desc(ExpenseDetails.created_at)).all()
 
     for item in data:
