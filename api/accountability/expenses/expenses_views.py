@@ -1,5 +1,8 @@
+from collections import defaultdict
 from datetime import date
 from datetime import datetime
+from functools import reduce
+from api.core.constat import MONTHS_LIST
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from itsdangerous import json
@@ -96,6 +99,59 @@ def user_get_expense(currency_id):
         "total": total_amount,
         "currency_code": currency,
     })
+
+# Retrieve all expense by grouping
+
+
+@expenses.get("/expense-report/<int:currency_id>")
+@jwt_required(refresh=True)
+def user_get_group_expense(currency_id):
+
+    expense_details: list = []
+    total_amount_list = []
+    expense_amount_detail_list = []
+    currency = []
+    new_dicts = {}
+    monthly_report: list = []
+
+    for month in MONTHS_LIST:
+
+        data = db.session.query(
+            ExpenseDetails.amount,
+            ExpenseDetails.created_at,
+            ExpenseDetails.description,
+            Currency.code).\
+            join(Currency, ExpenseDetails.currency_id == Currency.id).filter(extract('month', ExpenseDetails.created_at) == month["number"]).order_by(
+            desc(ExpenseDetails.created_at)).all()
+        # filter(ExpenseDetails.expense_id == expense_details_id, ExpenseDetails.currency_id == currency_id).\
+        # order_by(desc(ExpenseDetails.created_at)).all()
+
+        if data:
+            for item in data:
+                tot_expenses = expense_detail_schema.dump(
+                    item) | currency_schema.dump(item)
+                expense_detail_data = expense_detail_schema.dump(
+                    item) | currency_schema.dump(item)
+
+                expense_amount_detail_list.append(expense_detail_data)
+                expense_details.append(tot_expenses)
+
+                monthly_report.append({
+                    month["name"]: expense_detail_data
+                })
+
+    for expense_detail in expense_details:
+        total_amount_list.append(expense_detail['amount'])
+        # currency.append(expense_detail['code'])
+
+    total_amount = sum(total_amount_list)
+
+    return jsonify(data={
+        # "expenses_list": expense_amount_detail_list,
+        # "total_amount": total_amount,
+        # "currency_code": currency[0],
+        # "today_date": todays_date,
+        "new_data": monthly_report})
 
 
 # Update Expenses
