@@ -3,10 +3,12 @@ from datetime import date
 from datetime import datetime
 from functools import reduce
 from api.core.constat import MONTHS_LIST
+from api.core.reducer import Reducer
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from itsdangerous import json
-from sqlalchemy import extract, desc
+from sqlalchemy import extract, desc, Date, cast, and_, func
+
 
 from api.accountability.global_amount.global_amount_views import QUERY
 from api.core.query import QueryGlobalReport
@@ -106,57 +108,52 @@ def user_get_expense(currency_id):
 @expenses.get("/expense-report/<int:currency_id>")
 @jwt_required(refresh=True)
 def user_get_group_expense(currency_id):
-
+    user_id = get_jwt_identity()['id']
     expense_details: list = []
     total_amount_list = []
-    expense_amount_detail_list = []
-    currency = []
-    new_dicts = {}
-    monthly_report: list = []
+
+    month_report = []
 
     for month in MONTHS_LIST:
-
         data = db.session.query(
             ExpenseDetails.amount,
-            ExpenseDetails.created_at,
             ExpenseDetails.description,
-            Currency.code).\
-            join(Currency, ExpenseDetails.currency_id == Currency.id).filter(extract('month', ExpenseDetails.created_at) == month["number"]).order_by(
-            desc(ExpenseDetails.created_at)).all()
-        # filter(ExpenseDetails.expense_id == expense_details_id, ExpenseDetails.currency_id == currency_id).\
-        # order_by(desc(ExpenseDetails.created_at)).all()
+            ExpenseDetails.created_at,
+            Currency).\
+            join(Currency, ExpenseDetails.currency_id == Currency.id).\
+            join(Expenses, ExpenseDetails.expense_id == Expenses.id).\
+            filter(ExpenseDetails.currency_id == currency_id).\
+            filter(Expenses.user_id == user_id).\
+            filter(extract('month', ExpenseDetails.created_at) == month['number']).\
+            order_by(desc(ExpenseDetails.created_at)).all()
 
-        if data:
+        if len(data) > 0:
             for item in data:
-                tot_expenses = expense_detail_schema.dump(
-                    item) | currency_schema.dump(item)
-                expense_detail_data = expense_detail_schema.dump(
-                    item) | currency_schema.dump(item)
-
-                expense_amount_detail_list.append(expense_detail_data)
+                tot_expenses = expense_detail_schema.dump(item)
                 expense_details.append(tot_expenses)
 
-                monthly_report.append({
-                    month["name"]: expense_detail_data
-                })
+            for item in data:
+                month_report.append(
+                    {month['name']: expense_detail_schema.dump(item)})
 
     for expense_detail in expense_details:
         total_amount_list.append(expense_detail['amount'])
-        # currency.append(expense_detail['code'])
 
     total_amount = sum(total_amount_list)
 
-    return jsonify(data={
-        # "expenses_list": expense_amount_detail_list,
-        # "total_amount": total_amount,
-        # "currency_code": currency[0],
-        # "today_date": todays_date,
-        "new_data": monthly_report})
+    collect_months_data = Reducer(month_report).reduce_list()
 
+    return jsonify(data={
+        "total_amount": total_amount,
+        "today_date": todays_date,
+        'monthly_report': collect_months_data
+    })
 
 # Update Expenses
-@expenses.put("/update-expense/<int:expense_id>")
-@jwt_required(refresh=True)
+
+
+@ expenses.put("/update-expense/<int:expense_id>")
+@ jwt_required(refresh=True)
 def update_expense(expense_id):
     try:
         data = request.json
@@ -386,5 +383,4 @@ def update_expense_detail(expense_details_id):
             })
 
     except Exception as e:
-        print(e, ":::")
         return response_with(resp.INVALID_FIELD_NAME_SENT_422)
