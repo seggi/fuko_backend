@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import date
 from datetime import datetime
 from functools import reduce
-from api.core.constat import MONTHS_LIST
+from api.core.constat import CURRENT_YEAR, MONTHS_LIST
 from api.core.reducer import Reducer
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -114,8 +114,10 @@ def user_get_group_expense(currency_id):
     month_report = []
 
     data = request.json
+    convert_year = int(data["selected_year"]
+                       ) if data["selected_year"] != "" else None
 
-    selected_year = int(data["selected_year"])
+    selected_year = CURRENT_YEAR if convert_year == None else convert_year
 
     for month in MONTHS_LIST:
         data = db.session.query(
