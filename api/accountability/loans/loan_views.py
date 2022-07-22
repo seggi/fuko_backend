@@ -1,6 +1,6 @@
 from datetime import date
 from datetime import datetime
-from api.utils.constantes import COMPUTE_SIMGLE_AMOUNT
+from api.utils.constant import COMPUTE_SIMGLE_AMOUNT
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from api.accountability.global_amount.global_amount_views import QUERY
