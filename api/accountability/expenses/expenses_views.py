@@ -111,8 +111,11 @@ def user_get_group_expense(currency_id):
     user_id = get_jwt_identity()['id']
     expense_details: list = []
     total_amount_list = []
-
     month_report = []
+
+    data = request.json
+
+    selected_year = int(data["selected_year"])
 
     for month in MONTHS_LIST:
         data = db.session.query(
@@ -125,6 +128,7 @@ def user_get_group_expense(currency_id):
             filter(ExpenseDetails.currency_id == currency_id).\
             filter(Expenses.user_id == user_id).\
             filter(extract('month', ExpenseDetails.created_at) == month['number']).\
+            filter(extract('year', ExpenseDetails.created_at) == selected_year).\
             order_by(desc(ExpenseDetails.created_at)).all()
 
         if len(data) > 0:

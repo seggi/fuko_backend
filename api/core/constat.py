@@ -1,3 +1,8 @@
+from datetime import date
+
+CURRENT_YEAR = date.today().year
+
+
 MONTHS_LIST: list = [
     {"name": "January", "number": 1},
     {"name": "February", "number": 2},
