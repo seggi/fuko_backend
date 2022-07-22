@@ -66,3 +66,4 @@ twilio==7.1.0
 uritemplate==4.1.1
 urllib3==1.26.7
 Werkzeug==2.0.2
+pandas==1.4.2
