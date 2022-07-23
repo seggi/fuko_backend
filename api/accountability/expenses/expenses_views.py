@@ -112,6 +112,7 @@ def user_get_group_expense(currency_id, selected_years):
     expense_details: list = []
     total_amount_list = []
     month_report = []
+    currency_code = []
 
     convert_year = int(selected_years
                        ) if selected_years != "" else None
@@ -123,7 +124,7 @@ def user_get_group_expense(currency_id, selected_years):
             ExpenseDetails.amount,
             ExpenseDetails.description,
             ExpenseDetails.created_at,
-            Currency).\
+            Currency.code).\
             join(Currency, ExpenseDetails.currency_id == Currency.id).\
             join(Expenses, ExpenseDetails.expense_id == Expenses.id).\
             filter(ExpenseDetails.currency_id == currency_id).\
@@ -134,7 +135,8 @@ def user_get_group_expense(currency_id, selected_years):
 
         if len(data) > 0:
             for item in data:
-                tot_expenses = expense_detail_schema.dump(item)
+                tot_expenses = expense_detail_schema.dump(
+                    item) | currency_schema.dump(item)
                 expense_details.append(tot_expenses)
 
             for item in data:
@@ -143,15 +145,18 @@ def user_get_group_expense(currency_id, selected_years):
 
     for expense_detail in expense_details:
         total_amount_list.append(expense_detail['amount'])
+        currency_code.append(item['code'])
 
     total_amount = sum(total_amount_list)
 
     collect_months_data = Reducer(month_report).reduce_list()
+    currency = list(set(currency_code))
 
     return jsonify(data={
         "total_amount": total_amount,
         "today_date": todays_date,
-        'monthly_report': collect_months_data
+        'monthly_report': collect_months_data,
+        'currency_code': currency[0]
     })
 
 # Update Expenses
