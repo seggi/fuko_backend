@@ -105,17 +105,16 @@ def user_get_expense(currency_id):
 # Retrieve all expense by grouping
 
 
-@expenses.get("/expense-report/<int:currency_id>")
+@expenses.get("/expense-report/<int:currency_id>/<int:selected_years>")
 @jwt_required(refresh=True)
-def user_get_group_expense(currency_id):
+def user_get_group_expense(currency_id, selected_years):
     user_id = get_jwt_identity()['id']
     expense_details: list = []
     total_amount_list = []
     month_report = []
 
-    data = request.json
-    convert_year = int(data["selected_year"]
-                       ) if data["selected_year"] != "" else None
+    convert_year = int(selected_years
+                       ) if selected_years != "" else None
 
     selected_year = CURRENT_YEAR if convert_year == None else convert_year
 

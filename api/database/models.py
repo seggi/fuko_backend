@@ -420,7 +420,7 @@ class GroupeContributorAmount(db.Model):
 class GroupDepts(db.Model):
     __tablename__ = "group_depts"
     id = Column('id', Integer, primary_key=True)
-    memeber_id = Column(Integer, ForeignKey("group_members.id"))
+    member_id = Column(Integer, ForeignKey("group_members.id"))
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
