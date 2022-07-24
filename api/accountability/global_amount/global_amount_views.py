@@ -1,6 +1,6 @@
 from datetime import date
 from flask import Blueprint, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from api.database.models import DeptNoteBook, Depts, ExpenseDetails, Expenses, LoanNoteBook, Loans, Savings, User
 from api.utils.model_marsh import DeptsSchema, ExpenseDetailsSchema, ExpensesSchema, LoanSchema, SavingsSchema, UserSchema
@@ -33,12 +33,14 @@ SAVINGS_SCHEMA = SavingsSchema(many=True)
 QUERY = QueryGlobalReport()
 
 
-@global_account.get("/global-amount/<int:user_id>")
+@global_account.get("/global-amount/<int:currency_id>")
 @jwt_required(refresh=True)
-def user_global_amount(user_id):
+def user_global_amount(currency_id):
+    user_id = get_jwt_identity()['id']
     expenses = db.session.query(ExpenseDetails).join(
         Expenses, ExpenseDetails.expense_id == Expenses.id, isouter=True).\
-        filter(Expenses.user_id == user_id).all()
+        filter(Expenses.user_id == user_id,
+               ExpenseDetails.currency_id == currency_id).all()
 
     loans = db.session.query(Loans).join(
         LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True).\

@@ -68,8 +68,9 @@ def user_get_expense(currency_id):
     user_id = get_jwt_identity()['id']
     expenses_list: list = []
     expenses_details_list: list = []
-    total_amount_list = []
-    currency_code = []
+    total_amount_list: list = []
+    currency_code: list = []
+
     expenses_schema = ExpensesSchema()
     expenses_details_schema = ExpenseDetailsSchema()
     expenses = QUERY.get_data(db=db, model=Expenses, user_id=user_id)
@@ -110,9 +111,9 @@ def user_get_expense(currency_id):
 def user_get_group_expense(currency_id, selected_years):
     user_id = get_jwt_identity()['id']
     expense_details: list = []
-    total_amount_list = []
-    month_report = []
-    currency_code = []
+    total_amount_list: list = []
+    month_report: list = []
+    currency_code: list = []
 
     convert_year = int(selected_years
                        ) if selected_years != "" else None
@@ -225,9 +226,9 @@ def user_add_expenses(expense_id):
 @jwt_required(refresh=True)
 def user_get_expense_details(expense_details_id, currency_id):
     expense_details: list = []
-    total_amount_list = []
-    expense_amount_detail_list = []
-    currency = []
+    total_amount_list: list = []
+    expense_amount_detail_list: list = []
+    currency: list = []
     data = db.session.query(
         ExpenseDetails.amount,
         ExpenseDetails.created_at,
