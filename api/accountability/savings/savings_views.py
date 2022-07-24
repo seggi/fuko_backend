@@ -7,7 +7,7 @@ from api.accountability.global_amount.global_amount_views import QUERY
 from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import CurrenySchema, SavingsSchema
+from api.utils.model_marsh import CurrencySchema, SavingsSchema
 
 from ... import db
 from api.database.models import Currency, Savings, User
@@ -20,7 +20,7 @@ QUERY = QueryGlobalReport()
 
 todays_date = date.today()
 savings_schema = SavingsSchema()
-currency_schema = CurrenySchema()
+currency_schema = CurrencySchema()
 
 
 @savings.post("/add-saving")
