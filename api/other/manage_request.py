@@ -1,7 +1,7 @@
 from datetime import datetime
-import json
-from api.core.constat import generate_year_list
-from api.utils.model_marsh import CurrenySchema, NoteBookSchema
+from api.core.constant import YEARS_LIST
+
+from api.utils.model_marsh import CurrencySchema, NoteBookSchema
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import desc
@@ -29,7 +29,7 @@ noteBookMemberSchema = NoteBookMemberSchema()
 noteBookSchema = NoteBookSchema()
 userSchema = UserSchema()
 requestStatusSchema = RequestStatusSchema()
-currency_schema = CurrenySchema()
+currency_schema = CurrencySchema()
 
 request_status = {"sent": 1, "accepted": 50, "rejected": 3, "expired": 4}
 
@@ -272,4 +272,4 @@ def retrieve_currency():
 @manage_request.get("/retrieve-years")
 @jwt_required(refresh=True)
 def ear_list():
-    return jsonify({"years": generate_year_list()})
+    return jsonify({"data": YEARS_LIST})

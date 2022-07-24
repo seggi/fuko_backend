@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import date
 from datetime import datetime
 from functools import reduce
-from api.core.constat import CURRENT_YEAR, MONTHS_LIST
+from api.core.constant import CURRENT_YEAR, MONTHS_LIST
 from api.core.reducer import Reducer
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -14,7 +14,7 @@ from api.accountability.global_amount.global_amount_views import QUERY
 from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import CurrenySchema, ExpenseDetailsSchema, ExpensesSchema
+from api.utils.model_marsh import CurrencySchema, ExpenseDetailsSchema, ExpensesSchema
 from api.core.labels import AppLabels
 
 from ... import db
@@ -29,7 +29,7 @@ QUERY = QueryGlobalReport()
 todays_date = date.today()
 now = datetime.now()
 APP_LABEL = AppLabels()
-currency_schema = CurrenySchema()
+currency_schema = CurrencySchema()
 expense_schema = ExpensesSchema()
 expense_detail_schema = ExpenseDetailsSchema()
 # The default currency for the  platform is USD
