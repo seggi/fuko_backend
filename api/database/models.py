@@ -257,7 +257,7 @@ class Loans(db.Model):
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     '''Enter the date of receiving money & section works when the your financial partener is not in the system'''
-    recieve_money_at = Column(DateTime(), nullable=True)
+    receive_money_at = Column(DateTime(), nullable=True)
     payment_status = Column(Boolean, default=False)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())

@@ -11,11 +11,17 @@ class QueryGlobalReport:
             model2, model1.id == model2.user_id, isouter=True).filter(model1.id == user_id).first()
         return all_amount
 
-    def get_all_joined_table_by_id(self, db, model1, model2, user_id):
+    def get_all_joined_table_by_id(self, db, model1, model2, user_id, currency_id=None):
         # Left Join
-        all_amount = db.session.query(model2).join(
-            model1, model2.user_id == user_id, isouter=True).all()
-        return all_amount
+        if currency_id == None:
+            all_amount = db.session.query(model2).join(
+                model1, model2.user_id == user_id, isouter=True).all()
+            return all_amount
+        else:
+            all_amount = db.session.query(model2).join(
+                model1, model2.user_id == user_id, isouter=True).\
+                filter(model2.user_id == user_id).all()
+            return all_amount
 
     # Save data
     def insert_data(self, db, table_data):

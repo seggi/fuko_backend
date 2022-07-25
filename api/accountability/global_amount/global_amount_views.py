@@ -44,14 +44,14 @@ def user_global_amount(currency_id):
 
     loans = db.session.query(Loans).join(
         LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True).\
-        filter(LoanNoteBook.user_id == user_id).all()
+        filter(LoanNoteBook.user_id == user_id, Loans.currency_id).all()
 
     savings = QUERY.get_all_joined_table_by_id(
         db=db, model1=USER, model2=SAVINGS, user_id=user_id)
 
     dept = db.session.query(Depts).join(
         DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
-        filter(DeptNoteBook.user_id == user_id).all()
+        filter(DeptNoteBook.user_id == user_id, Depts.currency_id).all()
 
     result = GlobalAmount(
         tbl1=EXPENSES_SCHEMA.dump(expenses),
