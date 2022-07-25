@@ -20,7 +20,7 @@ class QueryGlobalReport:
         else:
             all_amount = db.session.query(model2).join(
                 model1, model2.user_id == user_id, isouter=True).\
-                filter(model2.user_id == user_id).all()
+                filter(model2.currency_id == currency_id).all()
             return all_amount
 
     # Save data
