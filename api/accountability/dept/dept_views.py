@@ -104,10 +104,11 @@ def user_get_dept(currency_id):
     user_id = get_jwt_identity()['id']
     dept_list = []
 
-    total_dept_amount = db.session.query(Depts).join(
-        DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
+    total_dept_amount = db.session.query(Depts).\
         filter(DeptNoteBook.user_id == user_id, Depts.currency_id == currency_id).order_by(
             desc(Depts.created_at)).all()
+    # .join(/
+    # DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
 
     for item in total_dept_amount:
         dept_list.append(dept_schema.dump(item))
@@ -119,8 +120,8 @@ def user_get_dept(currency_id):
 # Get dept by date
 
 
-@dept.get("/retrieve-dept-by-current-date/<int:dept_note_id>")
-@jwt_required(refresh=True)
+@ dept.get("/retrieve-dept-by-current-date/<int:dept_note_id>")
+@ jwt_required(refresh=True)
 def get_loan_by_current_date(dept_note_id):
     dept_list = []
     loan_data = Depts.query.filter_by(note_id=dept_note_id).\
@@ -142,8 +143,8 @@ def get_loan_by_current_date(dept_note_id):
 # Add dept
 
 
-@dept.post("/record-dept/<int:note_id>")
-@jwt_required(refresh=True)
+@ dept.post("/record-dept/<int:note_id>")
+@ jwt_required(refresh=True)
 def user_add_dept(note_id):
     # Generate inputs
     try:
@@ -173,8 +174,8 @@ def user_add_dept(note_id):
 
 
 # Pay dept
-@dept.post("/pay-borrowed-amount/<int:dept_id>")
-@jwt_required(refresh=True)
+@ dept.post("/pay-borrowed-amount/<int:dept_id>")
+@ jwt_required(refresh=True)
 def user_pay_loan(dept_id):
     collect_payment_history = []
     request_data = request.json | {"note_id": dept_id}
