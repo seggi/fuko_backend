@@ -256,7 +256,7 @@ def user_get_expense_details(expense_details_id, currency_id):
     return jsonify(data={
         "expenses_list": expense_amount_detail_list,
         "total_amount": total_amount,
-        "currency_code": currency[0],
+        "currency_code": currency[0] if len(currency) > 0 else "",
         "today_date": todays_date,
     })
 
@@ -306,7 +306,7 @@ def user_get_expenses_by_date(expense_id, currency_id):
     return jsonify(data={
         "expenses_list": currency_amount,
         "total_amount": {
-            "currency": currency_code[0]['code'],
+            "currency": currency_code[0]['code'] if len(currency_code) > 0 else "",
             "amount": total_amount
         },
         "today_date": todays_date,
@@ -360,7 +360,7 @@ def user_get_expenses_by_month(expense_id):
         return jsonify(data={
             "expenses_list": currency_amount,
             "total_amount": {
-                "currency": currency_code[0]['code'],
+                "currency": currency_code[0]['code'] if len(currency_code) > 0 else "",
                 "amount": total_amount
             },
             "today_date": todays_date,
