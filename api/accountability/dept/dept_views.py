@@ -108,15 +108,16 @@ def user_get_dept(currency_id):
     currency = []
     total_dept_amount = db.session.query(Depts.amount, Currency.code).\
         join(Currency, Depts.currency_id == Currency.id, isouter=True).\
-        join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
         filter(DeptNoteBook.user_id == user_id, Depts.currency_id == currency_id).order_by(
             desc(Depts.created_at)).all()
+    #   join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
 
     for item in total_dept_amount:
-        dept_list.append(dept_schema.dump(item))
+        dept_data = dept_schema.dump(item) | currency_schema.dump(item)
+        dept_list.append(dept_data)
 
-    for expense_detail in dept_list:
-        currency.append(expense_detail['code'])
+    for dept in dept_list:
+        currency.append(dept['code'])
 
     total_amount = manage_query.generate_total_amount(dept_list)
 
