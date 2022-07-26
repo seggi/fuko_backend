@@ -177,7 +177,7 @@ def retrieve_request_status():
     return jsonify(data=status_list)
 
 
-# Search for financial partener
+# Search for financial partner
 @manage_request.post("/search-user")
 @jwt_required(refresh=True)
 def search_user():
@@ -197,7 +197,7 @@ def search_user():
                 filter(User.confirmed == True).all()
             return jsonify(data=user_schema.dump(user))
 
-        return jsonify(data="User not found!")
+        return jsonify(data=[])
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
 

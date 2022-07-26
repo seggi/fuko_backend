@@ -1,5 +1,6 @@
 from datetime import date
 from datetime import datetime
+from locale import currency
 from api.auth.auth_views import refresh
 from api.utils.constant import COMPUTE_SIMGLE_AMOUNT
 from flask import Blueprint, jsonify, request
@@ -10,12 +11,12 @@ from api.accountability.global_amount.global_amount_views import QUERY
 from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import DeptNoteBookSchema, DeptsSchema, NoteBookMemberSchema, UserSchema
+from api.utils.model_marsh import CurrencySchema, DeptNoteBookSchema, DeptsSchema, NoteBookMemberSchema, UserSchema
 from api.core.labels import AppLabels
 from api.core.objects import ManageQuery
 
 from ... import db
-from api.database.models import DeptNoteBook, Depts, DeptsPayment, NoteBookMember, User
+from api.database.models import Currency, DeptNoteBook, Depts, DeptsPayment, NoteBookMember, User
 
 dept = Blueprint("dept", __name__, url_prefix="/api/user/account/dept")
 
@@ -30,6 +31,7 @@ APP_LABEL = AppLabels()
 dept_note_book_schema = DeptNoteBookSchema()
 dept_schema = DeptsSchema()
 user_schema = UserSchema()
+currency_schema = CurrencySchema()
 noteBook_Member_Schema = NoteBookMemberSchema()
 now = datetime.now()
 
@@ -98,23 +100,27 @@ def retrieve_members_from_dept_notebook():
     return jsonify(data=combine_all_list)
 
 
-@dept.get("/retrieve")
+@dept.get("/retrieve/<int:currency_id>")
 @jwt_required(refresh=True)
-def user_get_dept():
+def user_get_dept(currency_id):
     user_id = get_jwt_identity()['id']
     dept_list = []
-
-    total_dept_amount = db.session.query(Depts).join(
-        DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
-        filter(DeptNoteBook.user_id == user_id).order_by(
+    currency = []
+    total_dept_amount = db.session.query(Depts, Currency.code).\
+        join(Currency, Depts.currency_id == Currency.id).\
+        join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
+        filter(DeptNoteBook.user_id == user_id, Depts.currency_id == currency_id).order_by(
             desc(Depts.created_at)).all()
 
     for item in total_dept_amount:
         dept_list.append(dept_schema.dump(item))
 
+    for expense_detail in dept_list:
+        currency.append(expense_detail['code'])
+
     total_amount = manage_query.generate_total_amount(dept_list)
 
-    return jsonify(data={"dept_list": dept_list, "total_dept": total_amount})
+    return jsonify(data={"dept_list": dept_list, "total_dept": total_amount, "currency": currency[0] if len(currency) > 0 else ""})
 
 # Get dept by date
 
@@ -123,13 +129,18 @@ def user_get_dept():
 @jwt_required(refresh=True)
 def get_loan_by_current_date(dept_note_id):
     dept_list = []
+    currency = []
     loan_data = Depts.query.filter_by(note_id=dept_note_id).\
         filter(extract('year', Depts.created_at) == todays_date.year).\
         filter(extract('month', Depts.created_at) ==
                todays_date.month).order_by(desc(Depts.created_at)).all()
 
     for item in loan_data:
-        dept_list.append(dept_schema.dump(item))
+        dept_data = dept_schema.dump(item) | currency_schema.dump(item)
+        dept_list.append(dept_data)
+
+    for expense_detail in dept_list:
+        currency.append(expense_detail['code'])
 
     total_amount = manage_query.generate_total_amount(dept_list)
 
@@ -137,6 +148,7 @@ def get_loan_by_current_date(dept_note_id):
         "dept_list": dept_list,
         "total_amount": total_amount,
         "today_date": todays_date,
+        "currency": currency[0] if len(currency) > 0 else ""
     })
 
 # Add dept
