@@ -243,7 +243,7 @@ class LoanNoteBook(db.Model):
     # ? to be changed to member_id
     friend_id = Column(Integer, ForeignKey(
         'notebook_member.id'), nullable=True)
-    '''If your partener is not fuko user <mension his/her name>'''
+    '''If your partner is not fuko user <mention his/her name>'''
     partner_name = Column(Text, nullable=True)
     notebook_id = Column(Integer, ForeignKey('notebook.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())

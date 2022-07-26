@@ -47,9 +47,6 @@ def user_global_amount(currency_id):
         filter(LoanNoteBook.user_id == user_id,
                Loans.currency_id == currency_id).all()
 
-    # savings = QUERY.get_all_joined_table_by_id(
-    #     db=db, model1=USER, model2=SAVINGS, user_id=user_id, currency_id=currency_id)
-
     savings = db.session.query(Savings).join(
         User, Savings.user_id == User.id, isouter=True).\
         filter(Savings.user_id == user_id,

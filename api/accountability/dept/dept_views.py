@@ -98,15 +98,15 @@ def retrieve_members_from_dept_notebook():
     return jsonify(data=combine_all_list)
 
 
-@dept.get("/retrieve")
+@dept.get("/retrieve/<int:currency_id>")
 @jwt_required(refresh=True)
-def user_get_dept():
+def user_get_dept(currency_id):
     user_id = get_jwt_identity()['id']
     dept_list = []
 
     total_dept_amount = db.session.query(Depts).join(
         DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
-        filter(DeptNoteBook.user_id == user_id).order_by(
+        filter(DeptNoteBook.user_id == user_id, Depts.currency_id == currency_id).order_by(
             desc(Depts.created_at)).all()
 
     for item in total_dept_amount:

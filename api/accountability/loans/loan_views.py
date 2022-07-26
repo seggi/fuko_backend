@@ -150,9 +150,9 @@ def user_record_loan(note_id):
                 return response_with(resp.INVALID_INPUT_422)
             else:
                 if value["recieve_money_at"] == "":
-                    recieved_at = {"recieve_money_at": now}
+                    received_at = {"recieve_money_at": now}
                     QUERY.insert_data(db=db, table_data=Loans(
-                        **value | {"note_id": note_id, **recieved_at}))
+                        **value | {"note_id": note_id, **received_at}))
                     return jsonify({
                         "code": APP_LABEL.label("success"),
                         "message": APP_LABEL.label("Loan Amount recorded with success")
