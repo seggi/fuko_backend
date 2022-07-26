@@ -157,7 +157,7 @@ def user_get_group_expense(currency_id, selected_years):
         "total_amount": total_amount,
         "today_date": todays_date,
         'monthly_report': collect_months_data,
-        'currency_code': currency[0]
+        'currency_code': currency[0] if len(currency) > 0 else ""
     })
 
 # Update Expenses
