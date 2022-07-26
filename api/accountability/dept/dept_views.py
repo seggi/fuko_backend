@@ -106,21 +106,55 @@ def user_get_dept(currency_id):
     user_id = get_jwt_identity()['id']
     dept_list = []
     currency = []
-    total_dept_amount = db.session.query(Depts, Currency.code).\
-        join(Currency, Depts.currency_id == Currency.id).\
-        join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
+    total_dept_amount = db.session.query(Depts.amount, Currency.code).\
+        join(Currency, Depts.currency_id == Currency.id, isouter=True).\
         filter(DeptNoteBook.user_id == user_id, Depts.currency_id == currency_id).order_by(
             desc(Depts.created_at)).all()
+    #   join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
 
     for item in total_dept_amount:
-        dept_list.append(dept_schema.dump(item))
+        dept_data = dept_schema.dump(item) | currency_schema.dump(item)
+        dept_list.append(dept_data)
 
-    for expense_detail in dept_list:
-        currency.append(expense_detail['code'])
+    for dept in dept_list:
+        currency.append(dept['code'])
 
     total_amount = manage_query.generate_total_amount(dept_list)
 
-    return jsonify(data={"dept_list": dept_list, "total_dept": total_amount, "currency": currency[0] if len(currency) > 0 else ""})
+    return jsonify(data={
+        "dept_list": dept_list,
+        "total_dept": total_amount,
+        "currency": currency[0] if len(currency) > 0 else ""})
+
+
+@dept.get("/retrieve-friend-dept/<int:friend_id>/<int:currency_id>")
+@jwt_required(refresh=True)
+def retrieve_friend_dept(currency_id, friend_id):
+    user_id = get_jwt_identity()['id']
+    dept_list = []
+    currency = []
+    total_dept_amount = db.session.query(Depts.amount, Depts.description, Depts.created_at, Currency.code).\
+        join(Currency, Depts.currency_id == Currency.id, isouter=True).\
+        join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
+        filter(
+            DeptNoteBook.user_id == user_id,
+            Depts.currency_id == currency_id,
+            DeptNoteBook.id == friend_id).order_by(
+            desc(Depts.created_at)).all()
+
+    for item in total_dept_amount:
+        dept_data = dept_schema.dump(item) | currency_schema.dump(item)
+        dept_list.append(dept_data)
+
+    for dept in dept_list:
+        currency.append(dept['code'])
+
+    total_amount = manage_query.generate_total_amount(dept_list)
+
+    return jsonify(data={
+        "dept_list": dept_list,
+        "total_dept": total_amount,
+        "currency": currency[0] if len(currency) > 0 else ""})
 
 # Get dept by date
 
@@ -165,9 +199,9 @@ def user_add_dept(note_id):
                 return response_with(resp.INVALID_INPUT_422)
             else:
                 if value["lent_at"] == "":
-                    recieved_at = {"lent_at": now}
+                    received_at = {"lent_at": now}
                     QUERY.insert_data(db=db, table_data=Depts(
-                        **value | {"note_id": note_id, **recieved_at}))
+                        **value | {"note_id": note_id, **received_at}))
                     return jsonify({
                         "code": APP_LABEL.label("success"),
                         "message": APP_LABEL.label("Dept Amount recorded with success")
@@ -180,7 +214,8 @@ def user_add_dept(note_id):
                         "message": APP_LABEL.label("Dept Amount recorded with success")
                     })
 
-    except Exception:
+    except Exception as e:
+        print(e)
         return response_with(resp.INVALID_INPUT_422)
 
 
