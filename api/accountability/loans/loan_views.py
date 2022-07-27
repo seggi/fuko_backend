@@ -1,6 +1,6 @@
 from datetime import date
 from datetime import datetime
-from api.utils.constant import COMPUTE_SIMGLE_AMOUNT
+from api.utils.constant import COMPUTE_SINGLE_AMOUNT
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from api.accountability.global_amount.global_amount_views import QUERY
@@ -207,7 +207,7 @@ def user_pay_loan(loan_id):
         if request_data['data']["amount"] is None:
             return response_with(resp.INVALID_INPUT_422)
 
-        if request_data['method'] == COMPUTE_SIMGLE_AMOUNT:
+        if request_data['method'] == COMPUTE_SINGLE_AMOUNT:
             get_single_amount = db.session.query(Loans.amount, Loans.currency_id).\
                 filter(Loans.currency_id == request_data['data']['currency_id']).\
                 filter(Loans.payment_status == False).\
