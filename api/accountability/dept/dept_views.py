@@ -134,7 +134,12 @@ def retrieve_friend_dept(currency_id, friend_id):
     user_id = get_jwt_identity()['id']
     dept_list = []
     currency = []
-    total_dept_amount = db.session.query(Depts.id, Depts.amount, Depts.description, Depts.created_at, Currency.code).\
+    total_dept_amount = db.session.query(
+        Depts.id, Depts.amount,
+        Depts.description,
+        Depts.created_at,
+        Depts.payment_status,
+        Currency.code).\
         join(Currency, Depts.currency_id == Currency.id, isouter=True).\
         join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
         filter(
@@ -278,7 +283,34 @@ def user_pay_dept(dept_id):
             return jsonify(data="Please pay by selecting multiple.")
 
     except Exception as e:
-        print(e)
+        return response_with(resp.INVALID_INPUT_422)
+
+
+@dept.post("/pay-multiple-depts")
+@jwt_required(refresh=True)
+def pay_multiple_dept():
+    request_data = request.json
+    try:
+        for data in request_data:
+            get_dept = db.session.query(DeptsPayment).\
+                filter(DeptsPayment.dept_id == data['dept_id']).\
+                filter(DeptsPayment.description == data['description']).first()
+            if get_dept:
+                return jsonify({
+                    "code": APP_LABEL.label("Alert"),
+                    "message": APP_LABEL.label("Amount can't be applied twice."),
+                })
+            QUERY.insert_data(db=db, table_data=DeptsPayment(**data))
+            dept = db.session.query(Depts).filter(
+                Depts.id == data['dept_id']).one()
+            dept.payment_status = True
+            db.session.commit()
+
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label("You come to complete some depts."),
+        })
+    except Exception:
         return response_with(resp.INVALID_INPUT_422)
 
 
@@ -286,6 +318,7 @@ def user_pay_dept(dept_id):
 @jwt_required(refresh=True)
 def retrieve_payment_dept(dept_id, currency_id):
     currency = []
+    get_status = []
     payment_history_list = []
     collect_payment_history = []
 
@@ -297,6 +330,12 @@ def retrieve_payment_dept(dept_id, currency_id):
         filter(DeptsPayment.currency_id == currency_id).\
         filter(DeptsPayment.dept_id == dept_id).all()
 
+    retrieve_status = db.session.query(Depts.payment_status).\
+        filter(Depts.id == dept_id).all()
+
+    for payment_status in retrieve_status:
+        get_status.append(dept_schema.dump(payment_status))
+
     for amount in get_payment_history:
         payment_history_list.append(dept_payment_schema.dump(amount))
         collect_payment_history.append(float(amount['amount']))
@@ -307,5 +346,6 @@ def retrieve_payment_dept(dept_id, currency_id):
     return jsonify(data={
         "payment_history": payment_history_list,
         "currency": currency[0] if len(currency) > 0 else "",
-        "paid_amount": get_total_paid_amount
+        "paid_amount": get_total_paid_amount,
+        "status": get_status[0]["payment_status"]
     })
