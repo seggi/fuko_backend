@@ -1,7 +1,9 @@
 from datetime import date
 from datetime import datetime
 from locale import currency
+from threading import local
 from api.auth.auth_views import refresh
+from api.core.reducer import Reducer
 from api.utils.constant import COMPUTE_SINGLE_AMOUNT
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -314,8 +316,133 @@ def pay_multiple_dept():
         return response_with(resp.INVALID_INPUT_422)
 
 
-@dept.get("/retrieve-paid-amount/<int:currency_id>/<int:dept_id>")
+@dept.post("/pay-many-dept")
 @jwt_required(refresh=True)
+def pay_many_dept():
+    # amount
+    request_data = request.json
+    collect_unpaid_amount = []
+    collect_unfinished_payment = []
+    collect_all_dept = []
+    collect_final_data = []
+
+    unpaid_amounts = db.session.query(Depts.amount, Depts.id).\
+        filter(Depts.payment_status == False).\
+        filter(Depts.currency_id == 150).\
+        filter(Depts.note_id == 9).all()
+
+    unfinished_payment = db.session.query(Depts.id, DeptsPayment.amount).\
+        join(Depts, DeptsPayment.dept_id == Depts.id).\
+        filter(Depts.payment_status == False).\
+        filter(Depts.currency_id == 150).\
+        filter(Depts.note_id == 9).all()
+
+    for dept_amount in unpaid_amounts:
+        collect_unpaid_amount.append(dept_schema.dump(dept_amount))
+
+    for dept_amount in unfinished_payment:
+        combine_data = dept_payment_schema.dump(
+            dept_amount) | dept_schema.dump(dept_amount)
+        collect_unfinished_payment.append(combine_data)
+
+    reducer = Reducer(list_items=collect_unfinished_payment)
+
+    new_data_list = reducer.compute_paid_unfinished_payment(
+        unpaid_amounts=collect_unpaid_amount,
+    )
+
+    if len(new_data_list) == 0:
+        return jsonify(data={
+            "code":  APP_LABEL.label('success'),
+            "message":  APP_LABEL.label("There is not dept to pay.")
+        })
+
+    request_amount = float(request_data[0]['amount'])
+
+    def get_amount():
+        amount_list = []
+        for item in new_data_list:
+            if request_amount < float(item['amount']):
+                pass
+
+            if request_amount >= float(item['amount']):
+                amount_list.append(item)
+        return amount_list
+
+    if len(get_amount()) == 0:
+        return jsonify({
+            "code": APP_LABEL.label("Alert"),
+            "message": APP_LABEL.label("Amount entered is not sufficient..., please use single payment"),
+        })
+
+    if len(get_amount()) > 0:
+        for item in new_data_list:
+            collect_all_dept.append(item['amount'])
+
+        total_dept_amount = float(sum(collect_all_dept))
+
+        if request_amount > total_dept_amount:
+            return jsonify({
+                "code": APP_LABEL.label("Alert"),
+                "message": APP_LABEL.label(f"You entered {request_amount} witch is more than the dept {total_dept_amount}."),
+            })
+
+        else:
+            first_step = []
+            second_step = []
+            final_step = []
+            amount_list = []
+
+            data_list = list()
+            for item in get_amount():
+                if float(item['amount']) <= request_amount:
+                    first_step.append(item['amount'])
+                    amount_list.append(item)
+
+            global_amount = sum(first_step)
+            calculated_amount = global_amount - request_amount
+            cal = list()
+            for item in amount_list:
+                if global_amount > request_amount:
+                    second_step.append(item)
+
+                if global_amount == request_amount:
+                    second_step.append(item)
+
+                if global_amount < request_amount:
+                    second_step.append(item)
+
+            if data_list:
+                second_step.append(data_list[0])
+
+            get_0_amount = []
+            get_1_amount = []
+            get_2_amount = []
+            collect = sum([item['amount'] for item in second_step])
+            sub_more = collect - request_amount
+            for item in second_step:
+                sub = request_amount - item['amount']
+                if collect == request_amount:
+                    final_step.append(item)
+
+                if collect > request_amount:
+                    if item['amount'] == request_amount or sub < item['amount']:
+                        get_0_amount.append(item)
+
+                    if sub_more == item['amount']:
+                        get_1_amount.append(item)
+
+            if len(get_0_amount) > 0:
+                final_step.append(get_0_amount[0])
+
+            if len(get_1_amount) > 0:
+                final_step.append(get_1_amount[0])
+
+    return jsonify(data=collect_final_data)
+
+
+@ dept.get("/retrieve-paid-amount/<int:currency_id>/<int:dept_id>")
+@ jwt_required(refresh=True)
 def retrieve_payment_dept(dept_id, currency_id):
     currency = []
     get_status = []
