@@ -316,6 +316,31 @@ def pay_multiple_dept():
         return response_with(resp.INVALID_INPUT_422)
 
 
+@dept.post("/check-unfinished-dept")
+@jwt_required(refresh=True)
+def checking_unfinished_dept():
+    request_data = request.json
+
+    try:
+        unpaid_amounts = db.session.query(Depts.amount, Depts.id).\
+            filter(Depts.payment_status == False).\
+            filter(Depts.currency_id == 150).\
+            filter(Depts.note_id == 9).all()
+
+        unfinished_payment = db.session.query(Depts.id, DeptsPayment.amount).\
+            join(Depts, DeptsPayment.dept_id == Depts.id).\
+            filter(Depts.payment_status == False).\
+            filter(Depts.currency_id == 150).\
+            filter(Depts.note_id == 9).all()
+
+        return jsonify()
+
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
+
+
+# ! Many changes must be performed this section
+# ---------------------------------------------
 @dept.post("/pay-many-dept")
 @jwt_required(refresh=True)
 def pay_many_dept():
@@ -350,6 +375,9 @@ def pay_many_dept():
     new_data_list = reducer.compute_paid_unfinished_payment(
         unpaid_amounts=collect_unpaid_amount,
     )
+
+    # ? This part of code must be changed
+    # ! There are some logic to be removed from the code
 
     if len(new_data_list) == 0:
         return jsonify(data={
@@ -415,6 +443,8 @@ def pay_many_dept():
             if data_list:
                 second_step.append(data_list[0])
 
+            # ! To be remove
+
             get_0_amount = []
             get_1_amount = []
             get_2_amount = []
@@ -438,7 +468,7 @@ def pay_many_dept():
             if len(get_1_amount) > 0:
                 final_step.append(get_1_amount[0])
 
-    return jsonify(data=collect_final_data)
+    return jsonify(data=new_data_list)
 
 
 @ dept.get("/retrieve-paid-amount/<int:currency_id>/<int:dept_id>")
