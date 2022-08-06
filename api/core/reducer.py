@@ -1,5 +1,7 @@
 from types import new_class
 
+from api.core.payment_manager import ComputePaymentAmount
+
 
 class Reducer:
     def __init__(self, list_items=[]) -> None:
@@ -53,7 +55,7 @@ class Reducer:
 
         return new_list
 
-    def compute_paid_unfinished_payment(self, unpaid_amounts=[]):
+    def compute_paid_unfinished_payment(self, request_data=None,  unpaid_amounts=[]):
         new_list = []
 
         for unpaid in unpaid_amounts:
@@ -68,4 +70,7 @@ class Reducer:
                     new_list.append(
                         {'id': unpaid['id'], 'amount': remaining_amount})
 
-        return new_list
+        new_data = ComputePaymentAmount(request_amount=request_data,
+                                        db_amount=new_list, updated_amount_db=new_list)
+
+        return new_data.compute_db_amount()

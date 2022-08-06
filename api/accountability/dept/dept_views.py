@@ -3,6 +3,7 @@ from datetime import datetime
 from locale import currency
 from threading import local
 from api.auth.auth_views import refresh
+from api.core.payment_manager import ComputePaymentAmount
 from api.core.reducer import Reducer
 from api.utils.constant import COMPUTE_SINGLE_AMOUNT
 from flask import Blueprint, jsonify, request
@@ -373,100 +374,9 @@ def pay_many_dept():
     reducer = Reducer(list_items=collect_unfinished_payment)
 
     new_data_list = reducer.compute_paid_unfinished_payment(
+        request_data=float(request_data[0]['amount']),
         unpaid_amounts=collect_unpaid_amount,
     )
-
-    # ? This part of code must be changed
-    # ! There are some logic to be removed from the code
-
-    if len(new_data_list) == 0:
-        return jsonify(data={
-            "code":  APP_LABEL.label('success'),
-            "message":  APP_LABEL.label("There is not dept to pay.")
-        })
-
-    request_amount = float(request_data[0]['amount'])
-
-    def get_amount():
-        amount_list = []
-        for item in new_data_list:
-            if request_amount < float(item['amount']):
-                pass
-
-            if request_amount >= float(item['amount']):
-                amount_list.append(item)
-        return amount_list
-
-    if len(get_amount()) == 0:
-        return jsonify({
-            "code": APP_LABEL.label("Alert"),
-            "message": APP_LABEL.label("Amount entered is not sufficient..., please use single payment"),
-        })
-
-    if len(get_amount()) > 0:
-        for item in new_data_list:
-            collect_all_dept.append(item['amount'])
-
-        total_dept_amount = float(sum(collect_all_dept))
-
-        if request_amount > total_dept_amount:
-            return jsonify({
-                "code": APP_LABEL.label("Alert"),
-                "message": APP_LABEL.label(f"You entered {request_amount} witch is more than the dept {total_dept_amount}."),
-            })
-
-        else:
-            first_step = []
-            second_step = []
-            final_step = []
-            amount_list = []
-
-            data_list = list()
-            for item in get_amount():
-                if float(item['amount']) <= request_amount:
-                    first_step.append(item['amount'])
-                    amount_list.append(item)
-
-            global_amount = sum(first_step)
-            calculated_amount = global_amount - request_amount
-            cal = list()
-            for item in amount_list:
-                if global_amount > request_amount:
-                    second_step.append(item)
-
-                if global_amount == request_amount:
-                    second_step.append(item)
-
-                if global_amount < request_amount:
-                    second_step.append(item)
-
-            if data_list:
-                second_step.append(data_list[0])
-
-            # ! To be remove
-
-            get_0_amount = []
-            get_1_amount = []
-            get_2_amount = []
-            collect = sum([item['amount'] for item in second_step])
-            sub_more = collect - request_amount
-            for item in second_step:
-                sub = request_amount - item['amount']
-                if collect == request_amount:
-                    final_step.append(item)
-
-                if collect > request_amount:
-                    if item['amount'] == request_amount or sub < item['amount']:
-                        get_0_amount.append(item)
-
-                    if sub_more == item['amount']:
-                        get_1_amount.append(item)
-
-            if len(get_0_amount) > 0:
-                final_step.append(get_0_amount[0])
-
-            if len(get_1_amount) > 0:
-                final_step.append(get_1_amount[0])
 
     return jsonify(data=new_data_list)
 
