@@ -254,7 +254,7 @@ def user_pay_loan(loan_id):
 
 @loans.post("/pay-multiple-depts")
 @jwt_required(refresh=True)
-def pay_multiple_dept():
+def pay_multiple_loan():
     request_data = request.json
     try:
         for data in request_data:
