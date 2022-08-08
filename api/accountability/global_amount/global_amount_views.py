@@ -2,8 +2,8 @@ from datetime import date
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from api.database.models import DeptNoteBook, Depts, ExpenseDetails, Expenses, LoanNoteBook, Loans, Savings, User
-from api.utils.model_marsh import DeptsSchema, ExpenseDetailsSchema, ExpensesSchema, LoanSchema, SavingsSchema, UserSchema
+from api.database.models import DeptNoteBook, Depts, ExpenseDetails, Expenses, LoanNoteBook, Loans, RecordDeptPayment, Savings, User
+from api.utils.model_marsh import DeptsSchema, ExpenseDetailsSchema, ExpensesSchema, LoanSchema, RecordDeptPaymentSchema, SavingsSchema, UserSchema
 from api.core.query import QueryGlobalReport
 from api.core.objects import GlobalAmount
 
@@ -21,6 +21,7 @@ EXPENSES = ExpenseDetails
 LOANS = Loans
 DEPT = Depts
 SAVINGS = Savings
+RECORD_DEPT_PAYMENT = RecordDeptPayment
 
 # Call Schema
 USER_SCHEMA = UserSchema(many=True)
@@ -28,6 +29,7 @@ EXPENSES_SCHEMA = ExpenseDetailsSchema(many=True)
 LOANS_SCHEMA = LoanSchema(many=True)
 DEPT_SCHEMA = DeptsSchema(many=True)
 SAVINGS_SCHEMA = SavingsSchema(many=True)
+RECORD_DEPT_PAYMENT_SCHEMA = RecordDeptPaymentSchema(many=True)
 
 
 QUERY = QueryGlobalReport()
@@ -57,11 +59,19 @@ def user_global_amount(currency_id):
         filter(DeptNoteBook.user_id == user_id).\
         filter(Depts.currency_id == currency_id).all()
 
+    paid_dept = db.session.query(RecordDeptPayment).join(
+        DeptNoteBook, RecordDeptPayment.note_id == DeptNoteBook.id, isouter=True).\
+        filter(DeptNoteBook.user_id == user_id).\
+        filter(RecordDeptPayment.currency_id == currency_id).all()
+
+    print(paid_dept)
+
     result = GlobalAmount(
         tbl1=EXPENSES_SCHEMA.dump(expenses),
         tbl2=LOANS_SCHEMA.dump(loans),
         tbl3=SAVINGS_SCHEMA.dump(savings),
-        tbl4=DEPT_SCHEMA.dump(dept)
+        tbl4=DEPT_SCHEMA.dump(dept),
+        tbl5=RECORD_DEPT_PAYMENT_SCHEMA.dump(paid_dept)
     )
 
     global_amount = result.computer_amount(

@@ -319,27 +319,6 @@ def pay_multiple_dept():
         return response_with(resp.INVALID_INPUT_422)
 
 
-# ! Many changes must be performed this section
-#  request_data = request.json
-#     collect_unpaid_amount = []
-#     collect_unfinished_payment = []
-
-#     unpaid_amounts = db.session.query(Depts.amount, Depts.id).\
-#         filter(Depts.currency_id == 150).\
-#         filter(Depts.note_id == 9).all()
-
-#     paid_amount = db.session.query(Depts.id, RecordDeptPayment.amount).\
-#         filter(Depts.currency_id == 150).\
-#         filter(Depts.note_id == 9).all()
-
-#     for dept_amount in unpaid_amounts:
-#         collect_unpaid_amount.append(dept_schema.dump(dept_amount))
-
-#     for dept_amount in paid_amount:
-#         combine_data = dept_payment_schema.dump(
-#             dept_amount) | dept_schema.dump(dept_amount)
-#         collect_unfinished_payment.append(combine_data)
-# ---------------------------------------------
 @dept.post("/pay-many-dept")
 @jwt_required(refresh=True)
 def pay_many_dept():
@@ -384,6 +363,8 @@ def retrieve_payment_recorded(note_id, currency_id):
         "paid_amount": get_total_paid_amount,
     })
 
+
+#! To be changed
 
 @ dept.get("/retrieve-paid-amount/<int:currency_id>/<int:dept_id>")
 @ jwt_required(refresh=True)
