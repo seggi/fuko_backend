@@ -61,12 +61,15 @@ class ComputePaymentAmount:
                 )
 
                 return {
-                    "with_remain_amount": single_process,
-                    "without_remain_amount": new_data
+                    "single_payment": single_process,
+                    "with_remain_amount": [],
+                    "without_remain_amount": []
                 }
 
             if len(sub) > 0:
                 amount_paid = sub[0]['amount_paid']
+
+                # print(amount_paid, '||')
 
                 sub_amount_incoming = sub[2]['incoming_amount']
                 sub_list = sub[1]['data']
@@ -85,6 +88,7 @@ class ComputePaymentAmount:
                     }
 
             return {
+                "single_payment": {"dept_id": None, 'amount': 0.0},
                 "with_remain_amount": sub,
                 "without_remain_amount": new_data
             }
@@ -99,7 +103,7 @@ class ComputePaymentAmount:
                 collect_data.append(amount)
 
         get_random_data = random.choice(collect_data)
-        return {"id": get_random_data['id'], 'amount': incoming_amount}
+        return {"dept_id": get_random_data['id'], 'amount': incoming_amount}
 
     def sub_amount(self, amount_paid=None, updated_amount_db=None):
         empty_list = []

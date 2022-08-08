@@ -14,12 +14,12 @@ from api.accountability.global_amount.global_amount_views import QUERY
 from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import CurrencySchema, DeptNoteBookSchema, DeptPaymentSchema, DeptsSchema, NoteBookMemberSchema, UserSchema
+from api.utils.model_marsh import CurrencySchema, DeptNoteBookSchema, DeptPaymentSchema, DeptsSchema, NoteBookMemberSchema, RecordDeptPaymentSchema, UserSchema
 from api.core.labels import AppLabels
 from api.core.objects import ManageQuery
 
 from ... import db
-from api.database.models import Currency, DeptNoteBook, Depts, DeptsPayment, NoteBookMember, User
+from api.database.models import Currency, DeptNoteBook, Depts, DeptsPayment, NoteBookMember, RecordDeptPayment, User, RecordDeptPayment
 
 dept = Blueprint("dept", __name__, url_prefix="/api/user/account/dept")
 
@@ -37,7 +37,9 @@ user_schema = UserSchema()
 currency_schema = CurrencySchema()
 noteBook_Member_Schema = NoteBookMemberSchema()
 dept_payment_schema = DeptPaymentSchema()
+record_dept_payment_schema = RecordDeptPaymentSchema()
 now = datetime.now()
+
 
 # Invite Friend
 
@@ -317,68 +319,42 @@ def pay_multiple_dept():
         return response_with(resp.INVALID_INPUT_422)
 
 
-@dept.post("/check-unfinished-dept")
-@jwt_required(refresh=True)
-def checking_unfinished_dept():
-    request_data = request.json
-
-    try:
-        unpaid_amounts = db.session.query(Depts.amount, Depts.id).\
-            filter(Depts.payment_status == False).\
-            filter(Depts.currency_id == 150).\
-            filter(Depts.note_id == 9).all()
-
-        unfinished_payment = db.session.query(Depts.id, DeptsPayment.amount).\
-            join(Depts, DeptsPayment.dept_id == Depts.id).\
-            filter(Depts.payment_status == False).\
-            filter(Depts.currency_id == 150).\
-            filter(Depts.note_id == 9).all()
-
-        return jsonify()
-
-    except Exception:
-        return response_with(resp.INVALID_INPUT_422)
-
-
 # ! Many changes must be performed this section
+#  request_data = request.json
+#     collect_unpaid_amount = []
+#     collect_unfinished_payment = []
+
+#     unpaid_amounts = db.session.query(Depts.amount, Depts.id).\
+#         filter(Depts.currency_id == 150).\
+#         filter(Depts.note_id == 9).all()
+
+#     paid_amount = db.session.query(Depts.id, RecordDeptPayment.amount).\
+#         filter(Depts.currency_id == 150).\
+#         filter(Depts.note_id == 9).all()
+
+#     for dept_amount in unpaid_amounts:
+#         collect_unpaid_amount.append(dept_schema.dump(dept_amount))
+
+#     for dept_amount in paid_amount:
+#         combine_data = dept_payment_schema.dump(
+#             dept_amount) | dept_schema.dump(dept_amount)
+#         collect_unfinished_payment.append(combine_data)
 # ---------------------------------------------
 @dept.post("/pay-many-dept")
 @jwt_required(refresh=True)
 def pay_many_dept():
     # amount
     request_data = request.json
-    collect_unpaid_amount = []
-    collect_unfinished_payment = []
-    collect_all_dept = []
-    collect_final_data = []
+    try:
+        for data in request_data:
+            QUERY.insert_data(db=db, table_data=RecordDeptPayment(**data))
 
-    unpaid_amounts = db.session.query(Depts.amount, Depts.id).\
-        filter(Depts.payment_status == False).\
-        filter(Depts.currency_id == 150).\
-        filter(Depts.note_id == 9).all()
-
-    unfinished_payment = db.session.query(Depts.id, DeptsPayment.amount).\
-        join(Depts, DeptsPayment.dept_id == Depts.id).\
-        filter(Depts.payment_status == False).\
-        filter(Depts.currency_id == 150).\
-        filter(Depts.note_id == 9).all()
-
-    for dept_amount in unpaid_amounts:
-        collect_unpaid_amount.append(dept_schema.dump(dept_amount))
-
-    for dept_amount in unfinished_payment:
-        combine_data = dept_payment_schema.dump(
-            dept_amount) | dept_schema.dump(dept_amount)
-        collect_unfinished_payment.append(combine_data)
-
-    reducer = Reducer(list_items=collect_unfinished_payment)
-
-    new_data_list = reducer.compute_paid_unfinished_payment(
-        request_data=float(request_data[0]['amount']),
-        unpaid_amounts=collect_unpaid_amount,
-    )
-
-    return jsonify(data=new_data_list)
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label(f"You come to pay {request_data['amount']}."),
+        })
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
 
 
 @ dept.get("/retrieve-paid-amount/<int:currency_id>/<int:dept_id>")

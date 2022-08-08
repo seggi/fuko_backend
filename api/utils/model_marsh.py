@@ -7,7 +7,7 @@ from ..database.models import (
     LoanNoteBook, LoanPayment, State, Country, Language, Currency, AmountProvenance,
     User, UserProfile, UserSpokenLanguage, Expenses, Loans, Depts, Savings, Budget,
     NoteBook, NoteBookMember, RequestStatus,  UserDefaultCurrency, UserCreateGroup,
-    GroupMembers, BudgetOption
+    GroupMembers, BudgetOption, RecordDeptPayment
 )
 
 from .. import db
@@ -243,5 +243,12 @@ class UserCreateGroupSchema(marsh.SQLAlchemyAutoSchema):
 class GroupMemberSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = GroupMembers
+        include_relationships = True
+        load_instance = True
+
+
+class RecordDeptPaymentSchema(marsh.SQLAlchemyAutoSchema):
+    class Meta:
+        model = RecordDeptPayment
         include_relationships = True
         load_instance = True

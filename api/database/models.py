@@ -308,6 +308,8 @@ class Depts(db.Model):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
+# ! Remove DeptsPayment in the near future
+
 
 class DeptsPayment(db.Model):
     __tablename__ = "dept_payment"
@@ -315,6 +317,21 @@ class DeptsPayment(db.Model):
     dept_id = Column(Integer, ForeignKey('depts.id'), nullable=False)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    budget_category_id = Column(Integer, ForeignKey(
+        'budget_categories.id'), default=7, nullable=True)
+    budget_option_id = Column(Integer, ForeignKey(
+        'budget_option.id'), default=2, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
+
+class RecordDeptPayment(db.Model):
+    __tablename__ = "record_dept_payment"
+    id = Column('id', Integer, primary_key=True)
+    amount = Column(Float, nullable=False)
+    description = Column(Text, nullable=True)
+    note_id = Column(Integer, ForeignKey('dept_note_book.id'), nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     budget_category_id = Column(Integer, ForeignKey(
         'budget_categories.id'), default=7, nullable=True)
