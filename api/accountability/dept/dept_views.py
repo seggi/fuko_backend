@@ -342,7 +342,11 @@ def retrieve_payment_recorded(note_id, currency_id):
     collect_payment_history = []
     get_amount = []
     currency = []
-    paid_amount = db.session.query(RecordDeptPayment.amount, RecordDeptPayment.created_at, Currency.code).\
+    paid_amount = db.session.query(
+        RecordDeptPayment.description,
+        RecordDeptPayment.amount,
+        RecordDeptPayment.created_at,
+        Currency.code).\
         join(Currency, RecordDeptPayment.currency_id == Currency.id).\
         filter(RecordDeptPayment.currency_id == currency_id).\
         filter(RecordDeptPayment.note_id == note_id).order_by(
