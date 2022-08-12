@@ -1,5 +1,5 @@
 from datetime import datetime
-from api.utils.model_marsh import NoteBookSchema
+from api.utils.model_marsh import NoteBookMemberSchema, NoteBookSchema, UserSchema
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from api.accountability.global_amount.global_amount_views import QUERY
@@ -11,7 +11,7 @@ from api.core.labels import AppLabels
 from api.utils.model_marsh import NoteBookSchema
 
 from .. import db
-from api.database.models import NoteBook
+from api.database.models import NoteBook, NoteBookMember, User
 
 QUERY = QueryGlobalReport()
 APP_LABEL = AppLabels()
@@ -20,8 +20,9 @@ now = datetime.now()
 notebook = Blueprint("notebook", __name__,
                      url_prefix="/api/user/notebook")
 
+user_schema = UserSchema()
 noteBookSchema = NoteBookSchema()
-
+notebook_member_schema = NoteBookMemberSchema()
 # Create NoteBook
 
 
@@ -50,6 +51,21 @@ def retrieve_notebook():
     for values in data:
         notebook_list.append(noteBookSchema.dump(values))
     return jsonify(data=notebook_list)
+
+
+@notebook.get("/retrieve-notebook-member/<int:note_id>")
+@jwt_required(refresh=True)
+def retrieve_notebook_member(note_id):
+    user_id = get_jwt_identity()['id']
+    retrieve_member = []
+    get_member = db.session.query(NoteBookMember).\
+        join(NoteBook, NoteBookMember.notebook_id == NoteBook.id).\
+        filter(NoteBookMember.notebook_id == note_id).all()
+
+    for item in get_member:
+        retrieve_member.append(item)
+
+    return jsonify(data=retrieve_member)
 
 
 @notebook.put("/update")
