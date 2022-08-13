@@ -9,12 +9,12 @@ from sqlalchemy import extract, desc
 from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import LoanNoteBookSchema, LoanPaymentSchema, LoanSchema, NoteBookMemberSchema, UserSchema
+from api.utils.model_marsh import CurrencySchema, LoanNoteBookSchema, LoanPaymentSchema, LoanSchema, NoteBookMemberSchema, UserSchema
 from api.core.objects import ManageQuery
 from api.core.labels import AppLabels
 
 from ... import db
-from api.database.models import LoanNoteBook, LoanPayment, Loans, NoteBookMember, User
+from api.database.models import Currency, LoanNoteBook, LoanPayment, Loans, NoteBookMember, User
 
 loans = Blueprint("loans", __name__,  url_prefix="/api/user/account/loans")
 
@@ -30,6 +30,7 @@ userSchema = UserSchema()
 loans_note_book_schema = LoanNoteBookSchema()
 noteBook_Member_Schema = NoteBookMemberSchema()
 loan_payment_schema = LoanPaymentSchema()
+currency_schema = CurrencySchema()
 
 # Invite Friend
 
@@ -96,22 +97,34 @@ def retrieve_members_from_loan_notebook():
 # Get all loans
 
 
-@loans.get("/retrieve")
+@loans.get("/retrieve/<int:currency_id>")
 @jwt_required(refresh=True)
-def user_get_loans():
+def user_get_loans(currency_id):
     user_id = get_jwt_identity()['id']
     loan_list = []
-    total_loan_amount = db.session.query(Loans).\
-        join(LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True).\
-        filter(LoanNoteBook.user_id == user_id).order_by(
+    currency = []
+    total_loan_amount = db.session.query(Loans.amount, Currency.code).\
+        join(Currency, Loans.currency_id == Currency.id, isouter=True).\
+        filter(
+            LoanNoteBook.user_id == user_id,
+            Loans.currency_id == currency_id
+    ).order_by(
             desc(Loans.created_at)).all()
 
     for item in total_loan_amount:
-        loan_list.append(loans_schema.dump(item))
+        loans_data = loans_schema.dump(item) | currency_schema.dump(item)
+        loan_list.append(loans_data)
+
+    for loan in loan_list:
+        currency.append(loan['code'])
 
     total_amount = manage_query.generate_total_amount(loan_list)
 
-    return jsonify(data={"loan_list": loan_list, "total_loan": total_amount})
+    return jsonify(data={
+        "loan_list": loan_list,
+        "total_loan": total_amount,
+        "currency": currency[0] if len(currency) > 0 else ""
+    })
 
 # Get loan by date
 

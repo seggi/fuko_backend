@@ -41,20 +41,6 @@ record_dept_payment_schema = RecordDeptPaymentSchema()
 now = datetime.now()
 
 
-# Invite Friend
-
-
-@dept.post("/add-borrower-to-notebook")
-@jwt_required(refresh=True)
-def add_friend_to_notebook():
-    user_id = get_jwt_identity()['id']
-    data = request.json | {"user_id": user_id}
-    QUERY.insert_data(db=db, table_data=DeptNoteBook(**data))
-    return jsonify({
-        "code": "success",
-        "message": "Borrower added with success"
-    })
-
 # Add People
 # No from fuko
 
@@ -116,7 +102,6 @@ def user_get_dept(currency_id):
         join(Currency, Depts.currency_id == Currency.id, isouter=True).\
         filter(DeptNoteBook.user_id == user_id, Depts.currency_id == currency_id).order_by(
             desc(Depts.created_at)).all()
-    #   join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
 
     for item in total_dept_amount:
         dept_data = dept_schema.dump(item) | currency_schema.dump(item)
@@ -342,7 +327,11 @@ def retrieve_payment_recorded(note_id, currency_id):
     collect_payment_history = []
     get_amount = []
     currency = []
-    paid_amount = db.session.query(RecordDeptPayment.amount, RecordDeptPayment.created_at, Currency.code).\
+    paid_amount = db.session.query(
+        RecordDeptPayment.description,
+        RecordDeptPayment.amount,
+        RecordDeptPayment.created_at,
+        Currency.code).\
         join(Currency, RecordDeptPayment.currency_id == Currency.id).\
         filter(RecordDeptPayment.currency_id == currency_id).\
         filter(RecordDeptPayment.note_id == note_id).order_by(

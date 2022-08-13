@@ -203,7 +203,12 @@ class ExpenseDetails(db.Model):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
+
 # Note Book
+'''
+The notebook can be shared between two people 
+When accept request then join share note book info
+'''
 
 
 class NoteBook(db.Model):
