@@ -129,9 +129,9 @@ def add_friend_to_notebook():
         return response_with(resp.INVALID_INPUT_422)
 
 
-@notebook.get("/received-request")
+@notebook.get("/request-sent")
 @jwt_required(refresh=True)
-def request_received():
+def request_sent():
     try:
         sent_request = 1
         received_request = []
@@ -144,10 +144,10 @@ def request_received():
             NoteBook.notebook_name,
             User.username).\
             join(NoteBook, NoteBookMember.notebook_id == NoteBook.id).\
-            join(User, NoteBookMember.sender_id == User.id).\
+            join(User, NoteBookMember.friend_id == User.id).\
             join(RequestStatus, NoteBookMember.request_status == RequestStatus.id).\
             filter(NoteBookMember.request_status == sent_request).\
-            filter(NoteBookMember.friend_id == user_id).all()
+            filter(NoteBookMember.sender_id == user_id).all()
 
         for member in request_received:
             combine_member_data = user_schema.dump(
