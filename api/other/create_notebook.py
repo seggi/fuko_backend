@@ -129,7 +129,7 @@ def add_friend_to_notebook():
         return response_with(resp.INVALID_INPUT_422)
 
 
-@notebook.get("/retrieve-received-request")
+@notebook.get("/received-request")
 @jwt_required(refresh=True)
 def request_received():
     try:
