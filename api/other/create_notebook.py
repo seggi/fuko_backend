@@ -127,3 +127,34 @@ def add_friend_to_notebook():
 
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
+
+
+@notebook.get("/retrieve-received-request")
+@jwt_required(refresh=True)
+def request_received():
+    try:
+        sent_request = 1
+        received_request = []
+        user_id = get_jwt_identity()['id']
+        request_received = db.session.query(
+            NoteBookMember.id,
+            RequestStatus.request_status_name,
+            User.first_name, User.last_name,
+            User.username).\
+            join(NoteBook, NoteBookMember.notebook_id == NoteBook.id).\
+            join(User, NoteBookMember.friend_id == User.id).\
+            join(RequestStatus, NoteBookMember.request_status == RequestStatus.id).\
+            filter(NoteBookMember.request_status == sent_request).\
+            filter(NoteBookMember.friend_id == user_id).all()
+
+        for member in request_received:
+            combine_member_data = user_schema.dump(
+                member) | notebook_member_schema.dump(member)
+            collect_all = combine_member_data | request_status_schema.dump(
+                member)
+            received_request.append(collect_all)
+
+        return jsonify(data=received_request)
+
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
