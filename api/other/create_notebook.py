@@ -140,18 +140,19 @@ def request_received():
             NoteBookMember.id,
             RequestStatus.request_status_name,
             User.first_name, User.last_name,
+            NoteBook.notebook_name,
             User.username).\
             join(NoteBook, NoteBookMember.notebook_id == NoteBook.id).\
-            join(User, NoteBookMember.friend_id == User.id).\
+            join(User, NoteBookMember.sender_id == User.id).\
             join(RequestStatus, NoteBookMember.request_status == RequestStatus.id).\
             filter(NoteBookMember.request_status == sent_request).\
-            filter(NoteBookMember.friend_id == user_id).all()
+            filter(NoteBookMember.friend_id == 2).all()
 
         for member in request_received:
             combine_member_data = user_schema.dump(
                 member) | notebook_member_schema.dump(member)
             collect_all = combine_member_data | request_status_schema.dump(
-                member)
+                member) | noteBookSchema.dump(member)
             received_request.append(collect_all)
 
         return jsonify(data=received_request)
