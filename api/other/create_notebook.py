@@ -138,6 +138,7 @@ def request_received():
         user_id = get_jwt_identity()['id']
         request_received = db.session.query(
             NoteBookMember.id,
+            NoteBookMember.sent_at,
             RequestStatus.request_status_name,
             User.first_name, User.last_name,
             NoteBook.notebook_name,
@@ -146,7 +147,7 @@ def request_received():
             join(User, NoteBookMember.sender_id == User.id).\
             join(RequestStatus, NoteBookMember.request_status == RequestStatus.id).\
             filter(NoteBookMember.request_status == sent_request).\
-            filter(NoteBookMember.friend_id == 2).all()
+            filter(NoteBookMember.friend_id == user_id).all()
 
         for member in request_received:
             combine_member_data = user_schema.dump(
