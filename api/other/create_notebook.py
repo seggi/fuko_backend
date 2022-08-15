@@ -145,7 +145,7 @@ def request_received():
             join(User, NoteBookMember.friend_id == User.id).\
             join(RequestStatus, NoteBookMember.request_status == RequestStatus.id).\
             filter(NoteBookMember.request_status == sent_request).\
-            filter(NoteBookMember.friend_id == user_id).all()
+            filter(NoteBookMember.friend_id == 2).all()
 
         for member in request_received:
             combine_member_data = user_schema.dump(
