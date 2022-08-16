@@ -59,6 +59,7 @@ def retrieve_notebook():
 @notebook.get("/retrieve-notebook-member/<int:note_id>")
 @jwt_required(refresh=True)
 def retrieve_notebook_member(note_id):
+    sent_request = 2
     retrieve_member = []
     get_member = db.session.query(
         NoteBookMember.id,
@@ -68,6 +69,7 @@ def retrieve_notebook_member(note_id):
         join(NoteBook, NoteBookMember.notebook_id == NoteBook.id).\
         join(User, NoteBookMember.friend_id == User.id).\
         join(RequestStatus, NoteBookMember.request_status == RequestStatus.id).\
+        filter(NoteBookMember.request_status == sent_request).\
         filter(NoteBookMember.notebook_id == note_id).all()
 
     for member in get_member:
@@ -129,6 +131,39 @@ def add_friend_to_notebook():
         return response_with(resp.INVALID_INPUT_422)
 
 
+@notebook.get("/received-request")
+@jwt_required(refresh=True)
+def request_received():
+    try:
+        sent_request = 1
+        received_request = []
+        user_id = get_jwt_identity()['id']
+        request_ = db.session.query(
+            NoteBookMember.id,
+            NoteBookMember.sent_at,
+            RequestStatus.request_status_name,
+            User.first_name, User.last_name,
+            NoteBook.notebook_name,
+            User.username).\
+            join(NoteBook, NoteBookMember.notebook_id == NoteBook.id).\
+            join(User, NoteBookMember.sender_id == User.id).\
+            join(RequestStatus, NoteBookMember.request_status == RequestStatus.id).\
+            filter(NoteBookMember.request_status == sent_request).\
+            filter(NoteBookMember.friend_id == user_id).all()
+
+        for member in request_:
+            combine_member_data = user_schema.dump(
+                member) | notebook_member_schema.dump(member)
+            collect_all = combine_member_data | request_status_schema.dump(
+                member) | noteBookSchema.dump(member)
+            received_request.append(collect_all)
+
+        return jsonify(data=received_request)
+
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
+
+
 @notebook.get("/request-sent")
 @jwt_required(refresh=True)
 def request_sent():
@@ -160,3 +195,47 @@ def request_sent():
 
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
+
+
+@notebook.put("/confirm-reject-request")
+@jwt_required(refresh=True)
+def confirm_request():
+    rejected = "rejected"
+    accepted = "accepted"
+    try:
+        data = request.json
+        print(data)
+        if data['method'] == rejected:
+            if data['notebook_member_id'] is None:
+                return response_with(resp.INVALID_INPUT_422)
+            else:
+                notebook_member = db.session.query(NoteBookMember).filter(
+                    NoteBookMember.id == data['notebook_member_id'],
+                ).one()
+                notebook_member.request_status = data['request_status']
+                notebook_member.canceled_at = now
+                db.session.commit()
+                return jsonify({
+                    "code": APP_LABEL.label("Alert"),
+                    "message": APP_LABEL.label("Request canceled"),
+                })
+
+        if data['method'] == accepted:
+            if data['notebook_member_id'] is None:
+                return response_with(resp.INVALID_INPUT_422)
+            else:
+                notebook_member = db.session.query(NoteBookMember).filter(
+                    NoteBookMember.id == data['notebook_member_id'],
+                ).one()
+                notebook_member.request_status = data['request_status']
+                notebook_member.confirmed_at = now
+                db.session.commit()
+                return jsonify({
+                    "code": APP_LABEL.label("success"),
+                    "message": APP_LABEL.label("Congratulation! now you can view and exchange data in this notebook"),
+                    "data": notebook_member_schema.dump(notebook_member)
+                })
+
+    except Exception as e:
+        print(e)
+        return response_with(resp.INVALID_FIELD_NAME_SENT_422)
