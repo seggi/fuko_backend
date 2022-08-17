@@ -53,16 +53,19 @@ def invite_friend_to_notebook():
 @loans.post("/add-people-notebook")
 @jwt_required(refresh=True)
 def add_lent_to_notebook():
-    user_id = get_jwt_identity()['id']
-    data = request.json | {"user_id": user_id}
-    QUERY.insert_data(db=db, table_data=LoanNoteBook(**data))
-    return jsonify({
-        "code": APP_LABEL.label("success"),
-        "message": APP_LABEL.label("Friend added with success")
-    })
+    try:
+        user_id = get_jwt_identity()['id']
+        data = request.json | {"user_id": user_id}
+        QUERY.insert_data(db=db, table_data=LoanNoteBook(**data))
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label("Name created with success")
+        })
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
 
 
-@loans.get("/get-friend-from-loan-notebook")
+@loans.get("/personal-loan-notebook")
 @jwt_required(refresh=True)
 def retrieve_members_from_loan_notebook():
     user_id = get_jwt_identity()['id']
@@ -74,6 +77,7 @@ def retrieve_members_from_loan_notebook():
         filter(LoanNoteBook.partner_name == None).\
         filter(LoanNoteBook.user_id == user_id).\
         all()
+
     get_friend_outside = db.session.query(LoanNoteBook.id, LoanNoteBook.partner_name).\
         filter(LoanNoteBook.partner_name != None).\
         filter(LoanNoteBook.user_id == user_id).\
@@ -94,37 +98,65 @@ def retrieve_members_from_loan_notebook():
 
     return jsonify(data=combine_all_list)
 
+
+@loans.get("/pub-loan-notebook")
+@jwt_required(refresh=True)
+def pub_loan_notebook():
+    user_id = get_jwt_identity()['id']
+    member_in_loan_list = []
+    outside_friend = []
+    get_member = db.session.query(LoanNoteBook, NoteBookMember.id, User.username).\
+        join(NoteBookMember, LoanNoteBook.friend_id == NoteBookMember.id, isouter=True).\
+        join(User, NoteBookMember.friend_id == User.id, isouter=True).\
+        filter(LoanNoteBook.partner_name == None).\
+        filter(LoanNoteBook.user_id == user_id).\
+        all()
+
+    for member in get_member:
+        member_in_loan_list.append({
+            **userSchema.dump(member),
+            **noteBook_Member_Schema.dump(member)
+        })
+
+    combine_all_list = member_in_loan_list + outside_friend
+
+    return jsonify(data=combine_all_list)
+
 # Get all loans
 
 
 @loans.get("/retrieve/<int:currency_id>")
 @jwt_required(refresh=True)
 def user_get_loans(currency_id):
-    user_id = get_jwt_identity()['id']
-    loan_list = []
-    currency = []
-    total_loan_amount = db.session.query(Loans.amount, Currency.code).\
-        join(Currency, Loans.currency_id == Currency.id, isouter=True).\
-        filter(
-            LoanNoteBook.user_id == user_id,
-            Loans.currency_id == currency_id
-    ).order_by(
-            desc(Loans.created_at)).all()
+    try:
+        user_id = get_jwt_identity()['id']
+        loan_list = []
+        currency = []
+        total_loan_amount = db.session.query(Loans.amount, Currency.code).\
+            join(Currency, Loans.currency_id == Currency.id, isouter=True).\
+            join(LoanNoteBook, Loans.note_id == LoanNoteBook.id).\
+            filter(
+                LoanNoteBook.user_id == user_id,
+                Loans.currency_id == currency_id
+        ).order_by(
+                desc(Loans.created_at)).all()
 
-    for item in total_loan_amount:
-        loans_data = loans_schema.dump(item) | currency_schema.dump(item)
-        loan_list.append(loans_data)
+        for item in total_loan_amount:
+            loans_data = loans_schema.dump(item) | currency_schema.dump(item)
+            loan_list.append(loans_data)
 
-    for loan in loan_list:
-        currency.append(loan['code'])
+        for loan in loan_list:
+            currency.append(loan['code'])
 
-    total_amount = manage_query.generate_total_amount(loan_list)
+        total_amount = manage_query.generate_total_amount(loan_list)
 
-    return jsonify(data={
-        "loan_list": loan_list,
-        "total_loan": total_amount,
-        "currency": currency[0] if len(currency) > 0 else ""
-    })
+        return jsonify(data={
+            "loan_list": loan_list,
+            "total_loan": total_amount,
+            "currency": currency[0] if len(currency) > 0 else ""
+        })
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
 
 # Get loan by date
 
