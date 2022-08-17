@@ -61,15 +61,7 @@ def add_borrower_to_notebook():
 @jwt_required(refresh=True)
 def retrieve_members_from_dept_notebook():
     user_id = get_jwt_identity()['id']
-    member_in_dept_list = []
     outside_friend = []
-
-    # get_member = db.session.query(DeptNoteBook, NoteBookMember.id, User.username).\
-    #     join(NoteBookMember, DeptNoteBook.memeber_id == NoteBookMember.id, isouter=True).\
-    #     join(User, NoteBookMember.friend_id == User.id, isouter=True).\
-    #     filter(DeptNoteBook.borrower_name == None).\
-    #     filter(DeptNoteBook.user_id == user_id).\
-    #     all()
 
     get_friend_outside = db.session.query(DeptNoteBook.id, DeptNoteBook.borrower_name).\
         filter(DeptNoteBook.borrower_name != None).\
@@ -80,12 +72,6 @@ def retrieve_members_from_dept_notebook():
         outside_friend.append({
             **dept_note_book_schema.dump(member)
         })
-
-    # for member in get_member:
-    #     member_in_dept_list.append({
-    #         **user_schema.dump(member),
-    #         **noteBook_Member_Schema.dump(member)
-    #     })
 
     combine_all_list = outside_friend
 
