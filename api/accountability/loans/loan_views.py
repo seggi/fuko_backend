@@ -122,6 +122,41 @@ def pub_loan_notebook():
 
     return jsonify(data=combine_all_list)
 
+
+@loans.get("/retrieve-friend-loan/<int:friend_id>/<int:currency_id>")
+@jwt_required(refresh=True)
+def retrieve_friend_loan(currency_id, friend_id):
+    user_id = get_jwt_identity()['id']
+    loan_list = []
+    currency = []
+    total_dept_amount = db.session.query(
+        Loans.id, Loans.amount,
+        Loans.description,
+        Loans.created_at,
+        Loans.payment_status,
+        Currency.code).\
+        join(Currency, Loans.currency_id == Currency.id, isouter=True).\
+        join(LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True).\
+        filter(
+            LoanNoteBook.user_id == user_id,
+            Loans.currency_id == currency_id,
+            LoanNoteBook.id == friend_id).order_by(
+            desc(Loans.created_at)).all()
+
+    for item in total_dept_amount:
+        dept_data = loans_schema.dump(item) | currency_schema.dump(item)
+        loan_list.append(dept_data)
+
+    for dept in loan_list:
+        currency.append(dept['code'])
+
+    total_amount = manage_query.generate_total_amount(loan_list)
+
+    return jsonify(data={
+        "loan_list": loan_list,
+        "total_dept": total_amount,
+        "currency": currency[0] if len(currency) > 0 else ""})
+
 # Get all loans
 
 
