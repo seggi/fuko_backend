@@ -154,7 +154,7 @@ def retrieve_friend_loan(currency_id, friend_id):
 
     return jsonify(data={
         "loan_list": loan_list,
-        "total_dept": total_amount,
+        "total_loan": total_amount,
         "currency": currency[0] if len(currency) > 0 else ""})
 
 # Get all loans
