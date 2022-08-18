@@ -32,6 +32,7 @@ noteBook_Member_Schema = NoteBookMemberSchema()
 loan_payment_schema = LoanPaymentSchema()
 currency_schema = CurrencySchema()
 
+
 # Invite Friend
 
 
@@ -156,6 +157,38 @@ def retrieve_friend_loan(currency_id, friend_id):
         "loan_list": loan_list,
         "total_loan": total_amount,
         "currency": currency[0] if len(currency) > 0 else ""})
+
+
+@loans.get("/retrieved-paid-amount/<int:note_id>/<int:currency_id>")
+@jwt_required(refresh=True)
+def retrieve_payment_recorded(note_id, currency_id):
+    collect_payment_history = []
+    get_amount = []
+    currency = []
+    paid_amount = db.session.query(
+        LoanPayment.description,
+        LoanPayment.amount,
+        LoanPayment.created_at,
+        Currency.code).\
+        join(Currency, LoanPayment.currency_id == Currency.id).\
+        filter(LoanPayment.currency_id == currency_id).\
+        filter(LoanPayment.loan_id == note_id).order_by(
+            desc(LoanPayment.created_at)).all()
+
+    for amount in paid_amount:
+        get_all_amount = loan_payment_schema.dump(
+            amount) | currency_schema.dump(amount)
+        collect_payment_history.append(get_all_amount)
+        get_amount.append(float(amount['amount']))
+        currency.append(amount['code'])
+
+    get_total_paid_amount = sum(get_amount)
+
+    return jsonify(data={
+        "payment_history": collect_payment_history,
+        "currency": currency[0] if len(currency) > 0 else "",
+        "paid_amount": get_total_paid_amount,
+    })
 
 # Get all loans
 
