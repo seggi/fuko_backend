@@ -72,6 +72,7 @@ def retrieve_members_from_loan_notebook():
     user_id = get_jwt_identity()['id']
     member_in_loan_list = []
     outside_friend = []
+
     get_member = db.session.query(LoanNoteBook, NoteBookMember.id, User.username).\
         join(NoteBookMember, LoanNoteBook.friend_id == NoteBookMember.id, isouter=True).\
         join(User, NoteBookMember.friend_id == User.id, isouter=True).\
@@ -257,27 +258,14 @@ def get_loan_by_current_date(loan_note_id):
 def user_record_loan(note_id):
     # Generate inputs
     try:
-        data = request.json | {"note_id": note_id}
-        for value in data["data"]:
-            if value["amount"] is None:
-                return response_with(resp.INVALID_INPUT_422)
-            else:
-                if value["recieve_money_at"] == "":
-                    received_at = {"recieve_money_at": now}
-                    QUERY.insert_data(db=db, table_data=Loans(
-                        **value | {"note_id": note_id, **received_at}))
-                    return jsonify({
-                        "code": APP_LABEL.label("success"),
-                        "message": APP_LABEL.label("Loan Amount recorded with success")
-                    })
-                else:
-                    QUERY.insert_data(db=db, table_data=Loans(
-                        **value | {"note_id": note_id}))
-                    return jsonify({
-                        "code": APP_LABEL.label("success"),
-                        "message": APP_LABEL.label("Loan Amount recorded with success")
-                    })
-
+        request_data = request.json
+        for data in request_data["data"]:
+            QUERY.insert_data(db=db, table_data=Loans(
+                **data | {"note_id": note_id}))
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label("Loan Amount recorded with success")
+        })
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
 
@@ -310,84 +298,18 @@ def user_update_loan(loan_id):
 # Pay loan
 
 
-@loans.post("/pay-borrowed-amount/<int:loan_id>")
+@loans.post("/reimburse-loan")
 @jwt_required(refresh=True)
-def user_pay_loan(loan_id):
-    collect_payment_history = []
-    request_data = request.json | {"note_id": loan_id}
-
-    try:
-        if request_data['data']["amount"] is None:
-            return response_with(resp.INVALID_INPUT_422)
-
-        if request_data['method'] == COMPUTE_SINGLE_AMOUNT:
-            get_single_amount = db.session.query(Loans.amount, Loans.currency_id).\
-                filter(Loans.currency_id == request_data['data']['currency_id']).\
-                filter(Loans.payment_status == False).\
-                filter(Loans.id == loan_id).first()
-
-            get_payment_history = db.session.query(LoanPayment.amount).\
-                filter(LoanPayment.loan_id == loan_id).all()
-
-            for amount in get_payment_history:
-                collect_payment_history.append(float(amount['amount']))
-
-            get_total_paid_amount = sum(collect_payment_history)
-
-            for amount in get_single_amount:
-                get_dept = amount - get_total_paid_amount
-
-                if request_data['data']["amount"] <= amount and get_total_paid_amount <= amount and \
-                        request_data['data']['amount'] <= get_dept:
-                    data = {**request_data['data'], **{"loan_id": loan_id}}
-                    QUERY.insert_data(db=db, table_data=LoanPayment(**data))
-                    return jsonify({
-                        "code": APP_LABEL.label("success"),
-                        "message": APP_LABEL.label("You come to pay part of the dept."),
-                    })
-                if get_total_paid_amount == amount:
-                    loan = db.session.query(Loans).filter(
-                        Loans.id == loan_id).one()
-                    loan.payment_status = True
-                    db.session.commit()
-                    return jsonify({
-                        "code": APP_LABEL.label("success"),
-                        "message": APP_LABEL.label("Congratulation you paid to all this amount.")
-                    })
-                else:
-                    return jsonify(message=APP_LABEL.label(
-                        APP_LABEL.label(f"""You try pay much money...,the dept is {get_dept} . If you know what you are doing. please use pay multiple depts""")))
-
-        else:
-            return jsonify(data="Pease pay by selecting multiple.")
-
-    except Exception:
-        return response_with(resp.INVALID_INPUT_422)
-
-
-@loans.post("/pay-multiple-depts")
-@jwt_required(refresh=True)
-def pay_multiple_loan():
+def reimburse_loan():
+    # amount
     request_data = request.json
     try:
         for data in request_data:
-            get_dept = db.session.query(LoanPayment).\
-                filter(LoanPayment.loan_id == data['loan_id']).\
-                filter(LoanPayment.description == data['description']).first()
-            if get_dept:
-                return jsonify({
-                    "code": APP_LABEL.label("Alert"),
-                    "message": APP_LABEL.label("Amount can't be applied twice."),
-                })
             QUERY.insert_data(db=db, table_data=LoanPayment(**data))
-            loan = db.session.query(Loans).filter(
-                Loans.id == data['loan_id']).one()
-            loan.payment_status = True
-            db.session.commit()
+            return jsonify({
+                "code": APP_LABEL.label("success"),
+                "message": APP_LABEL.label(f"Amount saved with success."),
+            })
 
-        return jsonify({
-            "code": APP_LABEL.label("success"),
-            "message": APP_LABEL.label("You come complete some depts."),
-        })
     except Exception:
         return response_with(resp.INVALID_INPUT_422)

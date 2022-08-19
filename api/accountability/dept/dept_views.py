@@ -199,29 +199,16 @@ def get_loan_by_current_date(dept_note_id):
 def user_add_dept(note_id):
     # Generate inputs
     try:
-        data = request.json | {"note_id": note_id}
-        for value in data["data"]:
-            if value["amount"] is None:
-                return response_with(resp.INVALID_INPUT_422)
-            else:
-                if value["lent_at"] == "":
-                    received_at = {"lent_at": now}
-                    QUERY.insert_data(db=db, table_data=Depts(
-                        **value | {"note_id": note_id, **received_at}))
-                    return jsonify({
-                        "code": APP_LABEL.label("success"),
-                        "message": APP_LABEL.label("Dept Amount recorded with success")
-                    })
-                else:
-                    QUERY.insert_data(db=db, table_data=Depts(
-                        **value | {"note_id": note_id}))
-                    return jsonify({
-                        "code": APP_LABEL.label("success"),
-                        "message": APP_LABEL.label("Dept Amount recorded with success")
-                    })
+        request_data = request.json
+        for data in request_data["data"]:
+            QUERY.insert_data(db=db, table_data=Depts(
+                **data | {"note_id": note_id}))
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label("Dept Amount recorded with success")
+        })
 
-    except Exception as e:
-        print(e)
+    except Exception:
         return response_with(resp.INVALID_INPUT_422)
 
 
@@ -313,6 +300,9 @@ def pay_multiple_dept():
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
 
+# To be kept
+# Dept payment
+
 
 @dept.post("/pay-many-dept")
 @jwt_required(refresh=True)
@@ -322,11 +312,11 @@ def pay_many_dept():
     try:
         for data in request_data:
             QUERY.insert_data(db=db, table_data=RecordDeptPayment(**data))
+            return jsonify({
+                "code": APP_LABEL.label("success"),
+                "message": APP_LABEL.label(f"Amount saved with success."),
+            })
 
-        return jsonify({
-            "code": APP_LABEL.label("success"),
-            "message": APP_LABEL.label(f"You come to pay {request_data[0]['amount']}."),
-        })
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
 
