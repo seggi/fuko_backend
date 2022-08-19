@@ -272,7 +272,7 @@ def add_friend_to_loan_notebook():
         user_id = get_jwt_identity()['id']
         data = request.json | {"user_id": user_id}
         check_friend = db.session.query(LoanNoteBook).filter(
-            LoanNoteBook.memeber_id == data['friend_id']).first()
+            LoanNoteBook.friend_id == data['friend_id']).first()
 
         if check_friend:
             return jsonify({
@@ -286,5 +286,5 @@ def add_friend_to_loan_notebook():
             "message": "Friend linked with success."
         })
 
-    except Exception as e:
+    except Exception:
         return response_with(resp.INVALID_INPUT_422)
