@@ -107,7 +107,7 @@ def pub_loan_notebook():
     user_id = get_jwt_identity()['id']
     member_in_loan_list = []
     outside_friend = []
-    get_member = db.session.query(LoanNoteBook, NoteBookMember.id, User.username).\
+    get_member = db.session.query(LoanNoteBook, LoanNoteBook.id, User.username, User.first_name, User.last_name).\
         join(NoteBookMember, LoanNoteBook.friend_id == NoteBookMember.id, isouter=True).\
         join(User, NoteBookMember.friend_id == User.id, isouter=True).\
         filter(LoanNoteBook.partner_name == None).\

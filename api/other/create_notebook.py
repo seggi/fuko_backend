@@ -11,7 +11,7 @@ from api.core.labels import AppLabels
 from api.utils.model_marsh import NoteBookSchema
 
 from .. import db
-from api.database.models import DeptNoteBook, NoteBook, NoteBookMember, RequestStatus, User
+from api.database.models import DeptNoteBook, LoanNoteBook, NoteBook, NoteBookMember, RequestStatus, User
 
 QUERY = QueryGlobalReport()
 APP_LABEL = AppLabels()
@@ -256,6 +256,31 @@ def add_friend_to_dept_notebook():
             })
 
         QUERY.insert_data(db=db, table_data=DeptNoteBook(**data))
+        return jsonify({
+            "code": "success",
+            "message": "Friend linked with success."
+        })
+
+    except Exception:
+        return response_with(resp.INVALID_INPUT_422)
+
+
+@notebook.post("/link-loan-notebook-notebook-member")
+@jwt_required(refresh=True)
+def add_friend_to_loan_notebook():
+    try:
+        user_id = get_jwt_identity()['id']
+        data = request.json | {"user_id": user_id}
+        check_friend = db.session.query(LoanNoteBook).filter(
+            LoanNoteBook.friend_id == data['friend_id']).first()
+
+        if check_friend:
+            return jsonify({
+                "code": APP_LABEL.label("Alert"),
+                "message": APP_LABEL.label("Already linked")
+            })
+
+        QUERY.insert_data(db=db, table_data=LoanNoteBook(**data))
         return jsonify({
             "code": "success",
             "message": "Friend linked with success."
