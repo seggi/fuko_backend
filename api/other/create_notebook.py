@@ -267,7 +267,7 @@ def add_friend_to_dept_notebook():
 
 @notebook.post("/link-loan-notebook-notebook-member")
 @jwt_required(refresh=True)
-def add_friend_to_dept_notebook():
+def add_friend_to_loan_notebook():
     try:
         user_id = get_jwt_identity()['id']
         data = request.json | {"user_id": user_id}
