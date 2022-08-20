@@ -84,7 +84,12 @@ def retrieve_members_from_pub_dept_notebook():
     user_id = get_jwt_identity()['id']
     member_in_dept_list = []
 
-    get_member = db.session.query(DeptNoteBook, DeptNoteBook.id, User.username, User.first_name, User.last_name).\
+    get_member = db.session.query(
+        DeptNoteBook,
+        DeptNoteBook.id,
+        User.username,
+        User.first_name,
+        User.last_name).\
         join(NoteBookMember, DeptNoteBook.memeber_id == NoteBookMember.id, isouter=True).\
         join(User, NoteBookMember.friend_id == User.id, isouter=True).\
         filter(DeptNoteBook.borrower_name == None).\
@@ -366,7 +371,9 @@ def retrieve_payment_dept(dept_id, currency_id):
     get_payment_history = db.session.query(
         DeptsPayment.amount,
         DeptsPayment.created_at,
-        DeptsPayment.description, Currency.code).\
+        DeptsPayment.description,
+        Currency.code
+    ).\
         join(Currency, DeptsPayment.currency_id == Currency.id).\
         filter(DeptsPayment.currency_id == currency_id).\
         filter(DeptsPayment.dept_id == dept_id).all()
