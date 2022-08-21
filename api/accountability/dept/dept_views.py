@@ -1,5 +1,6 @@
 from datetime import date
 from datetime import datetime
+from dbm import dumb
 from locale import currency
 from threading import local
 from api.auth.auth_views import refresh
@@ -352,7 +353,8 @@ def retrieve_payment_recorded(note_id, currency_id):
     for amount in paid_dept_amount:
         get_all_amount = record_dept_payment_schema.dump(
             amount) | currency_schema.dump(amount)
-        collect_payment_history_dept.append(get_all_amount)
+        bind_auth = get_all_amount | {"username": "You"}
+        collect_payment_history_dept.append(bind_auth)
         get_amount_loan.append(float(amount['amount']))
         currency.append(amount['code'])
 
@@ -360,9 +362,11 @@ def retrieve_payment_recorded(note_id, currency_id):
         LoanPayment.description,
         LoanPayment.amount,
         LoanPayment.created_at,
+        User.username,
         Currency.code).\
         join(Currency, LoanPayment.currency_id == Currency.id).\
         join(LoanNoteBook, LoanPayment.notebook_id == LoanNoteBook.id).\
+        join(User, LoanNoteBook.user_id == User.id).\
         filter(LoanPayment.currency_id == currency_id).\
         filter(LoanNoteBook.user_id == user_id).order_by(
             desc(LoanPayment.created_at)).all()
@@ -370,7 +374,8 @@ def retrieve_payment_recorded(note_id, currency_id):
     for amount in paid_loan_amount:
         get_all_amount = loan_payment_schema.dump(
             amount) | currency_schema.dump(amount)
-        collect_payment_history_loan.append(get_all_amount)
+        bind_auth = get_all_amount | user_schema.dump(amount)
+        collect_payment_history_loan.append(bind_auth)
         get_amount_dept.append(float(amount['amount']))
         currency.append(amount['code'])
 
@@ -440,8 +445,6 @@ def retrieve_payment_dept(notebook_id, currency_id):
     get_total_paid_dept = sum(collect_payment_history)
 
     get_total_paid_amount = get_total_paid_loan + get_total_paid_dept
-
-    print("=====>")
 
     return jsonify(data={
         "payment_history": collect_payment_history,

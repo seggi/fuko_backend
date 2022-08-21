@@ -146,15 +146,18 @@ def retrieve_friend_loan(currency_id, friend_id):
             Loans.currency_id == currency_id,
             LoanNoteBook.id == friend_id).order_by(
             desc(Loans.created_at)).all()
+
     # ! ===========*********
     total_dept_amount = db.session.query(
         Depts.id, Depts.amount,
         Depts.description,
         Depts.created_at,
         Depts.payment_status,
+        User.username,
         Currency.code).\
         join(Currency, Depts.currency_id == Currency.id, isouter=True).\
         join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
+        join(User, DeptNoteBook.user_id == User.id).\
         filter(
             DeptNoteBook.user_id == user_id,
             Depts.currency_id == currency_id,
@@ -163,14 +166,16 @@ def retrieve_friend_loan(currency_id, friend_id):
 
     for item in total_dept_amount:
         dept_data = dept_schema.dump(item) | currency_schema.dump(item)
-        dept_list.append(dept_data)
+        bind_auth = dept_data | {"username": "You"}
+        dept_list.append(bind_auth)
 
     for dept in dept_list:
         currency.append(dept['code'])
 
     for item in total_loan_amount:
-        dept_data = loans_schema.dump(item) | currency_schema.dump(item)
-        loan_list.append(dept_data)
+        loan_data = loans_schema.dump(item) | currency_schema.dump(item)
+        bind_auth = loan_data | userSchema.dump(item)
+        loan_list.append(bind_auth)
 
     for dept in loan_list:
         currency.append(dept['code'])
