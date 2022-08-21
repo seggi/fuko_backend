@@ -147,7 +147,6 @@ def retrieve_friend_loan(currency_id, friend_id):
             LoanNoteBook.id == friend_id).order_by(
             desc(Loans.created_at)).all()
 
-    # ! ===========*********
     total_dept_amount = db.session.query(
         Depts.id, Depts.amount,
         Depts.description,
@@ -166,7 +165,7 @@ def retrieve_friend_loan(currency_id, friend_id):
 
     for item in total_dept_amount:
         dept_data = dept_schema.dump(item) | currency_schema.dump(item)
-        bind_auth = dept_data | {"username": "You"}
+        bind_auth = dept_data | userSchema.dump(item)
         dept_list.append(bind_auth)
 
     for dept in dept_list:
@@ -174,7 +173,7 @@ def retrieve_friend_loan(currency_id, friend_id):
 
     for item in total_loan_amount:
         loan_data = loans_schema.dump(item) | currency_schema.dump(item)
-        bind_auth = loan_data | userSchema.dump(item)
+        bind_auth = loan_data | {"username": "You"}
         loan_list.append(bind_auth)
 
     for dept in loan_list:
