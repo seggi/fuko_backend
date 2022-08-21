@@ -14,12 +14,12 @@ from api.accountability.global_amount.global_amount_views import QUERY
 from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import CurrencySchema, DeptNoteBookSchema, DeptPaymentSchema, DeptsSchema, NoteBookMemberSchema, RecordDeptPaymentSchema, UserSchema
+from api.utils.model_marsh import CurrencySchema, DeptNoteBookSchema, DeptPaymentSchema, DeptsSchema, LoanPaymentSchema, NoteBookMemberSchema, RecordDeptPaymentSchema, UserSchema
 from api.core.labels import AppLabels
 from api.core.objects import ManageQuery
 
 from ... import db
-from api.database.models import Currency, DeptNoteBook, Depts, DeptsPayment, NoteBookMember, RecordDeptPayment, User, RecordDeptPayment
+from api.database.models import Currency, DeptNoteBook, Depts, DeptsPayment, LoanPayment, NoteBookMember, RecordDeptPayment, User, RecordDeptPayment
 
 dept = Blueprint("dept", __name__, url_prefix="/api/user/account/dept")
 
@@ -235,7 +235,7 @@ def user_pay_dept(dept_id):
                 filter(Depts.id == dept_id).first()
 
             get_payment_history = db.session.query(DeptsPayment.amount).\
-                filter(DeptsPayment.dept_id == dept_id).all()
+                filter(DeptsPayment.notebook_id == dept_id).all()
 
             for amount in get_payment_history:
                 collect_payment_history.append(float(amount['amount']))
@@ -285,7 +285,7 @@ def pay_multiple_dept():
     try:
         for data in request_data:
             get_dept = db.session.query(DeptsPayment).\
-                filter(DeptsPayment.dept_id == data['dept_id']).\
+                filter(DeptsPayment.notebook_id == data['dept_id']).\
                 filter(DeptsPayment.description == data['description']).first()
             if get_dept:
                 return jsonify({
@@ -360,40 +360,58 @@ def retrieve_payment_recorded(note_id, currency_id):
 
 #! To be changed
 
-@ dept.get("/retrieve-paid-amount/<int:currency_id>/<int:dept_id>")
+@ dept.get("/retrieve-paid-amount/<int:currency_id>/<int:notebook_id>")
 @ jwt_required(refresh=True)
-def retrieve_payment_dept(dept_id, currency_id):
+def retrieve_payment_dept(notebook_id, currency_id):
     currency = []
     get_status = []
     payment_history_list = []
     collect_payment_history = []
 
+    collect_payment_history = []
+    get_amount = []
+    currency = []
+
     get_payment_history = db.session.query(
         DeptsPayment.amount,
         DeptsPayment.created_at,
         DeptsPayment.description,
-        Currency.code
+        Currency.code,
     ).\
         join(Currency, DeptsPayment.currency_id == Currency.id).\
         filter(DeptsPayment.currency_id == currency_id).\
-        filter(DeptsPayment.dept_id == dept_id).all()
+        filter(DeptsPayment.notebook_id == notebook_id).all()
 
-    retrieve_status = db.session.query(Depts.payment_status).\
-        filter(Depts.id == dept_id).all()
+    paid_amount = db.session.query(
+        LoanPayment.description,
+        LoanPayment.amount,
+        LoanPayment.created_at,
+        Currency.code).\
+        join(Currency, LoanPayment.currency_id == Currency.id).\
+        filter(LoanPayment.currency_id == currency_id).\
+        filter(LoanPayment.notebook_id == note_id).order_by(
+            desc(LoanPayment.created_at)).all()
 
-    for payment_status in retrieve_status:
-        get_status.append(dept_schema.dump(payment_status))
+    for amount in paid_amount:
+        get_all_amount = LoanPaymentSchema.dump(
+            amount) | currency_schema.dump(amount)
+        collect_payment_history.append(get_all_amount)
+        get_amount.append(float(amount['amount']))
+        currency.append(amount['code'])
 
     for amount in get_payment_history:
         payment_history_list.append(dept_payment_schema.dump(amount))
         collect_payment_history.append(float(amount['amount']))
         currency.append(amount['code'])
 
-    get_total_paid_amount = sum(collect_payment_history)
+    get_total_paid_loan = sum(get_amount)
+
+    get_total_paid_dept = sum(collect_payment_history)
+
+    get_total_paid_amount = get_total_paid_loan + get_total_paid_dept
 
     return jsonify(data={
-        "payment_history": payment_history_list,
+        "payment_history": payment_history_list + collect_payment_history,
         "currency": currency[0] if len(currency) > 0 else "",
         "paid_amount": get_total_paid_amount,
-        "status": get_status[0]["payment_status"]
     })
