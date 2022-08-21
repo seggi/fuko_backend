@@ -146,7 +146,7 @@ def retrieve_friend_loan(currency_id, friend_id):
             Loans.currency_id == currency_id,
             LoanNoteBook.id == friend_id).order_by(
             desc(Loans.created_at)).all()
-
+    # ! ===========*********
     total_dept_amount = db.session.query(
         Depts.id, Depts.amount,
         Depts.description,

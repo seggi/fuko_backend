@@ -19,7 +19,7 @@ from api.core.labels import AppLabels
 from api.core.objects import ManageQuery
 
 from ... import db
-from api.database.models import Currency, DeptNoteBook, Depts, DeptsPayment, LoanPayment, NoteBookMember, RecordDeptPayment, User, RecordDeptPayment
+from api.database.models import Currency, DeptNoteBook, Depts, DeptsPayment, LoanNoteBook, LoanPayment, NoteBookMember, RecordDeptPayment, User, RecordDeptPayment
 
 dept = Blueprint("dept", __name__, url_prefix="/api/user/account/dept")
 
@@ -363,6 +363,7 @@ def retrieve_payment_recorded(note_id, currency_id):
 @ dept.get("/retrieve-paid-amount/<int:currency_id>/<int:notebook_id>")
 @ jwt_required(refresh=True)
 def retrieve_payment_dept(notebook_id, currency_id):
+    user_id = get_jwt_identity()['id']
     currency = []
     get_status = []
     payment_history_list = []
@@ -388,8 +389,9 @@ def retrieve_payment_dept(notebook_id, currency_id):
         LoanPayment.created_at,
         Currency.code).\
         join(Currency, LoanPayment.currency_id == Currency.id).\
+        join(LoanNoteBook, LoanPayment.notebook_id == LoanNoteBook.id).\
         filter(LoanPayment.currency_id == currency_id).\
-        filter(LoanPayment.notebook_id == note_id).order_by(
+        filter(LoanNoteBook.user_id == user_id).order_by(
             desc(LoanPayment.created_at)).all()
 
     for amount in paid_amount:
