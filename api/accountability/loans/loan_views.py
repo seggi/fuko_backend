@@ -158,7 +158,7 @@ def retrieve_friend_loan(currency_id, friend_id):
         filter(
             DeptNoteBook.user_id == user_id,
             Depts.currency_id == currency_id,
-            DeptNoteBook.id == friend_id).order_by(
+    ).order_by(
             desc(Depts.created_at)).all()
 
     for item in total_dept_amount:
