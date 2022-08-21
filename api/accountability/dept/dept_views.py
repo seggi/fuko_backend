@@ -38,6 +38,7 @@ currency_schema = CurrencySchema()
 noteBook_Member_Schema = NoteBookMemberSchema()
 dept_payment_schema = DeptPaymentSchema()
 record_dept_payment_schema = RecordDeptPaymentSchema()
+loan_payment_schema = LoanPaymentSchema()
 now = datetime.now()
 
 
@@ -329,10 +330,16 @@ def pay_many_dept():
 @dept.get("/retrieved-paid-amount/<int:note_id>/<int:currency_id>")
 @jwt_required(refresh=True)
 def retrieve_payment_recorded(note_id, currency_id):
-    collect_payment_history = []
-    get_amount = []
+    user_id = get_jwt_identity()['id']
+    collect_payment_history_dept = []
+    get_amount_dept = []
     currency = []
-    paid_amount = db.session.query(
+
+    collect_payment_history_loan = []
+    get_amount_loan = []
+    currency = []
+
+    paid_dept_amount = db.session.query(
         RecordDeptPayment.description,
         RecordDeptPayment.amount,
         RecordDeptPayment.created_at,
@@ -342,14 +349,36 @@ def retrieve_payment_recorded(note_id, currency_id):
         filter(RecordDeptPayment.note_id == note_id).order_by(
             desc(RecordDeptPayment.created_at)).all()
 
-    for amount in paid_amount:
+    for amount in paid_dept_amount:
         get_all_amount = record_dept_payment_schema.dump(
             amount) | currency_schema.dump(amount)
-        collect_payment_history.append(get_all_amount)
-        get_amount.append(float(amount['amount']))
+        collect_payment_history_dept.append(get_all_amount)
+        get_amount_loan.append(float(amount['amount']))
         currency.append(amount['code'])
 
-    get_total_paid_amount = sum(get_amount)
+    paid_loan_amount = db.session.query(
+        LoanPayment.description,
+        LoanPayment.amount,
+        LoanPayment.created_at,
+        Currency.code).\
+        join(Currency, LoanPayment.currency_id == Currency.id).\
+        join(LoanNoteBook, LoanPayment.notebook_id == LoanNoteBook.id).\
+        filter(LoanPayment.currency_id == currency_id).\
+        filter(LoanNoteBook.user_id == user_id).order_by(
+            desc(LoanPayment.created_at)).all()
+
+    for amount in paid_loan_amount:
+        get_all_amount = loan_payment_schema.dump(
+            amount) | currency_schema.dump(amount)
+        collect_payment_history_loan.append(get_all_amount)
+        get_amount_dept.append(float(amount['amount']))
+        currency.append(amount['code'])
+
+    get_total_paid_loan = sum(get_amount_loan)
+    get_total_paid_dept = sum(get_amount_dept)
+
+    get_total_paid_amount = get_total_paid_loan + get_total_paid_dept
+    collect_payment_history = collect_payment_history_loan + collect_payment_history_dept
 
     return jsonify(data={
         "payment_history": collect_payment_history,
@@ -391,7 +420,7 @@ def retrieve_payment_dept(notebook_id, currency_id):
         join(Currency, LoanPayment.currency_id == Currency.id).\
         join(LoanNoteBook, LoanPayment.notebook_id == LoanNoteBook.id).\
         filter(LoanPayment.currency_id == currency_id).\
-        filter(LoanNoteBook.user_id == user_id).order_by(
+        filter(LoanNoteBook.user_id == 2).order_by(
             desc(LoanPayment.created_at)).all()
 
     for amount in paid_amount:
@@ -412,8 +441,10 @@ def retrieve_payment_dept(notebook_id, currency_id):
 
     get_total_paid_amount = get_total_paid_loan + get_total_paid_dept
 
+    print("=====>")
+
     return jsonify(data={
-        "payment_history": payment_history_list + collect_payment_history,
+        "payment_history": collect_payment_history,
         "currency": currency[0] if len(currency) > 0 else "",
         "paid_amount": get_total_paid_amount,
     })
