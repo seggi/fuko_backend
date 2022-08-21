@@ -272,7 +272,8 @@ class Loans(db.Model):
 class LoanPayment(db.Model):
     __tablename__ = "loan_payment"
     id = Column('id', Integer, primary_key=True)
-    loan_id = Column(Integer, ForeignKey('loans.id'), nullable=False)
+    notebook_id = Column(Integer, ForeignKey(
+        'loan_note_book.id'), nullable=False)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
@@ -319,7 +320,8 @@ class Depts(db.Model):
 class DeptsPayment(db.Model):
     __tablename__ = "dept_payment"
     id = Column('id', Integer, primary_key=True)
-    dept_id = Column(Integer, ForeignKey('depts.id'), nullable=False)
+    notebook_id = Column(Integer, ForeignKey(
+        'dept_note_book.id'), nullable=False)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)

@@ -9,12 +9,12 @@ from sqlalchemy import extract, desc
 from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import CurrencySchema, LoanNoteBookSchema, LoanPaymentSchema, LoanSchema, NoteBookMemberSchema, UserSchema
+from api.utils.model_marsh import CurrencySchema, DeptsSchema, LoanNoteBookSchema, LoanPaymentSchema, LoanSchema, NoteBookMemberSchema, UserSchema
 from api.core.objects import ManageQuery
 from api.core.labels import AppLabels
 
 from ... import db
-from api.database.models import Currency, LoanNoteBook, LoanPayment, Loans, NoteBookMember, User
+from api.database.models import Currency, DeptNoteBook, Depts, LoanNoteBook, LoanPayment, Loans, NoteBookMember, User
 
 loans = Blueprint("loans", __name__,  url_prefix="/api/user/account/loans")
 
@@ -28,6 +28,7 @@ now = datetime.now()
 loans_schema = LoanSchema()
 userSchema = UserSchema()
 loans_note_book_schema = LoanNoteBookSchema()
+dept_schema = DeptsSchema()
 noteBook_Member_Schema = NoteBookMemberSchema()
 loan_payment_schema = LoanPaymentSchema()
 currency_schema = CurrencySchema()
@@ -130,8 +131,9 @@ def pub_loan_notebook():
 def retrieve_friend_loan(currency_id, friend_id):
     user_id = get_jwt_identity()['id']
     loan_list = []
+    dept_list = []
     currency = []
-    total_dept_amount = db.session.query(
+    total_loan_amount = db.session.query(
         Loans.id, Loans.amount,
         Loans.description,
         Loans.created_at,
@@ -145,17 +147,47 @@ def retrieve_friend_loan(currency_id, friend_id):
             LoanNoteBook.id == friend_id).order_by(
             desc(Loans.created_at)).all()
 
+    total_dept_amount = db.session.query(
+        Depts.id, Depts.amount,
+        Depts.description,
+        Depts.created_at,
+        Depts.payment_status,
+        User.username,
+        Currency.code).\
+        join(Currency, Depts.currency_id == Currency.id, isouter=True).\
+        join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
+        join(User, DeptNoteBook.user_id == User.id).\
+        filter(
+            DeptNoteBook.user_id == user_id,
+            Depts.currency_id == currency_id,
+    ).order_by(
+            desc(Depts.created_at)).all()
+
     for item in total_dept_amount:
-        dept_data = loans_schema.dump(item) | currency_schema.dump(item)
-        loan_list.append(dept_data)
+        dept_data = dept_schema.dump(item) | currency_schema.dump(item)
+        bind_auth = dept_data | userSchema.dump(item)
+        dept_list.append(bind_auth)
+
+    for dept in dept_list:
+        currency.append(dept['code'])
+
+    for item in total_loan_amount:
+        loan_data = loans_schema.dump(item) | currency_schema.dump(item)
+        bind_auth = loan_data | {"username": "You"}
+        loan_list.append(bind_auth)
 
     for dept in loan_list:
         currency.append(dept['code'])
 
-    total_amount = manage_query.generate_total_amount(loan_list)
+    combine_all_amount = loan_list + dept_list
+
+    total_loan_amount = manage_query.generate_total_amount(loan_list)
+    total_dept_amount = manage_query.generate_total_amount(dept_list)
+
+    total_amount = total_loan_amount + total_dept_amount
 
     return jsonify(data={
-        "loan_list": loan_list,
+        "loan_list": combine_all_amount,
         "total_loan": total_amount,
         "currency": currency[0] if len(currency) > 0 else ""})
 
@@ -173,7 +205,7 @@ def retrieve_payment_recorded(note_id, currency_id):
         Currency.code).\
         join(Currency, LoanPayment.currency_id == Currency.id).\
         filter(LoanPayment.currency_id == currency_id).\
-        filter(LoanPayment.loan_id == note_id).order_by(
+        filter(LoanPayment.notebook_id == note_id).order_by(
             desc(LoanPayment.created_at)).all()
 
     for amount in paid_amount:
