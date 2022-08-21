@@ -107,28 +107,44 @@ def retrieve_members_from_loan_notebook():
 def pub_loan_notebook():
     user_id = get_jwt_identity()['id']
     member_in_loan_list = []
-    outside_friend = []
-    get_member = db.session.query(LoanNoteBook, LoanNoteBook.id, User.username, User.first_name, User.last_name).\
+    get_member = db.session.query(
+        LoanNoteBook,
+        LoanNoteBook.id,
+        User.username,
+        User.first_name,
+        User.last_name).\
         join(NoteBookMember, LoanNoteBook.friend_id == NoteBookMember.id, isouter=True).\
         join(User, NoteBookMember.friend_id == User.id, isouter=True).\
         filter(LoanNoteBook.partner_name == None).\
         filter(LoanNoteBook.user_id == user_id).\
         all()
 
+    dept_membership = db.session.query(
+        DeptNoteBook,
+        DeptNoteBook.id).\
+        join(NoteBookMember, DeptNoteBook.memeber_id == NoteBookMember.id, isouter=True).\
+        join(User, NoteBookMember.friend_id == User.id, isouter=True).\
+        filter(DeptNoteBook.borrower_name == None).\
+        filter(DeptNoteBook.user_id == user_id).\
+        all()
+
     for member in get_member:
+        new_dict = {}
+        for membership_id in dept_membership:
+            new_dict["dept_notebook_membership_id"] = membership_id['id']
+
         member_in_loan_list.append({
             **userSchema.dump(member),
-            **noteBook_Member_Schema.dump(member)
+            **noteBook_Member_Schema.dump(member),
+            **new_dict
         })
 
-    combine_all_list = member_in_loan_list + outside_friend
-
-    return jsonify(data=combine_all_list)
+    return jsonify(data=member_in_loan_list)
 
 
-@loans.get("/retrieve-friend-loan/<int:friend_id>/<int:currency_id>")
+@loans.get("/retrieve-friend-loan/<int:friend_id>/<int:dept_membership_id>/<int:currency_id>")
 @jwt_required(refresh=True)
-def retrieve_friend_loan(currency_id, friend_id):
+def retrieve_friend_loan(currency_id, friend_id, dept_membership_id):
     user_id = get_jwt_identity()['id']
     loan_list = []
     dept_list = []
@@ -147,34 +163,38 @@ def retrieve_friend_loan(currency_id, friend_id):
             LoanNoteBook.id == friend_id).order_by(
             desc(Loans.created_at)).all()
 
-    total_dept_amount = db.session.query(
-        Depts.id, Depts.amount,
-        Depts.description,
-        Depts.created_at,
-        Depts.payment_status,
-        User.username,
-        Currency.code).\
-        join(Currency, Depts.currency_id == Currency.id, isouter=True).\
-        join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
-        join(User, DeptNoteBook.user_id == User.id).\
-        filter(
-            DeptNoteBook.user_id == user_id,
-            Depts.currency_id == currency_id,
-    ).order_by(
-            desc(Depts.created_at)).all()
+    if dept_membership_id != 0:
+        total_dept_amount = db.session.query(
+            Depts.id, Depts.amount,
+            Depts.description,
+            Depts.created_at,
+            Depts.payment_status,
+            User.username,
+            Currency.code).\
+            join(Currency, Depts.currency_id == Currency.id, isouter=True).\
+            join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
+            join(User, DeptNoteBook.user_id == User.id).\
+            filter(
+                DeptNoteBook.user_id == user_id,
+                Depts.currency_id == currency_id,
+        ).order_by(
+                desc(Depts.created_at)).all()
 
-    for item in total_dept_amount:
-        dept_data = dept_schema.dump(item) | currency_schema.dump(item)
-        bind_auth = dept_data | userSchema.dump(item)
-        dept_list.append(bind_auth)
+        for item in total_dept_amount:
+            dept_data = dept_schema.dump(item) | currency_schema.dump(item)
+            bind_auth = dept_data | userSchema.dump(item)
+            dept_list.append(bind_auth)
+
+    for item in total_loan_amount:
+        if dept_membership_id != 0:
+            loan_data = loans_schema.dump(item) | currency_schema.dump(item)
+            bind_auth = loan_data | {"username": "You"}
+            loan_list.append(bind_auth)
+        loan_data = loans_schema.dump(item) | currency_schema.dump(item)
+        loan_list.append(loan_data)
 
     for dept in dept_list:
         currency.append(dept['code'])
-
-    for item in total_loan_amount:
-        loan_data = loans_schema.dump(item) | currency_schema.dump(item)
-        bind_auth = loan_data | {"username": "You"}
-        loan_list.append(bind_auth)
 
     for dept in loan_list:
         currency.append(dept['code'])
