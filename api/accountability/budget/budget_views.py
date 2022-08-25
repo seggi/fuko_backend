@@ -3,6 +3,7 @@ from api.core.labels import AppLabels
 from api.utils.responses import response_with
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy import extract, desc, Date, cast, and_, func
 
 from api.core.objects import ManageQuery
 
@@ -21,7 +22,9 @@ manage_query = ManageQuery()
 budget_option_schema = BudgetOptionSchema()
 budget_schema = BudgetSchema()
 budget_categories_schema = BudgetCategoriesSchema()
+budget_details_schema = BudgetDetailsSchema()
 APP_LABEL = AppLabels()
+
 
 
 @budget.get("/budget-option")
@@ -133,3 +136,45 @@ def get_budget_details(budget_id):
     collect_amount = budget_details_schema + budget_schema + [total]
 
     return jsonify(data=collect_amount)
+
+
+@budget.post("/add-envelope-budget")
+@jwt_required(refresh=True)
+def save_budget_envelop():
+    try:
+        user_id = get_jwt_identity()['id']
+        data = request.json
+        QUERY.insert_data(db=db, table_data=BudgetDetails(**data))
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label("Budget envelope saved with success")
+        })
+
+    except Exception as e:
+        return response_with(resp.INVALID_FIELD_NAME_SENT_422)
+
+
+@budget.get("/get-envelope/<int:budget_id>/<int:currency_code>")
+@jwt_required(refresh=True)
+def get_budget_envelop(currency_code, budget_id):
+    try:
+        user_id = get_jwt_identity()['id']
+        collect_data = []
+        budget_envelop_data = db.session.query(BudgetDetails.budget_amount, BudgetCategories.name, BudgetDetails.id).\
+            join(Budget, BudgetDetails.budget_id == Budget.id).\
+            join(BudgetCategories, BudgetDetails.budget_category_id == BudgetCategories.id).\
+            filter(Budget.user_id == user_id).\
+            filter(BudgetDetails.budget_id == budget_id).\
+            filter(BudgetDetails.currency_id == currency_code).\
+            order_by(desc(BudgetDetails.created_at)).\
+            all()
+
+        for envelope in budget_envelop_data:
+            envelopes = budget_details_schema.dump(envelope) | budget_categories_schema.dump(envelope)
+            collect_data.append(envelopes)
+
+        return jsonify(data=collect_data)
+
+    except Exception as e:
+        print("==>",e)
+        return response_with(resp.INVALID_FIELD_NAME_SENT_422)
