@@ -15,12 +15,16 @@ from api.accountability.global_amount.global_amount_views import QUERY
 from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import CurrencySchema, DeptNoteBookSchema, DeptPaymentSchema, DeptsSchema, LoanNoteBookSchema, LoanPaymentSchema, NoteBookMemberSchema, RecordDeptPaymentSchema, UserSchema
+from api.utils.model_marsh import (CurrencySchema, DeptNoteBookSchema,
+    DeptPaymentSchema,
+    DeptsSchema, LoanNoteBookSchema, LoanPaymentSchema,
+    NoteBookMemberSchema, RecordDeptPaymentSchema, UserSchema)
 from api.core.labels import AppLabels
 from api.core.objects import ManageQuery
 
 from ... import db
-from api.database.models import Currency, DeptNoteBook, Depts, DeptsPayment, LoanNoteBook, LoanPayment, NoteBookMember, RecordDeptPayment, User, RecordDeptPayment
+from api.database.models import (Currency, DeptNoteBook, Depts, DeptsPayment,
+    LoanNoteBook, LoanPayment, NoteBookMember, RecordDeptPayment, User, RecordDeptPayment)
 
 dept = Blueprint("dept", __name__, url_prefix="/api/user/account/dept")
 
@@ -232,94 +236,6 @@ def user_add_dept(note_id):
         return response_with(resp.INVALID_INPUT_422)
 
 
-# Pay dept
-# @dept.post("/pay-borrowed-amount/<int:dept_id>")
-# @jwt_required(refresh=True)
-# def user_pay_dept(dept_id):
-#     collect_payment_history = []
-#     request_data = request.json | {"note_id": dept_id}
-
-#     try:
-#         if request_data['data']["amount"] is None:
-#             return response_with(resp.INVALID_INPUT_422)
-
-#         if request_data['method'] == COMPUTE_SINGLE_AMOUNT:
-#             get_single_amount = db.session.query(Depts.amount, Depts.currency_id).\
-#                 filter(Depts.currency_id == request_data['data']['currency_id']).\
-#                 filter(Depts.payment_status == False).\
-#                 filter(Depts.id == dept_id).first()
-
-#             get_payment_history = db.session.query(DeptsPayment.amount).\
-#                 filter(DeptsPayment.notebook_id == dept_id).all()
-
-#             for amount in get_payment_history:
-#                 collect_payment_history.append(float(amount['amount']))
-
-#             get_total_paid_amount = sum(collect_payment_history)
-
-#             for amount in get_single_amount:
-#                 get_dept = amount - get_total_paid_amount
-
-#                 if request_data['data']["amount"] <= amount and get_total_paid_amount <= amount and \
-#                         request_data['data']['amount'] <= get_dept:
-#                     data = {
-#                         **request_data['data'],
-#                         **{"dept_id": dept_id},
-#                         **{"budget_category_id": 7},
-#                         **{"budget_option_id": 2}
-#                     }
-#                     QUERY.insert_data(db=db, table_data=DeptsPayment(**data))
-#                     return jsonify({
-#                         "code": APP_LABEL.label("success"),
-#                         "message": APP_LABEL.label("You come to pay part of the dept."),
-#                     })
-#                 if get_total_paid_amount == amount:
-#                     loan = db.session.query(Depts).filter(
-#                         Depts.id == dept_id).one()
-#                     loan.payment_status = True
-#                     db.session.commit()
-#                     return jsonify({
-#                         "code": APP_LABEL.label("success"),
-#                         "message": APP_LABEL.label("Congratulation you paid all the amount.")
-#                     })
-#                 else:
-#                     return jsonify(message=APP_LABEL.label(
-#                         APP_LABEL.label(f"""You try to pay much money...,the dept is {get_dept} . If you know what you are doing. please use pay multiple depts""")))
-
-#         else:
-#             return jsonify(data="Please pay by selecting multiple.")
-
-#     except Exception as e:
-#         return response_with(resp.INVALID_INPUT_422)
-
-
-# @dept.post("/pay-multiple-depts")
-# @jwt_required(refresh=True)
-# def pay_multiple_dept():
-#     request_data = request.json
-#     try:
-#         for data in request_data:
-#             get_dept = db.session.query(DeptsPayment).\
-#                 filter(DeptsPayment.notebook_id == data['dept_id']).\
-#                 filter(DeptsPayment.description == data['description']).first()
-#             if get_dept:
-#                 return jsonify({
-#                     "code": APP_LABEL.label("Alert"),
-#                     "message": APP_LABEL.label("Amount can't be applied twice."),
-#                 })
-#             QUERY.insert_data(db=db, table_data=DeptsPayment(**data))
-#             dept = db.session.query(Depts).filter(
-#                 Depts.id == data['dept_id']).one()
-#             dept.payment_status = True
-#             db.session.commit()
-
-#         return jsonify({
-#             "code": APP_LABEL.label("success"),
-#             "message": APP_LABEL.label("You come to complete some depts."),
-#         })
-#     except Exception:
-#         return response_with(resp.INVALID_INPUT_422)
-
 # To be kept
 # Dept payment
 
@@ -409,64 +325,3 @@ def retrieve_payment_recorded(note_id, currency_id, loan_membership_id):
         "currency": currency[0] if len(currency) > 0 else "",
         "paid_amount": get_total_paid_amount,
     })
-
-
-#! To be changed
-
-# @ dept.get("/retrieve-paid-amount/<int:currency_id>/<int:notebook_id>")
-# @ jwt_required(refresh=True)
-# def retrieve_payment_dept(notebook_id, currency_id):
-#     user_id = get_jwt_identity()['id']
-#     currency = []
-#     get_status = []
-#     payment_history_list = []
-#     collect_payment_history = []
-
-#     collect_payment_history = []
-#     get_amount = []
-#     currency = []
-
-#     get_payment_history = db.session.query(
-#         DeptsPayment.amount,
-#         DeptsPayment.created_at,
-#         DeptsPayment.description,
-#         Currency.code,
-#     ).\
-#         join(Currency, DeptsPayment.currency_id == Currency.id).\
-#         filter(DeptsPayment.currency_id == currency_id).\
-#         filter(DeptsPayment.notebook_id == notebook_id).all()
-
-#     paid_amount = db.session.query(
-#         LoanPayment.description,
-#         LoanPayment.amount,
-#         LoanPayment.created_at,
-#         Currency.code).\
-#         join(Currency, LoanPayment.currency_id == Currency.id).\
-#         join(LoanNoteBook, LoanPayment.notebook_id == LoanNoteBook.id).\
-#         filter(LoanPayment.currency_id == currency_id).\
-#         filter(LoanNoteBook.user_id == 2).order_by(
-#             desc(LoanPayment.created_at)).all()
-
-#     for amount in paid_amount:
-#         get_all_amount = LoanPaymentSchema.dump(
-#             amount) | currency_schema.dump(amount)
-#         collect_payment_history.append(get_all_amount)
-#         get_amount.append(float(amount['amount']))
-#         currency.append(amount['code'])
-
-#     for amount in get_payment_history:
-#         payment_history_list.append(dept_payment_schema.dump(amount))
-#         collect_payment_history.append(float(amount['amount']))
-#         currency.append(amount['code'])
-
-#     get_total_paid_loan = sum(get_amount)
-
-#     get_total_paid_dept = sum(collect_payment_history)
-
-#     get_total_paid_amount = get_total_paid_loan + get_total_paid_dept
-
-#     return jsonify(data={
-#         "payment_history": collect_payment_history,
-#         "currency": currency[0] if len(currency) > 0 else "",
-#         "paid_amount": get_total_paid_amount,
-#     })
