@@ -14,8 +14,8 @@ from api.core.labels import AppLabels
 from ... import db
 from api.database.models import Currency, ExpenseDetails, Expenses, GroupMembers, RequestStatus, User, UserCreateGroup
 
-REQUEST_SENT = "49"
-REQUEST_CANCELED = "52"
+REQUEST_SENT = "1"
+REQUEST_CANCELED = "3"
 REQUEST_ACCEPTED = "50"
 REQUEST_REJECTED = "51"
 
@@ -108,7 +108,8 @@ def add_partner_to_group():
             "code": APP_LABEL.label("success"),
             "message": APP_LABEL.label("Friend added with success")
         })
-    except Exception:
+    except Exception as e:
+        print("===>", e)
         return response_with(resp.INVALID_INPUT_422)
 
 
@@ -145,13 +146,16 @@ def get_sent_request():
     add_list = []
     get_request = db.session.query(
         User.username,
+        User.first_name,
+        User.last_name,
+        User.id,
         GroupMembers.requested_at,
         UserCreateGroup.group_name,
         RequestStatus.request_status_name).\
         join(User, GroupMembers.user_id == User.id).\
         join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
         join(RequestStatus, GroupMembers.request_status == RequestStatus.id).\
-        filter(UserCreateGroup.id == user_id).\
+        filter(UserCreateGroup.user_id == user_id).\
         filter(GroupMembers.request_status == REQUEST_SENT).\
         order_by(desc(GroupMembers.requested_at)).all()
 
@@ -165,10 +169,15 @@ def get_sent_request():
         schema=[user_schema, user_create_group_schema], data=[*get_request])
     retrieve_request = manage_request.getRequest()
     # manageRequest(data=[user_schema.dump(item), {"lastname": "serge"}])
-    for x in get_request:
-        add_list.append(**user_schema.dump(x))
-    print(add_list)
-    return jsonify("")
+    for member in get_request:
+        add_list.append({
+            **user_schema.dump(member),
+            **group_member_schema.dump(member),
+            **user_create_group_schema.dump(member),
+            **request_status_schema.dump(member)
+        })
+
+    return jsonify(data=add_list)
 
 
 @group.put("/cancel-accept-reject-request")

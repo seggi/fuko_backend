@@ -206,7 +206,7 @@ class ExpenseDetails(db.Model):
 
 # Note Book
 '''
-The notebook can be shared between two people 
+The notebook can be shared between two people
 When accept request then join share note book info
 '''
 

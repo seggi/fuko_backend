@@ -10,9 +10,10 @@ from api.core.objects import ManageQuery
 from ... import db
 from api.utils import responses as resp
 from api.accountability.global_amount.global_amount_views import QUERY
-from api.database.models import Budget, BudgetCategories, BudgetDetails, BudgetOption, User
+from api.database.models import Budget, BudgetCategories, BudgetDetails, BudgetOption, User, DeptsPayment, ExpenseDetails
 
-from api.utils.model_marsh import BudgetCategoriesSchema, BudgetDetailsSchema, BudgetOptionSchema, BudgetSchema
+from api.utils.model_marsh import (BudgetCategoriesSchema, ExpenseDetailsSchema,
+BudgetDetailsSchema, BudgetOptionSchema, BudgetSchema, DeptPaymentSchema)
 
 now = datetime.now()
 
@@ -23,6 +24,8 @@ budget_option_schema = BudgetOptionSchema()
 budget_schema = BudgetSchema()
 budget_categories_schema = BudgetCategoriesSchema()
 budget_details_schema = BudgetDetailsSchema()
+expense_detail_schema = ExpenseDetailsSchema()
+dept_payment_schema = DeptPaymentSchema()
 APP_LABEL = AppLabels()
 
 
@@ -160,7 +163,11 @@ def get_budget_envelop(currency_code, budget_id):
     try:
         user_id = get_jwt_identity()['id']
         collect_data = []
-        budget_envelop_data = db.session.query(BudgetDetails.budget_amount, BudgetCategories.name, BudgetDetails.id).\
+        expense_data = []
+        dept_data = []
+        budget_envelop_data = db.session.query(
+            BudgetDetails.budget_amount, BudgetCategories.name, BudgetDetails.id,
+            ).\
             join(Budget, BudgetDetails.budget_id == Budget.id).\
             join(BudgetCategories, BudgetDetails.budget_category_id == BudgetCategories.id).\
             filter(Budget.user_id == user_id).\
@@ -169,12 +176,30 @@ def get_budget_envelop(currency_code, budget_id):
             order_by(desc(BudgetDetails.created_at)).\
             all()
 
+        # expenses = db.session.query(
+        #         ExpenseDetails.amount).\
+        #     join(BudgetCategories, ExpenseDetails.budget_category_id == BudgetCategories.id).all()
+        #
+        # depts = db.session.query(DeptsPayment.amount, BudgetCategories.id).\
+        #     join(BudgetCategories, DeptsPayment.budget_category_id == BudgetCategories.id).\
+        # all()
+
+        # for expense in expenses:
+        #     data = expense_detail_schema.dump(expense)
+        #     expense_data.append(data)
+        #
+        # for dept in depts:
+        #     data = dept_payment_schema.dump(dept)
+        #     dept_data.append(data)
+
+
         for envelope in budget_envelop_data:
             envelopes = budget_details_schema.dump(envelope) | budget_categories_schema.dump(envelope)
             collect_data.append(envelopes)
 
+        # return jsonify(data={"budget": collect_data, "expense": expense_data, "depts": dept_data})
         return jsonify(data=collect_data)
 
     except Exception as e:
-        print("==>",e)
+        print(e)
         return response_with(resp.INVALID_FIELD_NAME_SENT_422)
