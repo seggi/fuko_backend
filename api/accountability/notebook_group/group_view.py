@@ -8,16 +8,16 @@ from sqlalchemy import extract, desc
 from api.accountability.global_amount.global_amount_views import QUERY
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.utils.model_marsh import GroupMemberSchema, RequestStatusSchema, UserCreateGroupSchema, UserSchema
+from api.utils.model_marsh import GroupMemberSchema, RequestStatusSchema, UserCreateGroupSchema, UserSchema, GroupeContributorAmountSchema
 from api.core.labels import AppLabels
 
 from ... import db
-from api.database.models import Currency, ExpenseDetails, Expenses, GroupMembers, RequestStatus, User, UserCreateGroup
+from api.database.models import Currency, ExpenseDetails, Expenses, GroupDepts, GroupMembers, RequestStatus, User, UserCreateGroup, GroupeContributorAmount
 
-REQUEST_SENT = "1"
-REQUEST_CANCELED = "3"
-REQUEST_ACCEPTED = "50"
-REQUEST_REJECTED = "51"
+REQUEST_SENT = 1
+REQUEST_CANCELED = 3
+REQUEST_ACCEPTED = 2
+
 
 now = datetime.now()
 APP_LABEL = AppLabels()
@@ -109,7 +109,6 @@ def add_partner_to_group():
             "message": APP_LABEL.label("Friend added with success")
         })
     except Exception as e:
-        print("===>", e)
         return response_with(resp.INVALID_INPUT_422)
 
 
@@ -148,7 +147,7 @@ def get_sent_request():
         User.username,
         User.first_name,
         User.last_name,
-        User.id,
+        GroupMembers.id,
         GroupMembers.requested_at,
         UserCreateGroup.group_name,
         RequestStatus.request_status_name).\
@@ -180,42 +179,212 @@ def get_sent_request():
     return jsonify(data=add_list)
 
 
+@group.get("/retrieve-request-accepted/<int:group_id>")
+@jwt_required(refresh=True)
+def get_accepted_request(group_id):
+    user_id = get_jwt_identity()['id']
+    group_member = []
+    request_status_list = []
+    user_create_group_list = []
+    member_list = []
+    add_list = []
+    get_request = db.session.query(
+        User.username,
+        User.first_name,
+        User.last_name,
+        GroupMembers.id,
+        GroupMembers.requested_at,
+        UserCreateGroup.group_name,
+        RequestStatus.request_status_name).\
+        join(User, GroupMembers.user_id == User.id).\
+        join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
+        join(RequestStatus, GroupMembers.request_status == RequestStatus.id).\
+        filter(UserCreateGroup.user_id == user_id).\
+        filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
+        filter(UserCreateGroup.id == group_id).\
+        order_by(desc(GroupMembers.requested_at)).all()
+
+    for item in get_request:
+        member_list.append(user_schema.dump(item))
+        user_create_group_list.append(user_create_group_schema.dump(item))
+        request_status_list.append(request_status_schema.dump(item))
+        group_member.append(group_member_schema.dump(item))
+
+    manage_request = ManageRequest(
+        schema=[user_schema, user_create_group_schema], data=[*get_request])
+    retrieve_request = manage_request.getRequest()
+    # manageRequest(data=[user_schema.dump(item), {"lastname": "serge"}])
+    for member in get_request:
+        add_list.append({
+            **user_schema.dump(member),
+            **group_member_schema.dump(member),
+            **user_create_group_schema.dump(member),
+            **request_status_schema.dump(member)
+        })
+
+    return jsonify(data=add_list)
+
+# TODO: Calculate Amount
+
+
+@group.get("/retrieve-member-contribution/<int:group_id>/<int:currency_code>")
+@jwt_required(refresh=True)
+def retrieve_member_contributions(group_id, currency_code):
+    user_id = get_jwt_identity()['id']
+    group_member = []
+    request_status_list = []
+    user_create_group_list = []
+    member_list = []
+    add_list = []
+    get_request = db.session.query(
+        User.username,
+        User.first_name,
+        User.last_name,
+        GroupMembers.id,
+        GroupeContributorAmount.amount,
+        GroupMembers.requested_at).\
+        join(User, GroupMembers.user_id == User.id).\
+        join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
+        join(RequestStatus, GroupMembers.request_status == RequestStatus.id).\
+        join(GroupeContributorAmount, GroupMembers.contributor_id == GroupeContributorAmount.id).\
+        filter(UserCreateGroup.user_id == user_id).\
+        filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
+        filter(UserCreateGroup.id == group_id).\
+        order_by(desc(GroupMembers.requested_at)).all()
+
+    for item in get_request:
+        member_list.append(user_schema.dump(item))
+        user_create_group_list.append(user_create_group_schema.dump(item))
+        request_status_list.append(request_status_schema.dump(item))
+        group_member.append(group_member_schema.dump(item))
+
+    manage_request = ManageRequest(
+        schema=[user_schema, user_create_group_schema], data=[*get_request])
+    retrieve_request = manage_request.getRequest()
+
+    for member in get_request:
+        add_list.append({
+            **user_schema.dump(member),
+            **group_member_schema.dump(member),
+            **user_create_group_schema.dump(member),
+            **request_status_schema.dump(member)
+        })
+
+    return jsonify(data=add_list)
+
+
+# TODO: Saved Amount
+@group.post("/save-group-contribution/<int:group_id>")
+@jwt_required(refresh=True)
+def save_group_contribution(group_id):
+    user_id = get_jwt_identity()['id']
+
+    new_member_list = []
+    member_list = []
+    current_user_id = []
+    try:
+        request_data = request.json
+        if request_data:
+            current_user = db.session.query(GroupMembers.id).filter(
+                GroupMembers.user_id == user_id, GroupMembers.group_id == group_id).all()
+
+            group_members = db.session.query(GroupMembers.id, User.username).join(
+                User, GroupMembers.user_id == User.id).filter(GroupMembers.group_id == group_id).all()
+
+            for user in current_user:
+                current_user_id.append(group_member_schema.dump(user))
+
+            contributions = {
+                **request_data[0], **{"contributor_id": current_user_id[0]["id"]}}
+
+            contribution = GroupeContributorAmount(**contributions)
+            db.session.add(contribution)
+            db.session.commit()
+
+            if len(request_data[1]['members']) == 0:
+                for member in group_members:
+                    if member['id'] == current_user_id[0]['id']:
+                        new_member_list.append({
+                            **{"member_id": group_member_schema.dump(member)['id']},
+                            **{"contributor": True},
+                            ** {"contribution_id": contribution.id}
+                        })
+                    if current_user_id[0]['id'] != member['id']:
+                        new_member_list.append({
+                            **{"member_id": group_member_schema.dump(member)['id']},
+                            ** {"contribution_id": contribution.id}
+                        })
+
+            else:
+                for member in request_data[1]['members']:
+                    if member['id'] == current_user_id[0]['id']:
+                        new_member_list.append({
+                            **{"member_id": member['id']},
+                            **{"contributor": True},
+                            ** {"contribution_id": contribution.id}
+                        })
+                    if current_user_id[0]['id'] != member['id']:
+                        new_member_list.append({
+                            **{"member_id": member['id']},
+                            ** {"contribution_id": contribution.id}
+                        })
+
+        for member in new_member_list:
+            contribution = GroupDepts(**member)
+            db.session.add(contribution)
+            db.session.commit()
+
+        return jsonify({
+            "code": APP_LABEL.label("success"),
+            "message": APP_LABEL.label("Amount added with success")
+        })
+
+    except Exception as e:
+        print(e)
+        return response_with(resp.INVALID_INPUT_422)
+
+
 @group.put("/cancel-accept-reject-request")
 @jwt_required(refresh=True)
 def request_status():
-    response = jsonify({
-        "code": APP_LABEL.label("success"),
-        "message": APP_LABEL.label("Request canceled!")
-    })
     try:
         data = request.json
 
         if data["request_status"] == REQUEST_CANCELED:
             group = db.session.query(GroupMembers).filter(
                 GroupMembers.id == data['id']).one()
-            group.request_status = REQUEST_CANCELED
-            group.remove_member_at = now
-            db.session.commit()
+            if group:
+                group.request_status = REQUEST_CANCELED
+                group.remove_member_at = now
+                db.session.commit()
 
-            return response
+                return jsonify({
+                    "code": APP_LABEL.label("success"),
+                    "message": APP_LABEL.label("Request canceled!")
+                })
+
+            return jsonify({
+                "code": APP_LABEL.label("Alert"),
+                "message": APP_LABEL.label("Group does not exist")
+            })
 
         if data["request_status"] == REQUEST_ACCEPTED:
             group = db.session.query(GroupMembers).filter(
                 GroupMembers.id == data['id']).one()
-            group.request_status = REQUEST_ACCEPTED
-            group.remove_member_at = now
-            db.session.commit()
+            if group:
+                group.request_status = REQUEST_ACCEPTED
+                group.accepted_at = now
+                db.session.commit()
 
-            return response
+                return jsonify({
+                    "code": APP_LABEL.label("success"),
+                    "message": APP_LABEL.label("Request accepted!")
+                })
 
-        if data["request_status"] == REQUEST_REJECTED:
-            group = db.session.query(GroupMembers).filter(
-                GroupMembers.id == data['id']).one()
-            group.request_status = REQUEST_REJECTED
-            group.remove_member_at = now
-            db.session.commit()
-
-            return response
+            return jsonify({
+                "code": APP_LABEL.label("Alert"),
+                "message": APP_LABEL.label("Group does not exist")
+            })
 
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
