@@ -25,6 +25,7 @@ user_schema = UserSchema()
 user_create_group_schema = UserCreateGroupSchema()
 group_member_schema = GroupMemberSchema()
 request_status_schema = RequestStatusSchema()
+group_contributor_amount_schema = GroupeContributorAmountSchema()
 
 group = Blueprint("group", __name__,
                   url_prefix="/api/user/account/group")
@@ -230,44 +231,49 @@ def get_accepted_request(group_id):
 @group.get("/retrieve-member-contribution/<int:group_id>/<int:currency_code>")
 @jwt_required(refresh=True)
 def retrieve_member_contributions(group_id, currency_code):
-    user_id = get_jwt_identity()['id']
-    group_member = []
-    request_status_list = []
-    user_create_group_list = []
-    member_list = []
     add_list = []
     get_request = db.session.query(
+        GroupMembers,
         User.username,
         User.first_name,
         User.last_name,
-        GroupMembers.id,
-        GroupeContributorAmount.amount,
-        GroupMembers.requested_at).\
+        GroupeContributorAmount.id, GroupeContributorAmount.amount).\
+        join(GroupeContributorAmount, GroupMembers.id == GroupeContributorAmount.contributor_id).\
         join(User, GroupMembers.user_id == User.id).\
-        join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
-        join(RequestStatus, GroupMembers.request_status == RequestStatus.id).\
-        join(GroupeContributorAmount, GroupMembers.contributor_id == GroupeContributorAmount.id).\
-        filter(UserCreateGroup.user_id == user_id).\
-        filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
-        filter(UserCreateGroup.id == group_id).\
-        order_by(desc(GroupMembers.requested_at)).all()
-
-    for item in get_request:
-        member_list.append(user_schema.dump(item))
-        user_create_group_list.append(user_create_group_schema.dump(item))
-        request_status_list.append(request_status_schema.dump(item))
-        group_member.append(group_member_schema.dump(item))
-
-    manage_request = ManageRequest(
-        schema=[user_schema, user_create_group_schema], data=[*get_request])
-    retrieve_request = manage_request.getRequest()
+        filter(GroupeContributorAmount.currency_id == currency_code).\
+        filter(GroupMembers.group_id == group_id).all()
 
     for member in get_request:
         add_list.append({
             **user_schema.dump(member),
-            **group_member_schema.dump(member),
-            **user_create_group_schema.dump(member),
-            **request_status_schema.dump(member)
+            **group_contributor_amount_schema.dump(member),
+        })
+
+    return jsonify(data=add_list)
+
+# ! to changed
+
+
+@group.get("/retrieve-participator/<int:contribution_id>/<int:currency_code>")
+@jwt_required(refresh=True)
+def retrieve_participator(contribution_id, currency_code):
+    add_list = []
+    get_request = db.session.query(
+        GroupMembers,
+        User.username,
+        User.first_name,
+        User.last_name,
+        GroupeContributorAmount.id, GroupeContributorAmount.amount).\
+        join(GroupeContributorAmount, GroupMembers.id == GroupeContributorAmount.contributor_id).\
+        join(User, GroupMembers.user_id == User.id).\
+        join(GroupDepts, GroupeContributorAmount.contributor_id == GroupDepts.id).\
+        filter(GroupeContributorAmount.currency_id == currency_code).\
+        filter(GroupDepts.contribution_id == contribution_id).all()
+
+    for member in get_request:
+        add_list.append({
+            **user_schema.dump(member),
+            **group_contributor_amount_schema.dump(member),
         })
 
     return jsonify(data=add_list)
@@ -278,9 +284,7 @@ def retrieve_member_contributions(group_id, currency_code):
 @jwt_required(refresh=True)
 def save_group_contribution(group_id):
     user_id = get_jwt_identity()['id']
-
     new_member_list = []
-    member_list = []
     current_user_id = []
     try:
         request_data = request.json
