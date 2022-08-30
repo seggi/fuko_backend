@@ -206,7 +206,7 @@ class ExpenseDetails(db.Model):
 
 # Note Book
 '''
-The notebook can be shared between two people 
+The notebook can be shared between two people
 When accept request then join share note book info
 '''
 
@@ -444,10 +444,9 @@ class GroupeContributorAmount(db.Model):
 class GroupDepts(db.Model):
     __tablename__ = "group_depts"
     id = Column('id', Integer, primary_key=True)
+    contribution_id = Column(Integer, ForeignKey("group_manage_money.id"))
     member_id = Column(Integer, ForeignKey("group_members.id"))
-    amount = Column(Float, nullable=False)
-    description = Column(Text, nullable=True)
-    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    contributor = Column(Boolean(), default=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 

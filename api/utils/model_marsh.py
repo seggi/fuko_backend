@@ -3,7 +3,7 @@ from xml.etree.ElementInclude import include
 from marshmallow import fields
 
 from ..database.models import (
-    Accommodation, BudgetCategories, BudgetDetails, Cities, DeptNoteBook, DeptsPayment, ExpenseDetails,
+    Accommodation, BudgetCategories, BudgetDetails, Cities, DeptNoteBook, DeptsPayment, ExpenseDetails, GroupeContributorAmount,
     LoanNoteBook, LoanPayment, State, Country, Language, Currency, AmountProvenance,
     User, UserProfile, UserSpokenLanguage, Expenses, Loans, Depts, Savings, Budget,
     NoteBook, NoteBookMember, RequestStatus,  UserDefaultCurrency, UserCreateGroup,
@@ -250,5 +250,12 @@ class GroupMemberSchema(marsh.SQLAlchemyAutoSchema):
 class RecordDeptPaymentSchema(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = RecordDeptPayment
+        include_relationships = True
+        load_instance = True
+
+
+class GroupeContributorAmountSchema(marsh.SQLAlchemyAutoSchema):
+    class Meta:
+        model = GroupeContributorAmount
         include_relationships = True
         load_instance = True
