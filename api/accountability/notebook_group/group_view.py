@@ -257,26 +257,43 @@ def retrieve_member_contributions(group_id, currency_code):
 @group.get("/retrieve-participator/<int:contribution_id>/<int:currency_code>")
 @jwt_required(refresh=True)
 def retrieve_participator(contribution_id, currency_code):
-    add_list = []
+    contributor_list = []
+    total_amount = []
+    new_contributor_list = []
     get_request = db.session.query(
+        GroupDepts,
         GroupMembers,
-        User.username,
-        User.first_name,
-        User.last_name,
+        User.first_name, User.last_name,
         GroupeContributorAmount.id, GroupeContributorAmount.amount).\
-        join(GroupeContributorAmount, GroupMembers.id == GroupeContributorAmount.contributor_id).\
+        join(GroupeContributorAmount, GroupDepts.contribution_id == GroupeContributorAmount.id).\
+        join(GroupMembers, GroupDepts.member_id == GroupMembers.id).\
         join(User, GroupMembers.user_id == User.id).\
-        join(GroupDepts, GroupeContributorAmount.contributor_id == GroupDepts.id).\
         filter(GroupeContributorAmount.currency_id == currency_code).\
         filter(GroupDepts.contribution_id == contribution_id).all()
 
     for member in get_request:
-        add_list.append({
+        contributor_list.append({
             **user_schema.dump(member),
             **group_contributor_amount_schema.dump(member),
         })
 
-    return jsonify(data=add_list)
+    for amounts in contributor_list:
+        total_amount.append(amounts['amount'])
+
+    amount_sum = total_amount[0]
+    members = len(contributor_list)
+
+    if members > 0:
+        splitted_amount = amount_sum / members
+        print(splitted_amount, amount_sum)
+        for member in contributor_list:
+            new_contributor_list.append({
+                **{"username": f"{member['first_name']} {member['last_name']}"},
+                **{"id": member["id"]},
+                **{"amount": splitted_amount}
+            })
+
+    return jsonify(data=new_contributor_list)
 
 
 # TODO: Saved Amount
