@@ -1,7 +1,9 @@
 from datetime import datetime
-from api.utils.model_marsh import NoteBookMemberSchema, NoteBookSchema, RequestStatusSchema, UserSchema
+from api.accountability.notebook_group.group_view import REQUEST_SENT
+from api.utils.model_marsh import GroupMemberSchema, GroupeContributorAmountSchema, NoteBookMemberSchema, NoteBookSchema, RequestStatusSchema, UserCreateGroupSchema, UserSchema
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy import extract, desc
 from api.accountability.global_amount.global_amount_views import QUERY
 
 from api.core.query import QueryGlobalReport
@@ -11,7 +13,7 @@ from api.core.labels import AppLabels
 from api.utils.model_marsh import NoteBookSchema
 
 from .. import db
-from api.database.models import DeptNoteBook, LoanNoteBook, NoteBook, NoteBookMember, RequestStatus, User
+from api.database.models import DeptNoteBook, GroupMembers, LoanNoteBook, NoteBook, NoteBookMember, RequestStatus, User, UserCreateGroup
 
 QUERY = QueryGlobalReport()
 APP_LABEL = AppLabels()
@@ -24,6 +26,10 @@ user_schema = UserSchema()
 noteBookSchema = NoteBookSchema()
 notebook_member_schema = NoteBookMemberSchema()
 request_status_schema = RequestStatusSchema()
+user_create_group_schema = UserCreateGroupSchema()
+group_member_schema = GroupMemberSchema()
+request_status_schema = RequestStatusSchema()
+group_contributor_amount_schema = GroupeContributorAmountSchema()
 # Create NoteBook
 
 
@@ -136,6 +142,7 @@ def request_received():
     try:
         sent_request = 1
         received_request = []
+        add_list = []
         user_id = get_jwt_identity()['id']
         request_ = db.session.query(
             NoteBookMember.id,
@@ -151,13 +158,45 @@ def request_received():
             filter(NoteBookMember.friend_id == user_id).all()
 
         for member in request_:
-            combine_member_data = user_schema.dump(
-                member) | notebook_member_schema.dump(member)
-            collect_all = combine_member_data | request_status_schema.dump(
-                member) | noteBookSchema.dump(member)
-            received_request.append(collect_all)
+            # combine_member_data = user_schema.dump(
+            #     member) | notebook_member_schema.dump(member)
+            # collect_all = combine_member_data | request_status_schema.dump(
+            #     member) | noteBookSchema.dump(member)
+            received_request.append({
+                **user_schema.dump(member),
+                **notebook_member_schema.dump(member),
+                **request_status_schema.dump(member),
+                **noteBookSchema.dump(member),
+                **{"notification": "notebook"}
+            })
 
-        return jsonify(data=received_request)
+        get_request = db.session.query(
+            User.username,
+            User.first_name,
+            User.last_name,
+            GroupMembers.id,
+            GroupMembers.requested_at,
+            UserCreateGroup.group_name,
+            RequestStatus.request_status_name).\
+            join(User, GroupMembers.user_id == User.id).\
+            join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
+            join(RequestStatus, GroupMembers.request_status == RequestStatus.id).\
+            filter(UserCreateGroup.user_id == user_id).\
+            filter(GroupMembers.request_status == REQUEST_SENT).\
+            order_by(desc(GroupMembers.requested_at)).all()
+
+        for member in get_request:
+            add_list.append({
+                **user_schema.dump(member),
+                **group_member_schema.dump(member),
+                **user_create_group_schema.dump(member),
+                **request_status_schema.dump(member),
+                **{"notification": "group"}
+            })
+
+        combine_both_list = received_request + add_list
+
+        return jsonify(data=combine_both_list)
 
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
