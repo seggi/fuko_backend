@@ -181,7 +181,7 @@ def request_received():
             join(User, GroupMembers.user_id == User.id).\
             join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
             join(RequestStatus, GroupMembers.request_status == RequestStatus.id).\
-            filter(UserCreateGroup.user_id == user_id).\
+            filter(GroupMembers.user_id == user_id).\
             filter(GroupMembers.request_status == REQUEST_SENT).\
             order_by(desc(GroupMembers.requested_at)).all()
 
