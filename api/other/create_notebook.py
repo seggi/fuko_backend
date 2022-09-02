@@ -175,15 +175,15 @@ def request_received():
             User.first_name,
             User.last_name,
             GroupMembers.id,
-            GroupMembers.requested_at,
+            GroupMembers.sent_at,
             UserCreateGroup.group_name,
             RequestStatus.request_status_name).\
-            join(User, GroupMembers.user_id == User.id).\
+            join(User, GroupMembers.member_id == User.id).\
             join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
             join(RequestStatus, GroupMembers.request_status == RequestStatus.id).\
-            filter(GroupMembers.user_id == user_id).\
+            filter(GroupMembers.sender_id == user_id).\
             filter(GroupMembers.request_status == REQUEST_SENT).\
-            order_by(desc(GroupMembers.requested_at)).all()
+            order_by(desc(GroupMembers.sent_at)).all()
 
         for member in get_request:
             add_list.append({

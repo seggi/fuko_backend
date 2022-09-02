@@ -417,12 +417,12 @@ class UserCreateGroup(db.Model):
 class GroupMembers(db.Model):
     __tablename__ = "group_members"
     id = Column('id', Integer, primary_key=True)
-    # member_id
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    sender_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+    member_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     group_id = Column(Integer, ForeignKey("user_create_group.id"))
     request_status = Column(Integer, ForeignKey(
         'request_status.id'), nullable=True)
-    requested_at = Column(DateTime(timezone=True), default=func.now())
+    sent_at = Column(DateTime(timezone=True), default=func.now())
     accepted_at = Column(DateTime(timezone=True))
     remove_member_at = Column(DateTime(timezone=True))
     status = Column(Boolean(), default=True)
