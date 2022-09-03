@@ -50,7 +50,17 @@ def user_create_group():
         })
 
     else:
-        QUERY.insert_data(db=db, table_data=UserCreateGroup(**data))
+        new_group = UserCreateGroup(**data)
+        db.session.add(new_group)
+        db.session.commit()
+        creator = {"group_id": new_group.id,
+                   "member_id": user_id,
+                   "request_status": REQUEST_ACCEPTED,
+                   "accepted_at": now,
+                   "sender_id": user_id}
+
+        QUERY.insert_data(db=db, table_data=GroupMembers(**creator))
+
         return jsonify({
             "code": APP_LABEL.label("success"),
             "message": APP_LABEL.label("Group name saved with success")
@@ -252,7 +262,6 @@ def retrieve_member_contributions(group_id, currency_code):
         GroupeContributorAmount.id, GroupeContributorAmount.amount).\
         join(GroupeContributorAmount, GroupMembers.id == GroupeContributorAmount.contributor_id).\
         join(User, GroupMembers.member_id == User.id).\
-        filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
         filter(GroupeContributorAmount.currency_id == currency_code).\
         filter(GroupMembers.group_id == group_id).all()
 
@@ -318,8 +327,10 @@ def save_group_contribution(group_id):
     try:
         request_data = request.json
         if request_data:
-            current_user = db.session.query(GroupMembers.id).filter(
-                GroupMembers.member_id == user_id, GroupMembers.group_id == group_id).all()
+            current_user = db.session.query(GroupMembers.id).\
+                filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
+                filter(GroupMembers.member_id == user_id,
+                       GroupMembers.group_id == group_id).all()
 
             group_members = db.session.query(GroupMembers.id, User.username).join(
                 User, GroupMembers.member_id == User.id).\
