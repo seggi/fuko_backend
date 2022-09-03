@@ -152,7 +152,7 @@ def request_received():
             NoteBook.notebook_name,
             User.username).\
             join(NoteBook, NoteBookMember.notebook_id == NoteBook.id).\
-            join(User, NoteBookMember.sender_id == User.id).\
+            join(User, NoteBookMember.friend_id == User.id).\
             join(RequestStatus, NoteBookMember.request_status == RequestStatus.id).\
             filter(NoteBookMember.request_status == REQUEST_SENT).\
             filter(NoteBookMember.friend_id == user_id).all()
@@ -177,7 +177,7 @@ def request_received():
             join(User, GroupMembers.member_id == User.id).\
             join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
             join(RequestStatus, GroupMembers.request_status == RequestStatus.id).\
-            filter(GroupMembers.sender_id == user_id).\
+            filter(GroupMembers.member_id == user_id).\
             filter(GroupMembers.request_status == REQUEST_SENT).\
             order_by(desc(GroupMembers.sent_at)).all()
 
