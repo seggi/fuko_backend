@@ -252,6 +252,7 @@ def retrieve_member_contributions(group_id, currency_code):
         GroupeContributorAmount.id, GroupeContributorAmount.amount).\
         join(GroupeContributorAmount, GroupMembers.id == GroupeContributorAmount.contributor_id).\
         join(User, GroupMembers.member_id == User.id).\
+        filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
         filter(GroupeContributorAmount.currency_id == currency_code).\
         filter(GroupMembers.group_id == group_id).all()
 
@@ -321,7 +322,9 @@ def save_group_contribution(group_id):
                 GroupMembers.member_id == user_id, GroupMembers.group_id == group_id).all()
 
             group_members = db.session.query(GroupMembers.id, User.username).join(
-                User, GroupMembers.member_id == User.id).filter(GroupMembers.group_id == group_id).all()
+                User, GroupMembers.member_id == User.id).\
+                filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
+                filter(GroupMembers.group_id == group_id).all()
 
             for user in current_user:
                 current_user_id.append(group_member_schema.dump(user))
