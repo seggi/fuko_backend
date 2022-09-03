@@ -250,7 +250,8 @@ def retrieve_member_contributions(group_id, currency_code):
         User.last_name,
         GroupeContributorAmount.id, GroupeContributorAmount.amount).\
         join(GroupeContributorAmount, GroupMembers.id == GroupeContributorAmount.contributor_id).\
-        join(User, GroupMembers.user_id == User.id).\
+        join(User, GroupMembers.member_id == User.id).\
+        filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
         filter(GroupeContributorAmount.currency_id == currency_code).\
         filter(GroupMembers.group_id == group_id).all()
 
