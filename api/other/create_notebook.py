@@ -154,14 +154,10 @@ def request_received():
             join(NoteBook, NoteBookMember.notebook_id == NoteBook.id).\
             join(User, NoteBookMember.sender_id == User.id).\
             join(RequestStatus, NoteBookMember.request_status == RequestStatus.id).\
-            filter(NoteBookMember.request_status == sent_request).\
+            filter(NoteBookMember.request_status == REQUEST_SENT).\
             filter(NoteBookMember.friend_id == user_id).all()
 
         for member in request_:
-            # combine_member_data = user_schema.dump(
-            #     member) | notebook_member_schema.dump(member)
-            # collect_all = combine_member_data | request_status_schema.dump(
-            #     member) | noteBookSchema.dump(member)
             received_request.append({
                 **user_schema.dump(member),
                 **notebook_member_schema.dump(member),

@@ -134,8 +134,6 @@ class ManageRequest:
             schema_dict.append(schema.dump(item))
         return schema_dict
 
-# ! Add sender in this table
-
 
 @group.get("/retrieve-request-sent")
 @jwt_required(refresh=True)
