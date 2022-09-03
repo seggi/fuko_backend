@@ -200,9 +200,8 @@ def get_accepted_request(group_id):
         join(User, GroupMembers.member_id == User.id).\
         join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
         join(RequestStatus, GroupMembers.request_status == RequestStatus.id).\
-        filter(UserCreateGroup.user_id == user_id).\
         filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
-        filter(UserCreateGroup.id == group_id).\
+        filter(GroupMembers.group_id == group_id).\
         order_by(desc(GroupMembers.sent_at)).all()
 
     for item in get_request:
