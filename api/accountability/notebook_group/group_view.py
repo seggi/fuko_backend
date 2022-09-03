@@ -103,13 +103,25 @@ def retrieve_create_group():
 def add_partner_to_group():
     user_id = get_jwt_identity()['id']
     try:
-        request_data = request.json | {"request_status": REQUEST_SENT}
-        QUERY.insert_data(db=db, table_data=GroupMembers(**request_data))
+        request_data = request.json | {
+            "request_status": REQUEST_SENT, "sender_id": user_id}
+        check_friend = db.session.query(GroupMembers).filter(
+            GroupMembers.group_id == request_data['group_id'],
+            GroupMembers.request_status == REQUEST_SENT,
+            GroupMembers.member_id == request_data['member_id']).first()
+        if check_friend:
+            return jsonify({
+                "code": APP_LABEL.label("success"),
+                "message": APP_LABEL.label("Request already sent")
+            })
+        QUERY.insert_data(db=db, table_data=GroupMembers(
+            **request_data))
         return jsonify({
             "code": APP_LABEL.label("success"),
-            "message": APP_LABEL.label("Friend added with success")
+            "message": APP_LABEL.label("Request sent with success.")
         })
     except Exception as e:
+        print(e)
         return response_with(resp.INVALID_INPUT_422)
 
 
@@ -133,8 +145,6 @@ class ManageRequest:
         for item in self.data:
             schema_dict.append(schema.dump(item))
         return schema_dict
-
-# ! Add sender in this table
 
 
 @group.get("/retrieve-request-sent")
@@ -196,16 +206,15 @@ def get_accepted_request(group_id):
         User.first_name,
         User.last_name,
         GroupMembers.id,
-        GroupMembers.requested_at,
+        GroupMembers.sent_at,
         UserCreateGroup.group_name,
         RequestStatus.request_status_name).\
-        join(User, GroupMembers.user_id == User.id).\
+        join(User, GroupMembers.member_id == User.id).\
         join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
         join(RequestStatus, GroupMembers.request_status == RequestStatus.id).\
-        filter(UserCreateGroup.user_id == user_id).\
         filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
-        filter(UserCreateGroup.id == group_id).\
-        order_by(desc(GroupMembers.requested_at)).all()
+        filter(GroupMembers.group_id == group_id).\
+        order_by(desc(GroupMembers.sent_at)).all()
 
     for item in get_request:
         member_list.append(user_schema.dump(item))
@@ -402,6 +411,24 @@ def request_status():
                 return jsonify({
                     "code": APP_LABEL.label("success"),
                     "message": APP_LABEL.label("Request accepted!")
+                })
+
+            return jsonify({
+                "code": APP_LABEL.label("Alert"),
+                "message": APP_LABEL.label("Group does not exist")
+            })
+
+        if data["request_status"] == REQUEST_CANCELED:
+            group = db.session.query(GroupMembers).filter(
+                GroupMembers.id == data['id']).one()
+            if group:
+                group.request_status = REQUEST_CANCELED
+                group.remove_member_at = now
+                db.session.commit()
+
+                return jsonify({
+                    "code": APP_LABEL.label("success"),
+                    "message": APP_LABEL.label("Request canceled!")
                 })
 
             return jsonify({

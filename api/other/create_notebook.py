@@ -118,6 +118,7 @@ def add_friend_to_notebook():
         data = request.json | {"sender_id": user_id}
         check_friend = db.session.query(NoteBookMember).filter(
             NoteBookMember.notebook_id == data['notebook_id'],
+            NoteBookMember.request_status == REQUEST_SENT,
             NoteBookMember.friend_id == data['friend_id']).first()
 
         if check_friend:
@@ -140,7 +141,6 @@ def add_friend_to_notebook():
 @jwt_required(refresh=True)
 def request_received():
     try:
-        sent_request = 1
         received_request = []
         add_list = []
         user_id = get_jwt_identity()['id']
@@ -154,14 +154,10 @@ def request_received():
             join(NoteBook, NoteBookMember.notebook_id == NoteBook.id).\
             join(User, NoteBookMember.sender_id == User.id).\
             join(RequestStatus, NoteBookMember.request_status == RequestStatus.id).\
-            filter(NoteBookMember.request_status == sent_request).\
+            filter(NoteBookMember.request_status == REQUEST_SENT).\
             filter(NoteBookMember.friend_id == user_id).all()
 
         for member in request_:
-            # combine_member_data = user_schema.dump(
-            #     member) | notebook_member_schema.dump(member)
-            # collect_all = combine_member_data | request_status_schema.dump(
-            #     member) | noteBookSchema.dump(member)
             received_request.append({
                 **user_schema.dump(member),
                 **notebook_member_schema.dump(member),
@@ -240,6 +236,7 @@ def request_sent():
 def confirm_request():
     rejected = "rejected"
     accepted = "accepted"
+    canceled = "canceled"
     try:
         data = request.json
         print(data)
@@ -271,6 +268,22 @@ def confirm_request():
                 return jsonify({
                     "code": APP_LABEL.label("success"),
                     "message": APP_LABEL.label("Congratulation! now you can view and exchange data in this notebook"),
+                    "data": notebook_member_schema.dump(notebook_member)
+                })
+
+        if data['method'] == canceled:
+            if data['notebook_member_id'] is None:
+                return response_with(resp.INVALID_INPUT_422)
+            else:
+                notebook_member = db.session.query(NoteBookMember).filter(
+                    NoteBookMember.id == data['notebook_member_id'],
+                ).one()
+                notebook_member.request_status = data['request_status']
+                notebook_member.canceled_at = now
+                db.session.commit()
+                return jsonify({
+                    "code": APP_LABEL.label("success"),
+                    "message": APP_LABEL.label("Request canceled."),
                     "data": notebook_member_schema.dump(notebook_member)
                 })
 
