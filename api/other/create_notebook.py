@@ -140,7 +140,6 @@ def add_friend_to_notebook():
 @jwt_required(refresh=True)
 def request_received():
     try:
-        sent_request = 1
         received_request = []
         add_list = []
         user_id = get_jwt_identity()['id']
