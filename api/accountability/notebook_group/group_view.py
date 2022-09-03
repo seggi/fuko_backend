@@ -96,12 +96,23 @@ def retrieve_create_group():
     user_id = get_jwt_identity()['id']
     group_list: list = []
 
-    group_data = db.session.query(UserCreateGroup).\
-        filter(UserCreateGroup.user_id == user_id).\
+    group_data = db.session.query(
+        GroupMembers,
+        UserCreateGroup.id,
+        UserCreateGroup.group_name,
+        User.first_name,
+        User.last_name,
+        User.username).\
+        join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
+        join(User, UserCreateGroup.user_id == User.id).\
+        filter(GroupMembers.member_id == user_id).\
         order_by(desc(UserCreateGroup.created_at)).all()
 
     for item in group_data:
-        group_list.append(user_create_group_schema.dump(item))
+        group_list.append({
+            **user_create_group_schema.dump(item),
+            **user_schema.dump(item)
+        })
 
     return jsonify({
         "all_group": group_list
