@@ -319,10 +319,10 @@ def save_group_contribution(group_id):
         request_data = request.json
         if request_data:
             current_user = db.session.query(GroupMembers.id).filter(
-                GroupMembers.user_id == user_id, GroupMembers.group_id == group_id).all()
+                GroupMembers.member_id == user_id, GroupMembers.group_id == group_id).all()
 
             group_members = db.session.query(GroupMembers.id, User.username).join(
-                User, GroupMembers.user_id == User.id).filter(GroupMembers.group_id == group_id).all()
+                User, GroupMembers.member_id == User.id).filter(GroupMembers.group_id == group_id).all()
 
             for user in current_user:
                 current_user_id.append(group_member_schema.dump(user))
