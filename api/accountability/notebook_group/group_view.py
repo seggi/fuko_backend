@@ -248,9 +248,10 @@ def retrieve_member_contributions(group_id, currency_code):
         User.username,
         User.first_name,
         User.last_name,
+        GroupeContributorAmount.created_at, GroupeContributorAmount.description,
         GroupeContributorAmount.id, GroupeContributorAmount.amount).\
         join(GroupeContributorAmount, GroupMembers.id == GroupeContributorAmount.contributor_id).\
-        join(User, GroupMembers.user_id == User.id).\
+        join(User, GroupMembers.member_id == User.id).\
         filter(GroupeContributorAmount.currency_id == currency_code).\
         filter(GroupMembers.group_id == group_id).all()
 
@@ -278,7 +279,7 @@ def retrieve_participator(contribution_id, currency_code):
         GroupeContributorAmount.id, GroupeContributorAmount.amount).\
         join(GroupeContributorAmount, GroupDepts.contribution_id == GroupeContributorAmount.id).\
         join(GroupMembers, GroupDepts.member_id == GroupMembers.id).\
-        join(User, GroupMembers.user_id == User.id).\
+        join(User, GroupMembers.member_id == User.id).\
         filter(GroupeContributorAmount.currency_id == currency_code).\
         filter(GroupDepts.contribution_id == contribution_id).all()
 
@@ -296,7 +297,6 @@ def retrieve_participator(contribution_id, currency_code):
 
     if members > 0:
         splitted_amount = amount_sum / members
-        print(splitted_amount, amount_sum)
         for member in contributor_list:
             new_contributor_list.append({
                 **{"username": f"{member['first_name']} {member['last_name']}"},
@@ -318,10 +318,10 @@ def save_group_contribution(group_id):
         request_data = request.json
         if request_data:
             current_user = db.session.query(GroupMembers.id).filter(
-                GroupMembers.user_id == user_id, GroupMembers.group_id == group_id).all()
+                GroupMembers.member_id == user_id, GroupMembers.group_id == group_id).all()
 
             group_members = db.session.query(GroupMembers.id, User.username).join(
-                User, GroupMembers.user_id == User.id).filter(GroupMembers.group_id == group_id).all()
+                User, GroupMembers.member_id == User.id).filter(GroupMembers.group_id == group_id).all()
 
             for user in current_user:
                 current_user_id.append(group_member_schema.dump(user))
