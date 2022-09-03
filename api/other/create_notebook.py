@@ -118,6 +118,7 @@ def add_friend_to_notebook():
         data = request.json | {"sender_id": user_id}
         check_friend = db.session.query(NoteBookMember).filter(
             NoteBookMember.notebook_id == data['notebook_id'],
+            NoteBookMember.request_status == REQUEST_SENT,
             NoteBookMember.friend_id == data['friend_id']).first()
 
         if check_friend:

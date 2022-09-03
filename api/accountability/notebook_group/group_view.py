@@ -105,11 +105,20 @@ def add_partner_to_group():
     try:
         request_data = request.json | {
             "request_status": REQUEST_SENT, "sender_id": user_id}
+        check_friend = db.session.query(GroupMembers).filter(
+            GroupMembers.group_id == request_data['group_id'],
+            GroupMembers.request_status == REQUEST_SENT,
+            GroupMembers.member_id == request_data['member_id']).first()
+        if check_friend:
+            return jsonify({
+                "code": APP_LABEL.label("success"),
+                "message": APP_LABEL.label("Request already sent")
+            })
         QUERY.insert_data(db=db, table_data=GroupMembers(
             **request_data))
         return jsonify({
             "code": APP_LABEL.label("success"),
-            "message": APP_LABEL.label("Friend added with success")
+            "message": APP_LABEL.label("Request sent with success.")
         })
     except Exception as e:
         print(e)
