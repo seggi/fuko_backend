@@ -103,13 +103,16 @@ def retrieve_create_group():
 def add_partner_to_group():
     user_id = get_jwt_identity()['id']
     try:
-        request_data = request.json | {"request_status": REQUEST_SENT}
-        QUERY.insert_data(db=db, table_data=GroupMembers(**request_data))
+        request_data = request.json | {
+            "request_status": REQUEST_SENT, "sender_id": user_id}
+        QUERY.insert_data(db=db, table_data=GroupMembers(
+            **request_data))
         return jsonify({
             "code": APP_LABEL.label("success"),
             "message": APP_LABEL.label("Friend added with success")
         })
     except Exception as e:
+        print(e)
         return response_with(resp.INVALID_INPUT_422)
 
 
