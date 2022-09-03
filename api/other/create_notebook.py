@@ -236,6 +236,7 @@ def request_sent():
 def confirm_request():
     rejected = "rejected"
     accepted = "accepted"
+    canceled = "canceled"
     try:
         data = request.json
         print(data)
@@ -267,6 +268,22 @@ def confirm_request():
                 return jsonify({
                     "code": APP_LABEL.label("success"),
                     "message": APP_LABEL.label("Congratulation! now you can view and exchange data in this notebook"),
+                    "data": notebook_member_schema.dump(notebook_member)
+                })
+
+        if data['method'] == canceled:
+            if data['notebook_member_id'] is None:
+                return response_with(resp.INVALID_INPUT_422)
+            else:
+                notebook_member = db.session.query(NoteBookMember).filter(
+                    NoteBookMember.id == data['notebook_member_id'],
+                ).one()
+                notebook_member.request_status = data['request_status']
+                notebook_member.canceled_at = now
+                db.session.commit()
+                return jsonify({
+                    "code": APP_LABEL.label("success"),
+                    "message": APP_LABEL.label("Request canceled."),
                     "data": notebook_member_schema.dump(notebook_member)
                 })
 

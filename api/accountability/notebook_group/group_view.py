@@ -418,5 +418,23 @@ def request_status():
                 "message": APP_LABEL.label("Group does not exist")
             })
 
+        if data["request_status"] == REQUEST_CANCELED:
+            group = db.session.query(GroupMembers).filter(
+                GroupMembers.id == data['id']).one()
+            if group:
+                group.request_status = REQUEST_CANCELED
+                group.remove_member_at = now
+                db.session.commit()
+
+                return jsonify({
+                    "code": APP_LABEL.label("success"),
+                    "message": APP_LABEL.label("Request canceled!")
+                })
+
+            return jsonify({
+                "code": APP_LABEL.label("Alert"),
+                "message": APP_LABEL.label("Group does not exist")
+            })
+
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
