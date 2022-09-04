@@ -343,8 +343,8 @@ def save_group_contribution(group_id):
         if request_data:
             current_user = db.session.query(GroupMembers.id).\
                 filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
-                filter(GroupMembers.member_id == user_id,
-                       GroupMembers.group_id == group_id).all()
+                filter(GroupMembers.member_id == user_id).\
+                filter(GroupMembers.group_id == group_id).all()
 
             group_members = db.session.query(GroupMembers.id, User.username).join(
                 User, GroupMembers.member_id == User.id).\
