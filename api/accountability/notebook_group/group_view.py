@@ -50,7 +50,17 @@ def user_create_group():
         })
 
     else:
-        QUERY.insert_data(db=db, table_data=UserCreateGroup(**data))
+        new_group = UserCreateGroup(**data)
+        db.session.add(new_group)
+        db.session.commit()
+        creator = {"group_id": new_group.id,
+                   "member_id": user_id,
+                   "request_status": REQUEST_ACCEPTED,
+                   "accepted_at": now,
+                   "sender_id": user_id}
+
+        QUERY.insert_data(db=db, table_data=GroupMembers(**creator))
+
         return jsonify({
             "code": APP_LABEL.label("success"),
             "message": APP_LABEL.label("Group name saved with success")
@@ -86,12 +96,26 @@ def retrieve_create_group():
     user_id = get_jwt_identity()['id']
     group_list: list = []
 
-    group_data = db.session.query(UserCreateGroup).\
-        filter(UserCreateGroup.user_id == user_id).\
+    group_data = db.session.query(
+        GroupMembers,
+        UserCreateGroup.id,
+        UserCreateGroup.user_id,
+        UserCreateGroup.group_name,
+        User.first_name,
+        User.last_name,
+        User.username).\
+        join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
+        join(User, UserCreateGroup.user_id == User.id).\
+        filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
+        filter(GroupMembers.member_id == user_id).\
         order_by(desc(UserCreateGroup.created_at)).all()
 
     for item in group_data:
-        group_list.append(user_create_group_schema.dump(item))
+        group_list.append({
+            **user_create_group_schema.dump(item),
+            **user_schema.dump(item),
+            **{"creator": True if item['user_id'] == user_id else False}
+        })
 
     return jsonify({
         "all_group": group_list
@@ -317,11 +341,15 @@ def save_group_contribution(group_id):
     try:
         request_data = request.json
         if request_data:
-            current_user = db.session.query(GroupMembers.id).filter(
-                GroupMembers.member_id == user_id, GroupMembers.group_id == group_id).all()
+            current_user = db.session.query(GroupMembers.id).\
+                filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
+                filter(GroupMembers.member_id == user_id).\
+                filter(GroupMembers.group_id == group_id).all()
 
             group_members = db.session.query(GroupMembers.id, User.username).join(
-                User, GroupMembers.member_id == User.id).filter(GroupMembers.group_id == group_id).all()
+                User, GroupMembers.member_id == User.id).\
+                filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
+                filter(GroupMembers.group_id == group_id).all()
 
             for user in current_user:
                 current_user_id.append(group_member_schema.dump(user))
