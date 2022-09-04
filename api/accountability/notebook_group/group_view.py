@@ -105,6 +105,7 @@ def retrieve_create_group():
         User.username).\
         join(UserCreateGroup, GroupMembers.group_id == UserCreateGroup.id).\
         join(User, UserCreateGroup.user_id == User.id).\
+        filter(GroupMembers.request_status == REQUEST_ACCEPTED).\
         filter(GroupMembers.member_id == user_id).\
         order_by(desc(UserCreateGroup.created_at)).all()
 
