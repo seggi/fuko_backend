@@ -99,6 +99,7 @@ def retrieve_create_group():
     group_data = db.session.query(
         GroupMembers,
         UserCreateGroup.id,
+        UserCreateGroup.user_id,
         UserCreateGroup.group_name,
         User.first_name,
         User.last_name,
@@ -112,7 +113,8 @@ def retrieve_create_group():
     for item in group_data:
         group_list.append({
             **user_create_group_schema.dump(item),
-            **user_schema.dump(item)
+            **user_schema.dump(item),
+            **{"creator": True if item['user_id'] == user_id else False}
         })
 
     return jsonify({
