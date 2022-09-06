@@ -277,7 +277,8 @@ def retrieve_member_contributions(group_id, currency_code):
         join(GroupeContributorAmount, GroupMembers.id == GroupeContributorAmount.contributor_id).\
         join(User, GroupMembers.member_id == User.id).\
         filter(GroupeContributorAmount.currency_id == currency_code).\
-        filter(GroupMembers.group_id == group_id).all()
+        filter(GroupMembers.group_id == group_id).order_by(
+            desc(GroupeContributorAmount.sent_at)).all()
 
     for member in get_request:
         add_list.append({
