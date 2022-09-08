@@ -12,6 +12,7 @@ from sqlalchemy import extract, desc, Date, cast, and_, func
 
 from api.accountability.global_amount.global_amount_views import QUERY
 from api.core.query import QueryGlobalReport
+from api.utils.constant import EXPENSE
 from api.utils.responses import response_with
 from api.utils import responses as resp
 from api.utils.model_marsh import CurrencySchema, ExpenseDetailsSchema, ExpensesSchema
@@ -95,7 +96,7 @@ def user_get_expense(currency_id):
         currency_code.append(item['code'])
 
     total_amount = sum(total_amount_list)
-    currency = currency_code[0]
+    currency = currency_code[0] if len(currency_code) > 0 else ""
 
     return jsonify(data={
         "expense": expenses_list,
@@ -203,7 +204,8 @@ def user_add_expenses(expense_id):
                 new_data = {
                     "amount": value['amount'],
                     "description": value["description"],
-                    "currency_id": system_default_currency
+                    "currency_id": system_default_currency,
+                    "budget_detail_id": value["budget_detail_id"]
                 }
                 QUERY.insert_data(db=db, table_data=ExpenseDetails(
                     **new_data | {"expense_id": expense_id}))
