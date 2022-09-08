@@ -16,15 +16,15 @@ from api.core.query import QueryGlobalReport
 from api.utils.responses import response_with
 from api.utils import responses as resp
 from api.utils.model_marsh import (CurrencySchema, DeptNoteBookSchema,
-    DeptPaymentSchema,
-    DeptsSchema, LoanNoteBookSchema, LoanPaymentSchema,
-    NoteBookMemberSchema, RecordDeptPaymentSchema, UserSchema)
+                                   DeptPaymentSchema,
+                                   DeptsSchema, LoanNoteBookSchema, LoanPaymentSchema,
+                                   NoteBookMemberSchema, RecordDeptPaymentSchema, UserSchema)
 from api.core.labels import AppLabels
 from api.core.objects import ManageQuery
 
 from ... import db
 from api.database.models import (Currency, DeptNoteBook, Depts, DeptsPayment,
-    LoanNoteBook, LoanPayment, NoteBookMember, RecordDeptPayment, User, RecordDeptPayment)
+                                 LoanNoteBook, LoanPayment, NoteBookMember, RecordDeptPayment, User, RecordDeptPayment)
 
 dept = Blueprint("dept", __name__, url_prefix="/api/user/account/dept")
 
@@ -232,7 +232,7 @@ def user_add_dept(note_id):
             "message": APP_LABEL.label("Dept Amount recorded with success")
         })
 
-    except Exception:
+    except Exception as e:
         return response_with(resp.INVALID_INPUT_422)
 
 

@@ -10,6 +10,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from passlib.hash import pbkdf2_sha256 as sha256
 from sqlalchemy.orm import backref
 
+from api.utils.constant import EXPENSE, INCOMES
+
 
 from .. import db
 
@@ -176,6 +178,37 @@ class UserSpokenLanguage(db.Model):
 
 # Accountability Table
 
+
+# Budget Table
+'''The system will check first the total amount user has in his wallet'''
+
+
+class Budget(db.Model):
+    __tablename__ = "Budget"
+    id = Column('id', Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    name = Column(Text(), nullable=False)
+    description = Column(Text, nullable=True)  # Example Incoming or Expenses
+    start_date = Column(DateTime(), nullable=True)
+    end_date = Column(DateTime(), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
+
+class BudgetDetails(db.Model):
+    __tablename__ = "budget_details"
+    id = Column('id', Integer, primary_key=True)
+    budget_id = Column(Integer, ForeignKey('Budget.id'), nullable=False)
+    budget_category_id = Column(Integer, ForeignKey(
+        'budget_categories.id'), nullable=True)
+    summary = Column(Text, nullable=True)
+    budget_amount = Column(Float, nullable=True)  # ! used
+    actual_amount = Column(Float, nullable=True)
+    difference_amount = Column(Float, nullable=True)
+    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
 # Private Expenses
 # Expense can not be deleted
 
@@ -193,10 +226,10 @@ class ExpenseDetails(db.Model):
     __tablename__ = "expense_details"
     id = Column('id', Integer, primary_key=True)
     expense_id = Column(Integer, ForeignKey('expense.id'), nullable=True)
-    budget_category_id = Column(Integer, ForeignKey(
-        'budget_categories.id'), nullable=True)
+    budget_detail_id = Column(Integer, ForeignKey(
+        'budget_details.id'), nullable=True)
     budget_option_id = Column(Integer, ForeignKey(
-        'budget_option.id'), default=2, nullable=True)
+        'budget_option.id'), default=EXPENSE, nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
@@ -261,7 +294,11 @@ class Loans(db.Model):
     note_id = Column(Integer, ForeignKey('loan_note_book.id'), nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
-    '''Enter the date of receiving money & section works when the your financial partener is not in the system'''
+    budget_detail_id = Column(Integer, ForeignKey(
+        'budget_details.id'), nullable=True)
+    budget_option_id = Column(Integer, ForeignKey(
+        'budget_option.id'), default=INCOMES, nullable=True)
+    '''Enter the date of receiving money & section works when the your financial partner is not in the system'''
     recieve_money_at = Column(DateTime(), nullable=True)
     payment_status = Column(Boolean, default=False)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
@@ -277,10 +314,10 @@ class LoanPayment(db.Model):
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
-    budget_category_id = Column(Integer, ForeignKey(
-        'budget_categories.id'), default=7, nullable=True)
+    budget_detail_id = Column(Integer, ForeignKey(
+        'budget_details.id'), nullable=True)
     budget_option_id = Column(Integer, ForeignKey(
-        'budget_option.id'), default=1, nullable=True)
+        'budget_option.id'), default=EXPENSE, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -310,6 +347,10 @@ class Depts(db.Model):
     '''Enter the date of receiving money & section works when the lender is not in the system'''
     lent_at = Column(DateTime())
     payment_status = Column(Boolean, default=False)
+    budget_detail_id = Column(Integer, ForeignKey(
+        'budget_details.id'), nullable=True)
+    budget_option_id = Column(Integer, ForeignKey(
+        'budget_option.id'), default=EXPENSE, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
@@ -325,10 +366,10 @@ class DeptsPayment(db.Model):
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
-    budget_category_id = Column(Integer, ForeignKey(
-        'budget_categories.id'), default=7, nullable=True)
+    budget_detail_id = Column(Integer, ForeignKey(
+        'budget_details.id'), nullable=True)
     budget_option_id = Column(Integer, ForeignKey(
-        'budget_option.id'), default=2, nullable=True)
+        'budget_option.id'), default=EXPENSE, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -340,10 +381,10 @@ class RecordDeptPayment(db.Model):
     description = Column(Text, nullable=True)
     note_id = Column(Integer, ForeignKey('dept_note_book.id'), nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
-    budget_category_id = Column(Integer, ForeignKey(
-        'budget_categories.id'), default=7, nullable=True)
+    budget_detail_id = Column(Integer, ForeignKey(
+        'budget_details.id'), nullable=True)
     budget_option_id = Column(Integer, ForeignKey(
-        'budget_option.id'), default=2, nullable=True)
+        'budget_option.id'), default=EXPENSE, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -354,47 +395,14 @@ class Savings(db.Model):
     __tablename__ = "savings"
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    budget_category_id = Column(Integer, ForeignKey(
-        'budget_categories.id'), default=7, nullable=True)
+    budget_detail_id = Column(Integer, ForeignKey(
+        'budget_details.id'), nullable=True)
     budget_option_id = Column(Integer, ForeignKey(
-        'budget_option.id'), default=2, nullable=True)
+        'budget_option.id'), default=INCOMES, nullable=True)
     money_provenance = Column(Integer, ForeignKey(
         'amount_provenance.id'), nullable=True)
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
-    currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=func.now())
-    updated_at = Column(DateTime(timezone=True), default=func.now())
-
-
-# Budget Table
-'''The system will check first the total amount user has in his wallet'''
-
-
-class Budget(db.Model):
-    __tablename__ = "Budget"
-    id = Column('id', Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    name = Column(Text(), nullable=False)
-    description = Column(Text, nullable=True)  # Example Incoming or Expenses
-    start_date = Column(DateTime(), nullable=True)
-    end_date = Column(DateTime(), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=func.now())
-    updated_at = Column(DateTime(timezone=True), default=func.now())
-
-
-class BudgetDetails(db.Model):
-    __tablename__ = "budget_details"
-    id = Column('id', Integer, primary_key=True)
-    budget_id = Column(Integer, ForeignKey('Budget.id'), nullable=False)
-    budget_option_id = Column(Integer, ForeignKey(
-        'budget_option.id'), nullable=True)
-    budget_category_id = Column(Integer, ForeignKey(
-        'budget_categories.id'), nullable=True)
-    summary = Column(Text, nullable=True)
-    budget_amount = Column(Float, nullable=True)
-    actual_amount = Column(Float, nullable=True)
-    difference_amount = Column(Float, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
@@ -437,6 +445,10 @@ class GroupeContributorAmount(db.Model):
     amount = Column(Float, nullable=False)
     description = Column(Text, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    budget_detail_id = Column(Integer, ForeignKey(
+        'budget_details.id'), nullable=True)
+    budget_option_id = Column(Integer, ForeignKey(
+        'budget_option.id'), default=EXPENSE, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -447,6 +459,10 @@ class GroupDepts(db.Model):
     contribution_id = Column(Integer, ForeignKey("group_manage_money.id"))
     member_id = Column(Integer, ForeignKey("group_members.id"))
     contributor = Column(Boolean(), default=False)
+    budget_detail_id = Column(Integer, ForeignKey(
+        'budget_details.id'), nullable=True)
+    budget_option_id = Column(Integer, ForeignKey(
+        'budget_option.id'), default=INCOMES, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
@@ -497,10 +513,10 @@ class Accommodation(db.Model):
         'rent_payment_option.id'), nullable=True)
     paid_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
-    budget_category_id = Column(Integer, ForeignKey(
-        'budget_categories.id'), default=1)
+    budget_detail_id = Column(Integer, ForeignKey(
+        'budget_details.id'), nullable=True)
     budget_option_id = Column(Integer, ForeignKey(
-        'budget_option.id'), default=2, nullable=True)
+        'budget_option.id'), default=EXPENSE, nullable=True)
 
 
 '''In the future we have to combine with tontine && back'''

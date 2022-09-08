@@ -318,7 +318,8 @@ def user_record_loan(note_id):
             "code": APP_LABEL.label("success"),
             "message": APP_LABEL.label("Loan Amount recorded with success")
         })
-    except Exception:
+    except Exception as e:
+        print(e)
         return response_with(resp.INVALID_INPUT_422)
 
 # Update loan
