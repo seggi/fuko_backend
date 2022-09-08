@@ -178,18 +178,6 @@ class UserSpokenLanguage(db.Model):
 
 # Accountability Table
 
-# Private Expenses
-# Expense can not be deleted
-
-
-class Expenses(db.Model):
-    __tablename__ = "expense"
-    id = Column('id', Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    expense_name = Column(Text, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=func.now())
-    updated_at = Column(DateTime(timezone=True), default=func.now())
-
 
 # Budget Table
 '''The system will check first the total amount user has in his wallet'''
@@ -218,6 +206,18 @@ class BudgetDetails(db.Model):
     actual_amount = Column(Float, nullable=True)
     difference_amount = Column(Float, nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
+
+# Private Expenses
+# Expense can not be deleted
+
+
+class Expenses(db.Model):
+    __tablename__ = "expense"
+    id = Column('id', Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    expense_name = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 

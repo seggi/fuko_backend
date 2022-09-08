@@ -233,7 +233,6 @@ def user_add_dept(note_id):
         })
 
     except Exception as e:
-        print(e)
         return response_with(resp.INVALID_INPUT_422)
 
 
