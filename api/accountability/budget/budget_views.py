@@ -266,6 +266,7 @@ def get_budget_envelop(currency_code, budget_id):
                 if envelope['id'] == expense['id']:
                     new_collection_data.append({
                         **{"id": expense['id']},
+                        **{"name": envelope["name"]},
                         **{"budget_amount": envelope["budget_amount"]},
                         **{"amount_consumed": expense["amount_consumed"]}
                     })
@@ -274,6 +275,7 @@ def get_budget_envelop(currency_code, budget_id):
                 if envelope['id'] == dept['id']:
                     new_collection_data.append({
                         **{"id": dept['id']},
+                        **{"name": envelope["name"]},
                         **{"budget_amount": envelope["budget_amount"]},
                         **{"amount_consumed": dept["amount_consumed"]}
                     })
@@ -283,11 +285,13 @@ def get_budget_envelop(currency_code, budget_id):
                     new_collection_data.append({
                         **{"id": dept_payment['id']},
                         **{"budget_amount": envelope["budget_amount"]},
+                        **{"name": envelope["name"]},
                         **{"amount_consumed": dept_payment["amount_consumed"]}
                     })
 
             new_collection_data.append({
                 **{"id": envelope['id']},
+                **{"name": envelope["name"]},
                 **{"budget_amount": envelope["budget_amount"]},
                 **{"amount_consumed": 0.0}
             })

@@ -78,6 +78,7 @@ class Reducer:
                         lists.append(element)
                     elements['total_amount'] = sum(lists)
                     elements['budget_amount'] = items["budget_amount"]
+                    elements['name'] = items['name']
 
         return new_list
 
