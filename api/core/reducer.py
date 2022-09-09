@@ -39,6 +39,14 @@ class Reducer:
                     collect_ids.append(str(elements['id']))
         return collect_ids
 
+    def collect_data_2(self):
+        collect_ids = []
+        for elements in self.list_items:
+            for element in elements:
+                if elements[element] == elements['id']:
+                    collect_ids.append(str(elements['id']))
+        return collect_ids
+
     def group_same_value(self):
         new_list = []
         for item in list(set(self.new_collection_data())):
@@ -52,6 +60,24 @@ class Reducer:
                     for element in elements['amount']:
                         lists.append(element)
                     elements['total_amount'] = sum(lists)
+
+        return new_list
+
+    def group_ids(self):
+        new_list = []
+        for item in list(set(self.new_collection_data())):
+            new_list.append({"id": int(item), "amount_consumed": []})
+
+        for items in self.list_items:
+            for elements in new_list:
+                if items['id'] == elements["id"]:
+                    lists = []
+                    elements['amount_consumed'].append(
+                        items["amount_consumed"])
+                    for element in elements['amount_consumed']:
+                        lists.append(element)
+                    elements['total_amount'] = sum(lists)
+                    elements['budget_amount'] = items["budget_amount"]
 
         return new_list
 

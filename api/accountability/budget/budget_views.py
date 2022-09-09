@@ -1,5 +1,6 @@
 from datetime import datetime
 from api.core.labels import AppLabels
+from api.core.reducer import Reducer
 from api.utils.constant import EXPENSE
 from api.utils.responses import response_with
 from flask import Blueprint, jsonify, request
@@ -8,12 +9,12 @@ from sqlalchemy import extract, desc, Date, cast, and_, func
 
 from api.core.objects import ManageQuery
 
-from ... import db
+from ... import create_app, db
 from api.utils import responses as resp
 from api.accountability.global_amount.global_amount_views import QUERY
-from api.database.models import Budget, BudgetCategories, BudgetDetails, BudgetOption, User, DeptsPayment, ExpenseDetails
+from api.database.models import Budget, BudgetCategories, BudgetDetails, BudgetOption, Depts, User, DeptsPayment, ExpenseDetails
 
-from api.utils.model_marsh import (BudgetCategoriesSchema, ExpenseDetailsSchema,
+from api.utils.model_marsh import (BudgetCategoriesSchema, DeptsSchema, ExpenseDetailsSchema,
                                    BudgetDetailsSchema, BudgetOptionSchema, BudgetSchema, DeptPaymentSchema)
 
 now = datetime.now()
@@ -27,6 +28,7 @@ budget_categories_schema = BudgetCategoriesSchema()
 budget_details_schema = BudgetDetailsSchema()
 expense_detail_schema = ExpenseDetailsSchema()
 dept_payment_schema = DeptPaymentSchema()
+dept_schema = DeptsSchema()
 APP_LABEL = AppLabels()
 
 
@@ -147,6 +149,17 @@ def save_budget_envelop():
     try:
         user_id = get_jwt_identity()['id']
         data = request.json
+
+        retrieve_budget = db.session.query(BudgetDetails).filter(
+            BudgetDetails.budget_id == data["budget_id"],
+            BudgetDetails.budget_category_id == data["budget_category_id"]).all()
+
+        if retrieve_budget:
+            return jsonify({
+                "code": APP_LABEL.label("Alert"),
+                "message": APP_LABEL.label("Budget envelope already saved")
+            })
+
         QUERY.insert_data(db=db, table_data=BudgetDetails(**data))
         return jsonify({
             "code": APP_LABEL.label("success"),
@@ -162,20 +175,31 @@ def save_budget_envelop():
 def get_budget_envelop(currency_code, budget_id):
     try:
         user_id = get_jwt_identity()['id']
-        collect_data = []
+        envelope_data = []
         expense_data = []
         dept_data = []
+        dept_payment_data = []
+
+        def remove_amount_list(list_data) -> list:
+            new_list = []
+            for item_data in list_data:
+                new_list.append({
+                    **{"id": int(item_data["id"])},
+                    **{"amount_consumed": item_data["total_amount"]}
+                })
+            return new_list
+
         budget_envelop_data = db.session.query(
             BudgetDetails.budget_amount,
             BudgetCategories.name,
-            BudgetDetails.id
+            BudgetDetails.id,
+            BudgetDetails.created_at
         ).\
             join(Budget, BudgetDetails.budget_id == Budget.id).\
             join(BudgetCategories, BudgetDetails.budget_category_id == BudgetCategories.id).\
             filter(Budget.user_id == user_id).\
             filter(BudgetDetails.budget_id == budget_id).\
             filter(BudgetDetails.currency_id == currency_code).\
-            filter(Budget.id == user_id).\
             order_by(desc(BudgetDetails.created_at)).\
             all()
 
@@ -184,31 +208,93 @@ def get_budget_envelop(currency_code, budget_id):
             join(BudgetDetails, ExpenseDetails.budget_detail_id == BudgetDetails.id).\
             join(Budget, BudgetDetails.budget_id == Budget.id).\
             filter(BudgetDetails.budget_id == budget_id).\
-            filter(Budget.id == user_id).\
-            filter(ExpenseDetails.currency_id == currency_code).\
-            filter(ExpenseDetails.budget_option_id == EXPENSE).all()
+            filter(Budget.user_id == user_id).\
+            filter(ExpenseDetails.budget_option_id == EXPENSE).\
+            filter(ExpenseDetails.currency_id == currency_code).all()
 
-        # depts = db.session.query(DeptsPayment.amount, BudgetCategories.id).\
-        #     join(BudgetCategories, DeptsPayment.budget_category_id == BudgetCategories.id).\
-        # all()
+        depts = db.session.query(
+            Depts.amount, BudgetDetails.id).\
+            join(BudgetDetails, Depts.budget_detail_id == BudgetDetails.id).\
+            join(Budget, BudgetDetails.budget_id == Budget.id).\
+            filter(BudgetDetails.budget_id == budget_id).\
+            filter(Budget.user_id == user_id).\
+            filter(Depts.budget_option_id == EXPENSE).\
+            filter(Depts.currency_id == currency_code).all()
+
+        dept_payment = db.session.query(
+            DeptsPayment.amount, BudgetDetails.id).\
+            join(BudgetDetails, DeptsPayment.budget_detail_id == BudgetDetails.id).\
+            join(Budget, BudgetDetails.budget_id == Budget.id).\
+            filter(BudgetDetails.budget_id == budget_id).\
+            filter(Budget.user_id == user_id).\
+            filter(DeptsPayment.budget_option_id == EXPENSE).\
+            filter(DeptsPayment.currency_id == currency_code).all()
+
+        for envelope in budget_envelop_data:
+            envelope_data.append({
+                **budget_details_schema.dump(envelope),
+                **budget_categories_schema.dump(envelope),
+            })
 
         for expense in expenses:
             expense_data.append(
                 {**expense_detail_schema.dump(expense),
                  **budget_details_schema.dump(expense)})
 
-        #
-        # for dept in depts:
-        #     data = dept_payment_schema.dump(dept)
-        #     dept_data.append(data)
-
-        for envelope in budget_envelop_data:
-            collect_data.append({
-                **budget_details_schema.dump(envelope),
-                **budget_categories_schema.dump(envelope),
+        for dept in depts:
+            dept_data.append({
+                **dept_schema.dump(dept),
+                **budget_details_schema.dump(dept)
             })
 
-        return jsonify(data=collect_data, expense=expense_data)
+        for dept in dept_payment:
+            dept_payment_data.append({
+                **dept_payment_schema.dump(dept),
+                **budget_details_schema.dump(dept)
+            })
+
+        new_expense_data = remove_amount_list(
+            list_data=Reducer(expense_data).group_same_value())
+        new_dept_data = remove_amount_list(
+            list_data=Reducer(dept_data).group_same_value())
+        new_dept_payment_data = remove_amount_list(
+            list_data=Reducer(dept_payment_data).group_same_value())
+
+        new_collection_data = []
+        for envelope in envelope_data:
+            for expense in new_expense_data:
+                if envelope['id'] == expense['id']:
+                    new_collection_data.append({
+                        **{"id": expense['id']},
+                        **{"budget_amount": envelope["budget_amount"]},
+                        **{"amount_consumed": expense["amount_consumed"]}
+                    })
+
+            for dept in new_dept_data:
+                if envelope['id'] == dept['id']:
+                    new_collection_data.append({
+                        **{"id": dept['id']},
+                        **{"budget_amount": envelope["budget_amount"]},
+                        **{"amount_consumed": dept["amount_consumed"]}
+                    })
+
+            for dept_payment in new_dept_payment_data:
+                if envelope['id'] == dept_payment['id']:
+                    new_collection_data.append({
+                        **{"id": dept_payment['id']},
+                        **{"budget_amount": envelope["budget_amount"]},
+                        **{"amount_consumed": dept_payment["amount_consumed"]}
+                    })
+
+            new_collection_data.append({
+                **{"id": envelope['id']},
+                **{"budget_amount": envelope["budget_amount"]},
+                **{"amount_consumed": 0.0}
+            })
+
+        final_data_collection = Reducer(new_collection_data).group_ids()
+
+        return jsonify(data=final_data_collection)
 
     except Exception as e:
         print(e)
