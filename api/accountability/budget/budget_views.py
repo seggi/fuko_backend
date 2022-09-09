@@ -170,6 +170,33 @@ def save_budget_envelop():
         return response_with(resp.INVALID_FIELD_NAME_SENT_422)
 
 
+@budget.get("/get-envelope-list/<int:budget_id>/<int:currency_code>")
+@jwt_required(refresh=True)
+def get_budget_envelop_list(currency_code, budget_id):
+    user_id = get_jwt_identity()['id']
+    envelope_data = []
+    budget_envelop_data = db.session.query(
+        BudgetCategories.name,
+        BudgetDetails.id,
+        BudgetDetails.created_at
+    ).\
+        join(Budget, BudgetDetails.budget_id == Budget.id).\
+        join(BudgetCategories, BudgetDetails.budget_category_id == BudgetCategories.id).\
+        filter(Budget.user_id == user_id).\
+        filter(BudgetDetails.budget_id == budget_id).\
+        filter(BudgetDetails.currency_id == currency_code).\
+        order_by(desc(BudgetDetails.created_at)).\
+        all()
+
+    for envelope in budget_envelop_data:
+        envelope_data.append({
+            **budget_details_schema.dump(envelope),
+            **budget_categories_schema.dump(envelope),
+        })
+
+    return jsonify(data=envelope_data)
+
+
 @budget.get("/get-envelope/<int:budget_id>/<int:currency_code>")
 @jwt_required(refresh=True)
 def get_budget_envelop(currency_code, budget_id):
