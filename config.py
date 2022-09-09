@@ -14,11 +14,11 @@ class Config:
     DEBUG_TB_INTERCEPT_REDIRECTS = False
 
     # Mail Settings
-    MAIL_DEFAULT_SENDER = os.getenv('MAIL_USERNAME')
-    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_DEFAULT_SENDER = os.getenv('GMAIL_SMTP_SENDER')
+    MAIL_SERVER = os.getenv('GMAIL_SMTP_SERVER')
     MAIL_PORT = os.getenv("MAIL_PORT")
-    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
-    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_USERNAME = os.getenv('GMAIL_SMTP_USER')
+    MAIL_PASSWORD = os.getenv('GMAIL_SMTP_PASSWORD')
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
 
