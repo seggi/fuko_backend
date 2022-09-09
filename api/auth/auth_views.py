@@ -60,8 +60,7 @@ def create_user():
         return response_with(resp.SUCCESS_200)
 
     except Exception as e:
-        return jsonify(data=e)
-        # return response_with(resp.INVALID_INPUT_422)
+        return response_with(resp.INVALID_INPUT_422)
 
 # Verification token
 
