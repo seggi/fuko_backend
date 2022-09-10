@@ -1,9 +1,12 @@
 {
   "cSpell.words": [
     "Depts",
+    "EEXIST",
     "fuko",
     "isouter",
     "jsonify",
-    "memeber"
+    "memeber",
+    "sqlalchemy",
+    "werkzeug"
   ]
 }
