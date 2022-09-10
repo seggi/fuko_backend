@@ -65,7 +65,8 @@ def allowed_file(filename):
 @profile_view.post('/upload-profile-image')
 @jwt_required(refresh=True)
 def upload_profile_image():
-    user_id = get_jwt_identity()['id']
+    # user_id = get_jwt_identity()['id']
+    user_id = 3
     request_file = request.files
 
     if 'file' not in request_file:
@@ -135,7 +136,8 @@ def upload_profile_image():
 @profile_view.get('/get-profile')
 @jwt_required(refresh=True)
 def get_profile():
-    user_id = get_jwt_identity()['id']
+    # user_id = get_jwt_identity()['id']
+    user_id = 3
     profile_data = []
 
     user_profile = db.session.query(User.username, User.first_name,
