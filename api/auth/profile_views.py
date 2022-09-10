@@ -65,8 +65,7 @@ def allowed_file(filename):
 @profile_view.post('/upload-profile-image')
 @jwt_required(refresh=True)
 def upload_profile_image():
-    # user_id = get_jwt_identity()['id']
-    user_id = 3
+    user_id = get_jwt_identity()['id']
     request_file = request.files
 
     if 'file' not in request_file:
@@ -136,8 +135,7 @@ def upload_profile_image():
 @profile_view.get('/get-profile')
 @jwt_required(refresh=True)
 def get_profile():
-    # user_id = get_jwt_identity()['id']
-    user_id = 3
+    user_id = get_jwt_identity()['id']
     profile_data = []
 
     user_profile = db.session.query(User.username, User.first_name,
@@ -155,10 +153,10 @@ def get_profile():
 
 
 @profile_view.get('/get-picture/<path:image_name>')
-# @jwt_required(refresh=True)
+@jwt_required(refresh=True)
 def get_picture(image_name):
-    # user_id = get_jwt_identity()['id']
-    folder_path = f"{UPLOAD_FOLDER}/{3}"
+    user_id = get_jwt_identity()['id']
+    folder_path = f"{UPLOAD_FOLDER}/{user_id}"
     try:
         basedir = os.path.join(os.path.realpath(folder_path))
         return send_from_directory(basedir, image_name, as_attachment=True)
