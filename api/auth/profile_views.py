@@ -89,22 +89,22 @@ def upload_profile_image():
         filename = secure_filename(file.filename)
         new_path_name = {'picture': f'{filename}'}
 
-        path = create_path(directory=f'{UPLOAD_FOLDER}/{user_id}')
-        if path == 200:
-            picture = UserProfile.query.filter_by(
-                picture=new_path_name['picture']).first()
-            if picture:
-                resp = jsonify({'message': 'File already exist.'})
-                resp.status_code = 200
-                return resp
+        # path = create_path(directory=f'{UPLOAD_FOLDER}/{user_id}')
+        # if path == 200:
+        #     picture = UserProfile.query.filter_by(
+        #         picture=new_path_name['picture']).first()
+        #     if picture:
+        #         resp = jsonify({'message': 'File already exist.'})
+        #         resp.status_code = 200
+        #         return resp
 
-            file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
-            resp = jsonify({'message': 'File saved with success.'})
-            UserProfile.query.filter_by(user_id=user_id).update(new_path_name)
-            db.session.commit()
+        #     file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
+        #     resp = jsonify({'message': 'File saved with success.'})
+        #     UserProfile.query.filter_by(user_id=user_id).update(new_path_name)
+        #     db.session.commit()
 
-            resp.status_code = 201
-            return resp
+        #     resp.status_code = 201
+        #     return resp
 
         picture = UserProfile.query.filter_by(
             picture=new_path_name['picture']).first()
@@ -114,7 +114,7 @@ def upload_profile_image():
             resp.status_code = 200
             return resp
 
-        file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
+        # file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
         resp = jsonify({'message': 'File saved with success.'})
         UserProfile.query.filter_by(user_id=user_id).update(new_path_name)
         db.session.commit()

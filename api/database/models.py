@@ -1,6 +1,5 @@
 from datetime import datetime
 from email.policy import default
-from pydoc import describe
 from tokenize import group
 from sqlalchemy import (
     Column, Integer, DateTime, Boolean, String, Float, Text, ForeignKey, LargeBinary
@@ -155,7 +154,7 @@ class UserProfile(db.Model):
     country = Column(Integer, ForeignKey("country.id"), nullable=True)
     state = Column(Integer, ForeignKey('state.id'), nullable=True)
     city = Column(Integer, ForeignKey('cities.id'), nullable=True)
-    picture = Column(Text(), nullable=True)
+    picture = Column(LargeBinary, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
 
