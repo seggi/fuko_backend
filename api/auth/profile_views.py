@@ -117,8 +117,9 @@ def upload_profile_image():
 
         file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
         resp = jsonify({'message': 'File saved with success.'})
-        user_picture = UserProfile(**path_name)
-        db.session.add(user_picture)
+        new_path_name = {'picture': f'{filename}'}
+
+        UserProfile.query.filter_by(user_id=user_id).update(new_path_name)
         db.session.commit()
 
         resp.status_code = 201
