@@ -89,7 +89,7 @@ def upload_profile_image():
         filename = secure_filename(file.filename)
         new_path_name = {'picture': f'{filename}'}
 
-        path = create_path(directory=f'{UPLOAD_FOLDER}/{user_id}')
+        path = create_path(directory=f'files/images/{user_id}')
         if path == 200:
             picture = UserProfile.query.filter_by(
                 picture=new_path_name['picture']).first()
@@ -98,7 +98,7 @@ def upload_profile_image():
                 resp.status_code = 200
                 return resp
 
-            file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
+            file.save(os.path.join(f'files/images/{user_id}', filename))
             resp = jsonify({'message': 'File saved with success.'})
             UserProfile.query.filter_by(user_id=user_id).update(new_path_name)
             db.session.commit()
@@ -109,12 +109,12 @@ def upload_profile_image():
         picture = UserProfile.query.filter_by(
             picture=new_path_name['picture']).first()
         if picture:
-            file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
+            file.save(os.path.join(f'files/images/{user_id}', filename))
             resp = jsonify({'message': 'File already exist.'})
             resp.status_code = 200
             return resp
 
-        file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
+        file.save(os.path.join(f'files/images/{user_id}', filename))
         resp = jsonify({'message': 'File saved with success.'})
         UserProfile.query.filter_by(user_id=user_id).update(new_path_name)
         db.session.commit()
