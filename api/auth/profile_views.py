@@ -139,7 +139,7 @@ def get_profile():
     user_id = get_jwt_identity()['id']
     profile_data = []
 
-    user_profile = db.session.query(User.username, User.first_name,
+    user_profile = db.session.query(User.username, User.first_name, User.email,
                                     User.last_name, User.birth_date, UserProfile.picture).\
         join(User, UserProfile.user_id == User.id).\
         filter(User.id == user_id).all()
@@ -154,10 +154,10 @@ def get_profile():
 
 
 @profile_view.get('/get-picture/<path:image_name>')
-@jwt_required(refresh=True)
+# @jwt_required(refresh=True)
 def get_picture(image_name):
     user_id = get_jwt_identity()['id']
-    folder_path = f"{UPLOAD_FOLDER}/{user_id}"
+    folder_path = f"{UPLOAD_FOLDER}/2"
     try:
         basedir = os.path.join(os.path.realpath(folder_path))
         return send_from_directory(basedir, image_name, as_attachment=True)
