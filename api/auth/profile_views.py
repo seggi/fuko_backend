@@ -109,6 +109,7 @@ def upload_profile_image():
         picture = UserProfile.query.filter_by(
             picture=new_path_name['picture']).first()
         if picture:
+            file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
             resp = jsonify({'message': 'File already exist.'})
             resp.status_code = 200
             return resp
