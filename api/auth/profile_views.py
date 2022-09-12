@@ -87,13 +87,12 @@ def upload_profile_image():
 
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        path_name = {'user_id': user_id,
-                     'picture': f'{filename}'}
+        new_path_name = {'picture': f'{filename}'}
 
         path = create_path(directory=f'{UPLOAD_FOLDER}/{user_id}')
         if path == 200:
             picture = UserProfile.query.filter_by(
-                picture=path_name['picture']).first()
+                picture=new_path_name['picture']).first()
             if picture:
                 resp = jsonify({'message': 'File already exist.'})
                 resp.status_code = 200
@@ -101,15 +100,14 @@ def upload_profile_image():
 
             file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
             resp = jsonify({'message': 'File saved with success.'})
-            user_picture = UserProfile(**path_name)
-            db.session.add(user_picture)
+            UserProfile.query.filter_by(user_id=user_id).update(new_path_name)
             db.session.commit()
 
             resp.status_code = 201
             return resp
 
         picture = UserProfile.query.filter_by(
-            picture=path_name['picture']).first()
+            picture=new_path_name['picture']).first()
         if picture:
             resp = jsonify({'message': 'File already exist.'})
             resp.status_code = 200
@@ -117,8 +115,6 @@ def upload_profile_image():
 
         file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
         resp = jsonify({'message': 'File saved with success.'})
-        new_path_name = {'picture': f'{filename}'}
-
         UserProfile.query.filter_by(user_id=user_id).update(new_path_name)
         db.session.commit()
 
@@ -154,10 +150,10 @@ def get_profile():
 
 
 @profile_view.get('/get-picture/<path:image_name>')
-# @jwt_required(refresh=True)
+@jwt_required(refresh=True)
 def get_picture(image_name):
     user_id = get_jwt_identity()['id']
-    folder_path = f"{UPLOAD_FOLDER}/{3}"
+    folder_path = f"{UPLOAD_FOLDER}/{user_id}"
     try:
         basedir = os.path.join(os.path.realpath(folder_path))
         return send_from_directory(basedir, image_name, as_attachment=True)
