@@ -87,13 +87,12 @@ def upload_profile_image():
 
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        path_name = {'user_id': user_id,
-                     'picture': f'{filename}'}
+        new_path_name = {'picture': f'{filename}'}
 
         path = create_path(directory=f'{UPLOAD_FOLDER}/{user_id}')
         if path == 200:
             picture = UserProfile.query.filter_by(
-                picture=path_name['picture']).first()
+                picture=new_path_name['picture']).first()
             if picture:
                 resp = jsonify({'message': 'File already exist.'})
                 resp.status_code = 200
@@ -101,24 +100,23 @@ def upload_profile_image():
 
             file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
             resp = jsonify({'message': 'File saved with success.'})
-            user_picture = UserProfile(**path_name)
-            db.session.add(user_picture)
+            UserProfile.query.filter_by(user_id=user_id).update(new_path_name)
             db.session.commit()
 
             resp.status_code = 201
             return resp
 
         picture = UserProfile.query.filter_by(
-            picture=path_name['picture']).first()
+            picture=new_path_name['picture']).first()
         if picture:
+            file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
             resp = jsonify({'message': 'File already exist.'})
             resp.status_code = 200
             return resp
 
         file.save(os.path.join(f'{UPLOAD_FOLDER}/{user_id}', filename))
         resp = jsonify({'message': 'File saved with success.'})
-        user_picture = UserProfile(**path_name)
-        db.session.add(user_picture)
+        UserProfile.query.filter_by(user_id=user_id).update(new_path_name)
         db.session.commit()
 
         resp.status_code = 201
@@ -138,7 +136,7 @@ def get_profile():
     user_id = get_jwt_identity()['id']
     profile_data = []
 
-    user_profile = db.session.query(User.username, User.first_name,
+    user_profile = db.session.query(User.username, User.first_name, User.email,
                                     User.last_name, User.birth_date, UserProfile.picture).\
         join(User, UserProfile.user_id == User.id).\
         filter(User.id == user_id).all()

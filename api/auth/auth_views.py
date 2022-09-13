@@ -5,14 +5,16 @@ from flask_jwt_extended import create_access_token, create_refresh_token, jwt_re
 from .. import db
 from api.utils.responses import response_with
 from api.utils import responses as resp
-from api.database.models import User
-from api.utils.model_marsh import UserSchema
+from api.database.models import User, UserProfile
+from api.utils.model_marsh import UserProfileSchema, UserSchema
 from api.utils.token import generate_verification_token, confirm_verification_token
 from api.utils.email import send_email
 
 # Manage route
 
 auth = Blueprint("auth", __name__, url_prefix="/api/user")
+user_schema = UserSchema()
+user_profile_schema = UserProfileSchema()
 
 
 @auth.post('/signup')
@@ -97,6 +99,7 @@ def refresh():
 
 @auth.post('/login')
 def sign_in_user():
+    profile_data = []
     try:
         data = {
             "email": request.json["email"],
@@ -110,21 +113,32 @@ def sign_in_user():
         if current_user and not current_user.confirmed:
             return response_with(resp.BAD_REQUEST_400)
         if User.verify_hash(data['password'], current_user.password):
-            user = User.query.filter_by(email=data['email']).first()
+            get_user = User.query.filter_by(email=data['email']).first()
+            user_id = user_schema.dump(get_user)['id']
+
+            user_profile = db.session.query(User.username, User.first_name, User.id, User.status,
+                                            User.last_name, User.birth_date, UserProfile.picture).\
+                join(User, UserProfile.user_id == User.id).\
+                filter(User.id == user_id).all()
+
+            for profile in user_profile:
+                profile_data.append(
+                    {**user_profile_schema.dump(profile), **user_schema.dump(profile)})
 
             access_token = create_access_token(
-                identity={"id": user.id, "email": data["email"]})
+                identity={"id": profile_data[0]['id'], "email": data["email"]})
             access_fresh_token = create_refresh_token(
-                identity={"id": user.id, "email": data["email"]})
+                identity={"id": profile_data[0]['id'], "email": data["email"]})
             return response_with(resp.SUCCESS_201, value={'message': f'{current_user.username}',
                                                           "access_token": access_token,
                                                           "access_fresh_token": access_fresh_token,
                                                           "data": {
-                                                              "first_name": user.first_name,
-                                                              "last_name": user.last_name,
-                                                              "username": user.username,
-                                                              "status": user.status,
-                                                              "user_id": user.id
+                                                              "first_name": profile_data[0]['first_name'],
+                                                              "last_name": profile_data[0]['last_name'],
+                                                              "username": profile_data[0]['username'],
+                                                              "status": profile_data[0]['status'],
+                                                              "picture": profile_data[0]['picture']
+                                                              #   "user_id": profile_data[0]['id']
                                                           }
                                                           }
                                  )
@@ -132,4 +146,5 @@ def sign_in_user():
             return response_with(resp.UNAUTHORIZED_403)
 
     except Exception as e:
+        print(e)
         return response_with(resp.INVALID_INPUT_422)
