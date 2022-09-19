@@ -232,12 +232,14 @@ def user_get_expense_details(expense_details_id, currency_id):
     expense_amount_detail_list: list = []
     currency: list = []
     data = db.session.query(
+        ExpenseDetails.id,
         ExpenseDetails.amount,
         ExpenseDetails.created_at,
         ExpenseDetails.description,
         Currency.code).\
         join(Currency, ExpenseDetails.currency_id == Currency.id).\
-        filter(ExpenseDetails.expense_id == expense_details_id, ExpenseDetails.currency_id == currency_id).\
+        filter(ExpenseDetails.expense_id == expense_details_id,
+               ExpenseDetails.currency_id == currency_id).\
         order_by(desc(ExpenseDetails.created_at)).all()
 
     for item in data:
