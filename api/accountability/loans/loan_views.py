@@ -48,12 +48,32 @@ def invite_friend_to_notebook():
         "message": APP_LABEL.label("Friend added with success")
     })
 
+
+@loans.put("/update-loan-name/<int:loan_id>")
+@jwt_required(refresh=True)
+def update_loan(loan_id):
+    # Generate inputs
+    try:
+        data = request.json
+        loan = db.session.query(LoanNoteBook).filter(
+            LoanNoteBook.id == loan_id
+        ).one()
+        loan.partner_name = data['partner_name']
+        loan.updated_at = now
+        db.session.commit()
+        return jsonify({
+            "code": "success",
+            "message": "Loan updated with success"
+        })
+    except Exception as e:
+        return response_with(resp.INVALID_INPUT_422)
+
 # Add People
 # No from fuko
 
 
-@loans.post("/add-people-notebook")
-@jwt_required(refresh=True)
+@ loans.post("/add-people-notebook")
+@ jwt_required(refresh=True)
 def add_lent_to_notebook():
     try:
         user_id = get_jwt_identity()['id']
@@ -67,8 +87,8 @@ def add_lent_to_notebook():
         return response_with(resp.INVALID_INPUT_422)
 
 
-@loans.get("/personal-loan-notebook")
-@jwt_required(refresh=True)
+@ loans.get("/personal-loan-notebook")
+@ jwt_required(refresh=True)
 def retrieve_members_from_loan_notebook():
     user_id = get_jwt_identity()['id']
     member_in_loan_list = []
@@ -102,8 +122,8 @@ def retrieve_members_from_loan_notebook():
     return jsonify(data=combine_all_list)
 
 
-@loans.get("/pub-loan-notebook")
-@jwt_required(refresh=True)
+@ loans.get("/pub-loan-notebook")
+@ jwt_required(refresh=True)
 def pub_loan_notebook():
     user_id = get_jwt_identity()['id']
     member_in_loan_list = []
@@ -142,8 +162,8 @@ def pub_loan_notebook():
     return jsonify(data=member_in_loan_list)
 
 
-@loans.get("/retrieve-friend-loan/<int:friend_id>/<int:dept_membership_id>/<int:currency_id>")
-@jwt_required(refresh=True)
+@ loans.get("/retrieve-friend-loan/<int:friend_id>/<int:dept_membership_id>/<int:currency_id>")
+@ jwt_required(refresh=True)
 def retrieve_friend_loan(currency_id, friend_id, dept_membership_id):
     user_id = get_jwt_identity()['id']
     loan_list = []
@@ -212,8 +232,8 @@ def retrieve_friend_loan(currency_id, friend_id, dept_membership_id):
         "currency": currency[0] if len(currency) > 0 else ""})
 
 
-@loans.get("/retrieved-paid-amount/<int:note_id>/<int:currency_id>")
-@jwt_required(refresh=True)
+@ loans.get("/retrieved-paid-amount/<int:note_id>/<int:currency_id>")
+@ jwt_required(refresh=True)
 def retrieve_payment_recorded(note_id, currency_id):
     collect_payment_history = []
     get_amount = []
@@ -246,8 +266,8 @@ def retrieve_payment_recorded(note_id, currency_id):
 # Get all loans
 
 
-@loans.get("/retrieve/<int:currency_id>")
-@jwt_required(refresh=True)
+@ loans.get("/retrieve/<int:currency_id>")
+@ jwt_required(refresh=True)
 def user_get_loans(currency_id):
     try:
         user_id = get_jwt_identity()['id']
@@ -282,8 +302,8 @@ def user_get_loans(currency_id):
 # Get loan by date
 
 
-@loans.get("/retrieve-by-current-date/<int:loan_note_id>")
-@jwt_required(refresh=True)
+@ loans.get("/retrieve-by-current-date/<int:loan_note_id>")
+@ jwt_required(refresh=True)
 def get_loan_by_current_date(loan_note_id):
     loan_list = []
     loan_data = Loans.query.filter_by(note_id=loan_note_id).\
@@ -305,8 +325,8 @@ def get_loan_by_current_date(loan_note_id):
 # Add loan
 
 
-@loans.post("/record-loan/<int:note_id>")
-@jwt_required(refresh=True)
+@ loans.post("/record-loan/<int:note_id>")
+@ jwt_required(refresh=True)
 def user_record_loan(note_id):
     # Generate inputs
     try:
@@ -325,8 +345,8 @@ def user_record_loan(note_id):
 # Update loan
 
 
-@loans.put("/update-loan/<int:loan_id>")
-@jwt_required(refresh=True)
+@ loans.put("/update-loan/<int:loan_id>")
+@ jwt_required(refresh=True)
 def user_update_loan(loan_id):
     # Generate inputs
     try:
@@ -351,8 +371,8 @@ def user_update_loan(loan_id):
 # Pay loan
 
 
-@loans.post("/reimburse-loan")
-@jwt_required(refresh=True)
+@ loans.post("/reimburse-loan")
+@ jwt_required(refresh=True)
 def reimburse_loan():
     # amount
     request_data = request.json

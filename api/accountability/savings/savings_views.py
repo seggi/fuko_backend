@@ -1,4 +1,5 @@
 from datetime import date
+from datetime import datetime
 from api.core.constant import CURRENT_YEAR, MONTHS_LIST
 from api.core.reducer import Reducer
 from flask import Blueprint, jsonify, request
@@ -21,6 +22,7 @@ QUERY = QueryGlobalReport()
 # Register saving data
 
 todays_date = date.today()
+now = datetime.now()
 savings_schema = SavingsSchema()
 currency_schema = CurrencySchema()
 
@@ -43,6 +45,27 @@ def user_add_saving():
         return response_with(resp.INVALID_INPUT_422)
 
 
+@savings.put("/update-saving/<int:amount_id>")
+@jwt_required(refresh=True)
+def user_update_saving(amount_id):
+    # Generate inputs
+    try:
+        data = request.json
+        saving = db.session.query(Savings).filter(
+            Savings.id == amount_id
+        ).one()
+        saving.description = data['description']
+        saving.amount = data['amount']
+        saving.updated_at = now
+        db.session.commit()
+        return jsonify({
+            "code": "success",
+            "message": "Amount updated with success"
+        })
+    except Exception as e:
+        return response_with(resp.INVALID_INPUT_422)
+
+
 # Get all savings
 @savings.get("/retrieve-by-current-date/<int:currency_id>")
 @jwt_required(refresh=True)
@@ -58,6 +81,7 @@ def user_get_saving_by_date(currency_id):
 
     data = db.session.query(
         Savings.amount,
+        Savings.id,
         Savings.description,
         Savings.created_at,
         Savings.money_provenance,
