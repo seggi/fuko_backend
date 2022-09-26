@@ -1,9 +1,10 @@
 from datetime import date
+from re import L
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from api.database.models import DeptNoteBook, Depts, ExpenseDetails, Expenses, LoanNoteBook, Loans, RecordDeptPayment, Savings, User
-from api.utils.model_marsh import DeptsSchema, ExpenseDetailsSchema, ExpensesSchema, LoanSchema, RecordDeptPaymentSchema, SavingsSchema, UserSchema
+from api.database.models import DeptNoteBook, Depts, DeptsPayment, ExpenseDetails, Expenses, LoanNoteBook, LoanPayment, Loans, RecordDeptPayment, Savings, User
+from api.utils.model_marsh import DeptsSchema, ExpenseDetailsSchema, ExpensesSchema, LoanPaymentSchema, LoanSchema, RecordDeptPaymentSchema, SavingsSchema, UserSchema
 from api.core.query import QueryGlobalReport
 from api.core.objects import GlobalAmount
 
@@ -30,6 +31,7 @@ LOANS_SCHEMA = LoanSchema(many=True)
 DEPT_SCHEMA = DeptsSchema(many=True)
 SAVINGS_SCHEMA = SavingsSchema(many=True)
 RECORD_DEPT_PAYMENT_SCHEMA = RecordDeptPaymentSchema(many=True)
+PAID_LOAN_SCHEMA = LoanPaymentSchema(many=True)
 
 
 QUERY = QueryGlobalReport()
@@ -39,6 +41,7 @@ QUERY = QueryGlobalReport()
 @jwt_required(refresh=True)
 def user_global_amount(currency_id):
     user_id = get_jwt_identity()['id']
+    paid_amount = []
     expenses = db.session.query(ExpenseDetails).join(
         Expenses, ExpenseDetails.expense_id == Expenses.id, isouter=True).\
         filter(Expenses.user_id == user_id,
@@ -48,6 +51,27 @@ def user_global_amount(currency_id):
         LoanNoteBook, Loans.note_id == LoanNoteBook.id, isouter=True).\
         filter(LoanNoteBook.user_id == user_id,
                Loans.currency_id == currency_id).all()
+
+    person_paid_loan = db.session.query(LoanPayment.amount).\
+        join(LoanNoteBook, LoanPayment.notebook_id == LoanNoteBook.id).\
+        filter(LoanNoteBook.user_id == user_id).\
+        filter(LoanPayment.currency_id == currency_id).\
+        all()
+
+    pub_paid_loan = db.session.query(LoanPayment.amount).\
+        join(LoanNoteBook, LoanPayment.notebook_id == LoanNoteBook.id).\
+        filter(LoanNoteBook.friend_id == user_id,
+               LoanPayment.currency_id == currency_id).all()
+
+    pub_paid_dept = db.session.query(RecordDeptPayment.amount).\
+        join(DeptNoteBook, RecordDeptPayment.note_id == DeptNoteBook.id).\
+        filter(DeptNoteBook.memeber_id == user_id,
+               RecordDeptPayment.currency_id == currency_id).all()
+
+    person_paid_dept = db.session.query(RecordDeptPayment.amount).\
+        join(DeptNoteBook, RecordDeptPayment.note_id == DeptNoteBook.id).\
+        filter(DeptNoteBook.user_id == 2,
+               RecordDeptPayment.currency_id == currency_id).all()
 
     savings = db.session.query(Savings).join(
         User, Savings.user_id == User.id, isouter=True).\
@@ -64,14 +88,16 @@ def user_global_amount(currency_id):
         filter(DeptNoteBook.user_id == user_id).\
         filter(RecordDeptPayment.currency_id == currency_id).all()
 
-    print(paid_dept)
-
     result = GlobalAmount(
         tbl1=EXPENSES_SCHEMA.dump(expenses),
         tbl2=LOANS_SCHEMA.dump(loans),
         tbl3=SAVINGS_SCHEMA.dump(savings),
         tbl4=DEPT_SCHEMA.dump(dept),
-        tbl5=RECORD_DEPT_PAYMENT_SCHEMA.dump(paid_dept)
+        tbl5=RECORD_DEPT_PAYMENT_SCHEMA.dump(paid_dept),
+        tbl6=PAID_LOAN_SCHEMA.dump(person_paid_loan),
+        tbl7=PAID_LOAN_SCHEMA.dump(pub_paid_loan),
+        tbl8=RECORD_DEPT_PAYMENT_SCHEMA.dump(pub_paid_dept),
+        tbl9=RECORD_DEPT_PAYMENT_SCHEMA.dump(person_paid_dept)
     )
 
     global_amount = result.computer_amount(
