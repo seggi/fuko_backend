@@ -3,8 +3,8 @@ from re import L
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from api.database.models import DeptNoteBook, Depts, DeptsPayment, ExpenseDetails, Expenses, LoanNoteBook, LoanPayment, Loans, RecordDeptPayment, Savings, User
-from api.utils.model_marsh import DeptsSchema, ExpenseDetailsSchema, ExpensesSchema, LoanPaymentSchema, LoanSchema, RecordDeptPaymentSchema, SavingsSchema, UserSchema
+from api.database.models import Currency, DeptNoteBook, Depts, DeptsPayment, ExpenseDetails, Expenses, LoanNoteBook, LoanPayment, Loans, RecordDeptPayment, Savings, User
+from api.utils.model_marsh import CurrencySchema, DeptsSchema, ExpenseDetailsSchema, ExpensesSchema, LoanPaymentSchema, LoanSchema, RecordDeptPaymentSchema, SavingsSchema, UserSchema
 from api.core.query import QueryGlobalReport
 from api.core.objects import GlobalAmount
 
@@ -32,6 +32,7 @@ DEPT_SCHEMA = DeptsSchema(many=True)
 SAVINGS_SCHEMA = SavingsSchema(many=True)
 RECORD_DEPT_PAYMENT_SCHEMA = RecordDeptPaymentSchema(many=True)
 PAID_LOAN_SCHEMA = LoanPaymentSchema(many=True)
+CURRENCY_SCHEMA = CurrencySchema()
 
 
 QUERY = QueryGlobalReport()
@@ -42,6 +43,10 @@ QUERY = QueryGlobalReport()
 def user_global_amount(currency_id):
     user_id = get_jwt_identity()['id']
     paid_amount = []
+
+    currencyCode = db.session.query(Currency.code).filter(
+        Currency.id == currency_id).all()
+
     expenses = db.session.query(ExpenseDetails).join(
         Expenses, ExpenseDetails.expense_id == Expenses.id, isouter=True).\
         filter(Expenses.user_id == user_id,
@@ -103,7 +108,14 @@ def user_global_amount(currency_id):
     global_amount = result.computer_amount(
         item_list=result.out_put(),
     )
-    return jsonify(data={"all_4_tables": result.out_put(), "global_amount": global_amount})
+
+    currencyCode_list = []
+
+    for code in currencyCode:
+        getCode = CURRENCY_SCHEMA.dump(code)
+        currencyCode_list.append(getCode['code'])
+
+    return jsonify(data={"all_4_tables": result.out_put(), "global_amount": {**global_amount, **{"currencyCode": currencyCode_list[0]}}})
 
 
 @global_account.get("/global-amount-by-date/<int:user_id>")
