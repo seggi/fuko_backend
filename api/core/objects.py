@@ -99,7 +99,9 @@ class GlobalAmount:
             "global_amount_details": data,
             "global_amount": calculate_all_amount,
             "total_loans": total_loan,
-            "total_depts": total_dept
+            "total_depts": total_dept,
+            "total_expenses": sum(lists),
+            "total_savings": sum(lists2)
         }
 
 
