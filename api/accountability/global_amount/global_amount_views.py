@@ -83,13 +83,13 @@ def user_global_amount(currency_id):
         filter(Savings.user_id == user_id,
                Savings.currency_id == currency_id).all()
 
-    dept = db.session.query(Depts).join(
-        DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
+    dept = db.session.query(Depts).\
+        join(DeptNoteBook, Depts.note_id == DeptNoteBook.id, isouter=True).\
         filter(DeptNoteBook.user_id == user_id).\
         filter(Depts.currency_id == currency_id).all()
 
-    paid_dept = db.session.query(RecordDeptPayment).join(
-        DeptNoteBook, RecordDeptPayment.note_id == DeptNoteBook.id, isouter=True).\
+    paid_dept = db.session.query(RecordDeptPayment).\
+        join(DeptNoteBook, RecordDeptPayment.note_id == DeptNoteBook.id, isouter=True).\
         filter(DeptNoteBook.user_id == user_id).\
         filter(RecordDeptPayment.currency_id == currency_id).all()
 

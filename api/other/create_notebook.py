@@ -116,24 +116,31 @@ def add_friend_to_notebook():
     try:
         user_id = get_jwt_identity()['id']
         data = request.json | {"sender_id": user_id}
-        check_friend = db.session.query(NoteBookMember).filter(
-            NoteBookMember.notebook_id == data['notebook_id'],
-            NoteBookMember.request_status == REQUEST_SENT,
-            NoteBookMember.friend_id == data['friend_id']).first()
 
-        if check_friend:
+        if user_id != data['friend_id']:
+            check_friend = db.session.query(NoteBookMember).\
+                filter(NoteBookMember.notebook_id == data['notebook_id'],
+                       NoteBookMember.request_status == REQUEST_SENT,
+                       NoteBookMember.friend_id == data['friend_id']).first()
+
+            if check_friend:
+                return jsonify({
+                    "code": APP_LABEL.label("success"),
+                    "message": APP_LABEL.label("Request already sent")
+                })
+
+            QUERY.insert_data(db=db, table_data=NoteBookMember(**data))
             return jsonify({
-                "code": APP_LABEL.label("success"),
-                "message": APP_LABEL.label("Request already sent")
+                "code": "success",
+                "message": "Request sent with success"
+            })
+        else:
+            return jsonify({
+                "code": "success",
+                "message": "You can not send request to your self."
             })
 
-        QUERY.insert_data(db=db, table_data=NoteBookMember(**data))
-        return jsonify({
-            "code": "success",
-            "message": "Request sent with success"
-        })
-
-    except Exception:
+    except Exception as e:
         return response_with(resp.INVALID_INPUT_422)
 
 
