@@ -75,7 +75,7 @@ def user_global_amount(currency_id):
 
     person_paid_dept = db.session.query(RecordDeptPayment.amount).\
         join(DeptNoteBook, RecordDeptPayment.note_id == DeptNoteBook.id).\
-        filter(DeptNoteBook.user_id == 2,
+        filter(DeptNoteBook.user_id == user_id,
                RecordDeptPayment.currency_id == currency_id).all()
 
     savings = db.session.query(Savings).join(
