@@ -33,7 +33,6 @@ noteBook_Member_Schema = NoteBookMemberSchema()
 loan_payment_schema = LoanPaymentSchema()
 currency_schema = CurrencySchema()
 
-
 # Invite Friend
 
 

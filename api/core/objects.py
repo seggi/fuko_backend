@@ -84,22 +84,24 @@ class GlobalAmount:
             self.tbl_names[8]:  sum(lists8),
         }
 
-        negative_values = sum(lists + lists3)
-        positive_values = sum(lists1 + lists2 + lists4 +
-                              lists5 + lists6 + lists7 + lists8)
-
-        calculate_all_amount = positive_values - negative_values
         collect_paid_loan = sum(lists5 + lists6)
         total_loan = sum(lists1) - collect_paid_loan
 
         collect_paid_dept = sum(lists7 + lists8)
         total_dept = sum(lists3) - collect_paid_dept
 
+        negative_values = sum(lists) + total_dept
+        positive_values = sum(lists2) + total_loan
+
+        calculate_all_amount = positive_values - negative_values
+
         return {
             "global_amount_details": data,
             "global_amount": calculate_all_amount,
             "total_loans": total_loan,
-            "total_depts": total_dept
+            "total_depts": total_dept,
+            "total_expenses": sum(lists),
+            "total_savings": sum(lists2)
         }
 
 
