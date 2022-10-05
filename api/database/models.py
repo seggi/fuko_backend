@@ -165,6 +165,8 @@ class UserDefaultCurrency(db.Model):
     id = Column('id', Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     currency_id = Column(Integer, ForeignKey('currency.id'), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    updated_at = Column(DateTime(timezone=True), default=func.now())
 
 # User spoken language
 
