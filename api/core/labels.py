@@ -1,8 +1,10 @@
 
 
 class AppLabels:
-    laguages = ['french', 'english']
+    languages = ['Fr', 'En']
 
     @staticmethod
-    def label(label: str, language=None, ) -> str:
-        return label
+    def label(label: str, selected_language=None, ) -> str:
+
+        if selected_language in AppLabels.languages:
+            return

@@ -210,10 +210,16 @@ def set_default_currency():
     user_id = get_jwt_identity()['id']
     try:
         data = request.json | {"user_id": user_id}
+        check_default_currency = db.session.query(UserDefaultCurrency).all()
+        if check_default_currency:
+            return jsonify({
+                "code": "success",
+                "message": "Default currency already set."
+            })
         QUERY.insert_data(db=db, table_data=UserDefaultCurrency(**data))
         return jsonify({
-            "code": APP_LABEL.label("success"),
-            "message": APP_LABEL.label("Currency set with success")
+            "code": "success",
+            "message": "Currency set with success"
         })
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
