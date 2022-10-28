@@ -210,7 +210,8 @@ def set_default_currency():
     user_id = get_jwt_identity()['id']
     try:
         data = request.json | {"user_id": user_id}
-        check_default_currency = db.session.query(UserDefaultCurrency).all()
+        check_default_currency = db.session.query(UserDefaultCurrency).filter(
+            UserDefaultCurrency.user_id == user_id).all()
         if check_default_currency:
             return jsonify({
                 "code": "success",
