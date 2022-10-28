@@ -239,8 +239,8 @@ def update_default_currency():
         currency.currency_id = data["currency_id"]
         db.session.commit()
         return jsonify({
-            "code": APP_LABEL.label("success"),
-            "message": APP_LABEL.label("Currency changed with success")
+            "code": "success",
+            "message": "Currency changed with success"
         })
     except Exception:
         return response_with(resp.INVALID_INPUT_422)
