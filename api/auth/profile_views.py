@@ -32,7 +32,7 @@ def user_complete_profile():
             "first_name": request.json["first_name"],
             "last_name": request.json["last_name"],
             "phone": request.json["phone"],
-            "status": True,
+            "status": request.json["status"],
         },
         "user_profile": {
             "user_id": user_id,
@@ -46,9 +46,9 @@ def user_complete_profile():
 
     user = User.query.filter_by(id=data["users"]['id']).first()
     if user:
-        User.query.filter_by(id=data["users"]['id']).update(data["users"])
-        user_id = UserProfile(**data["user_profile"])
-        db.session.add(user_id)
+        User.query.filter_by(id=data["users"]['id']).update(**data["users"])
+        UserProfile.query.filter_by(user_id=data["users"]['id']).update(
+            **data["user_profile"])
         db.session.commit()
         return jsonify({
             "code": "success",
