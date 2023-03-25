@@ -116,7 +116,7 @@ class User(db.Model):
     status = Column(Boolean(), default=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now())
-    confirmed = Column(Boolean(), nullable=False, default=False)
+    confirmed = Column(Boolean(), nullable=False, default=True)
     confirmed_on = Column(DateTime(timezone=True),
                           default=func.now(), nullable=True)
     profile = db.relationship("UserProfile", backref="user", lazy=True)

@@ -110,11 +110,17 @@ def sign_in_user():
             current_user = User.find_by_email(data['email'])
         if not current_user:
             return response_with(resp.SERVER_ERROR_404)
-        # if current_user and not current_user.confirmed:
-        #     return response_with(resp.BAD_REQUEST_400)
+        if current_user and not current_user.confirmed:
+            return response_with(resp.BAD_REQUEST_400)
         if User.verify_hash(data['password'], current_user.password):
             get_user = User.query.filter_by(email=data['email']).first()
-            user_id = user_schema.dump(get_user)['id']
+            user_id = int(user_schema.dump(get_user)['id'])
+            user_status = user_schema.dump(get_user)['status']
+
+            if user_status == False:
+                add_user_id = UserProfile(**{"user_id": user_id})
+                db.session.add(add_user_id)
+                db.session.commit()
 
             user_profile = db.session.query(User.username, User.first_name, User.id, User.status,
                                             User.last_name, User.birth_date, UserProfile.picture).\
@@ -142,10 +148,11 @@ def sign_in_user():
                                                           }
                                                           }
                                  )
+
         else:
             return response_with(resp.UNAUTHORIZED_403)
 
     except Exception as e:
-        print(e)
+        print(user_status)
         return jsonify(data=f'{e}')
         # return response_with(resp.INVALID_INPUT_422)
