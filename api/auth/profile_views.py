@@ -25,7 +25,7 @@ user_profile_schema = UserProfileSchema()
 @profile_view.post('/complete-profile')
 @jwt_required(refresh=True)
 def user_complete_profile():
-    user_id = get_jwt_identity()['id']
+    user_id = int(get_jwt_identity()['id'])
     data = {
         "users": {
             "first_name": request.json["first_name"],
