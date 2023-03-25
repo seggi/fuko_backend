@@ -31,7 +31,7 @@ def user_complete_profile():
             "first_name": request.json["first_name"],
             "last_name": request.json["last_name"],
             "phone": request.json["phone"],
-            "status": True,
+            "status": request.json["status"],
         },
         "user_profile": {
             "gender":  request.json["gender"],
@@ -44,12 +44,8 @@ def user_complete_profile():
 
     user = db.session.query(User).filter(User.id == user_id).first()
     if user:
-        User.query.filter_by(id=user_id).update({
-            "first_name": request.json["first_name"],
-            "last_name": request.json["last_name"],
-            "phone": request.json["phone"],
-            "status": request.json["status"],
-        })
+        print(data['users'], ":::::::-----:")
+        User.query.filter_by(id=user_id).update(data['users'])
         db.session.commit()
 
         UserProfile.query.filter_by(user_id=user_id).update(
