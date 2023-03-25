@@ -28,14 +28,12 @@ def user_complete_profile():
     user_id = get_jwt_identity()['id']
     data = {
         "users": {
-            "id": user_id,
             "first_name": request.json["first_name"],
             "last_name": request.json["last_name"],
             "phone": request.json["phone"],
             "status": request.json["status"],
         },
         "user_profile": {
-            "user_id": user_id,
             "gender":  request.json["gender"],
         }
     }
@@ -44,11 +42,18 @@ def user_complete_profile():
             or data["user_profile"]['gender'] is None:
         return response_with(resp.INVALID_INPUT_422)
 
-    user = User.query.filter_by(id=data["users"]['id']).first()
+    user = db.session.query(User).filter(User.id == user_id).first()
     if user:
-        User.query.filter_by(id=data["users"]['id']).update(**data["users"])
-        UserProfile.query.filter_by(user_id=data["users"]['id']).update(
-            **data["user_profile"])
+        User.query.filter_by(id=user_id).update({
+            "first_name": request.json["first_name"],
+            "last_name": request.json["last_name"],
+            "phone": request.json["phone"],
+            "status": request.json["status"],
+        })
+        db.session.commit()
+
+        UserProfile.query.filter_by(user_id=user_id).update(
+            data["user_profile"])
         db.session.commit()
         return jsonify({
             "code": "success",
