@@ -23,7 +23,7 @@ user_profile_schema = UserProfileSchema()
 
 
 @profile_view.post('/complete-profile')
-@jwt_required()
+@jwt_required(refresh=True)
 def user_complete_profile():
     user_id = get_jwt_identity()['id']
     data = {
