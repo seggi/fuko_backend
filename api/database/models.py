@@ -521,4 +521,4 @@ class Accommodation(db.Model):
         'budget_option.id'), default=EXPENSE, nullable=True)
 
 
-'''In the future we have to combine with tontine && back'''
+'''In the future we have to combine with tontine && bank'''

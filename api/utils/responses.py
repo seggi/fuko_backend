@@ -47,7 +47,7 @@ UNAUTHORIZED_403 = {
 SUCCESS_200 = {
     "http_code": 200,
     "code": "success",
-    "message": "Please Verify your email"
+    "message": "Account created with success."
 }
 
 SUCCESS_201 = {
@@ -71,12 +71,12 @@ def response_with(response, value=None, message=None, error=None, headers={}, pa
 
     if response.get('message', None) is not None:
         result.update({'message': response['message']})
-    
+
     result.update({'code': response['code']})
 
     if error is not None:
         result.update({'errors': error})
-    
+
     if pagination is not None:
         result.update({'pagination': pagination})
 

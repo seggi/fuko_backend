@@ -97,7 +97,7 @@ def refresh():
 # Login
 
 
-@auth.post('/login')
+@auth.post('/logins')
 def sign_in_user():
     profile_data = []
     try:
@@ -110,8 +110,8 @@ def sign_in_user():
             current_user = User.find_by_email(data['email'])
         if not current_user:
             return response_with(resp.SERVER_ERROR_404)
-        if current_user and not current_user.confirmed:
-            return response_with(resp.BAD_REQUEST_400)
+        # if current_user and not current_user.confirmed:
+        #     return response_with(resp.BAD_REQUEST_400)
         if User.verify_hash(data['password'], current_user.password):
             get_user = User.query.filter_by(email=data['email']).first()
             user_id = user_schema.dump(get_user)['id']
@@ -147,4 +147,5 @@ def sign_in_user():
 
     except Exception as e:
         print(e)
-        return response_with(resp.INVALID_INPUT_422)
+        return jsonify(data=f'{e}')
+        # return response_with(resp.INVALID_INPUT_422)

@@ -49,7 +49,7 @@ def create_app(config_name) -> any:
     jwt.init_app(app)
 
     # Import views
-    from .auth.auth_views  import auth as auth_blueprint
+    from .auth.auth_views import auth as auth_blueprint
     from .auth.profile_views import profile_view as profile_blueprint
     from . accountability.global_amount.global_amount_views import global_account as account_blueprint
     from .accountability.expenses.expenses_views import expenses as expenses_blueprint
@@ -62,7 +62,6 @@ def create_app(config_name) -> any:
     from .other.create_notebook import notebook as notebook_blueprint
     from .other.manage_request import manage_request as manage_request_blueprint
     from .accountability.notebook_group.group_view import group as group_blueprint
-    
 
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(profile_blueprint)
@@ -76,7 +75,6 @@ def create_app(config_name) -> any:
     app.register_blueprint(manage_request_blueprint)
     app.register_blueprint(accommodation_blueprint)
     app.register_blueprint(group_blueprint)
-
     app.register_blueprint(document_blueprint)
 
     return app
