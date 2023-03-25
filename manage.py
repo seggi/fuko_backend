@@ -34,6 +34,7 @@ def seed_db():
     rent_payment_option = ["Month", "Week", "Day", "Year"]
 
     for status in request_status:
+        print('ggggggg', rent_payment_option)
         db.session.add(RequestStatus(request_status_name=status))
         db.session.commit()
 

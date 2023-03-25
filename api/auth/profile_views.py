@@ -32,7 +32,7 @@ def user_complete_profile():
             "first_name": request.json["first_name"],
             "last_name": request.json["last_name"],
             "phone": request.json["phone"],
-            "status": request.json["status"],
+            "status": True,
         },
         "user_profile": {
             "user_id": user_id,
