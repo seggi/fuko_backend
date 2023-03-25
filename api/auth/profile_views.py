@@ -44,7 +44,7 @@ def user_complete_profile():
 
     user = db.session.query(User).filter(User.id == user_id).first()
     if user:
-        print(data['users'], ":::::::-----:")
+        print(data['users'], ":::::::-----:", user_id)
         User.query.filter_by(id=user_id).update(data['users'])
         db.session.commit()
 
