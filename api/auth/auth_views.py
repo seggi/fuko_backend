@@ -143,8 +143,8 @@ def sign_in_user():
                                                               "last_name": profile_data[0]['last_name'],
                                                               "username": profile_data[0]['username'],
                                                               "status": profile_data[0]['status'],
-                                                              "picture": profile_data[0]['picture']
-                                                              #   "user_id": profile_data[0]['id']
+                                                              "picture": profile_data[0]['picture'],
+                                                              "user_id": profile_data[0]['id']
                                                           }
                                                           }
                                  )
