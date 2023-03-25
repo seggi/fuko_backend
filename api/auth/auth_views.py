@@ -97,7 +97,7 @@ def refresh():
 # Login
 
 
-@auth.post('/logins')
+@auth.post('/login')
 def sign_in_user():
     profile_data = []
     try:
