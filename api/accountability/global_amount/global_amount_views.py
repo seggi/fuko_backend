@@ -115,7 +115,8 @@ def user_global_amount(currency_id):
         getCode = CURRENCY_SCHEMA.dump(code)
         currencyCode_list.append(getCode['code'])
 
-    return jsonify(data={"all_4_tables": result.out_put(), "global_amount": {**global_amount, **{"currencyCode": currencyCode_list[0]}}})
+    return jsonify(data={"all_4_tables": result.out_put(), 
+                         "global_amount": {**global_amount, **{"currencyCode": currencyCode_list[0]  if len(currencyCode_list) != 0 else ""}}})
 
 
 @global_account.get("/global-amount-by-date/<int:user_id>")

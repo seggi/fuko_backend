@@ -204,6 +204,35 @@ def search_user():
 # Set default currency
 
 
+@manage_request.post("/add-currency")
+def add_currency():
+    try:
+        request_data: dict = request.json
+
+        if request_data['data'] is None or request_data['data'] == "":
+            return jsonify({
+                "code": "failed",
+                "message": "Provide data"
+            })
+        
+        for data in request_data["data"]:
+            save_currency = Currency(**{
+                "code": data['code'],
+                "description": data['description']
+            })
+
+            db.session.add(save_currency)
+            db.session.commit()
+        
+        return jsonify({
+                "code": "success",
+                "message": "Currency added successfully"
+            })
+
+    
+    except Exception as e:
+        return jsonify(f"{e}")
+
 @manage_request.post("/set-default-currency")
 @jwt_required(refresh=True)
 def set_default_currency():
@@ -242,8 +271,8 @@ def update_default_currency():
             "code": "success",
             "message": "Currency changed with success"
         })
-    except Exception:
-        return response_with(resp.INVALID_INPUT_422)
+    except Exception as e:
+        return jsonify(f"{e}")
 
 # Set default currency
 

@@ -24,7 +24,6 @@ def create_user():
             "email": request.json["email"],
             "password": request.json["password"],
             "username": request.json["username"],
-            "birth_date": request.json["birth_date"]
         }
         if data['email'] is None or data['username'] is None:
             return response_with(resp.INVALID_INPUT_422)
@@ -62,7 +61,7 @@ def create_user():
         return response_with(resp.SUCCESS_200)
 
     except Exception as e:
-        return response_with(resp.INVALID_INPUT_422)
+        return jsonify(data=f'{e}')
 
 # Verification token
 
@@ -153,6 +152,4 @@ def sign_in_user():
             return response_with(resp.UNAUTHORIZED_403)
 
     except Exception as e:
-        print(user_status)
         return jsonify(data=f'{e}')
-        # return response_with(resp.INVALID_INPUT_422)
